@@ -5,22 +5,22 @@ import SkribosPlugin from "./main";
 const obsidianModule = require("obsidian");
 
 export class EtaHandler {
+  varName: string;
+
   baseContext: {[index: string]: any} = { 
     obsidian: obsidianModule 
   }
 
   constructor(app: App, plugin: SkribosPlugin) {
-
+    this.varName = plugin.varName;
   }
 
-  // the embed renderer only renders elements that have been rendered when the value is returned from the postprocessor
-  // more clearly: if made to wait by an async inside the renderer, the internal embedder will move along before we are done with our elements
-  // even more clearly: async breaky my embeds :(
+
   async renderAsync(content: string, ctxIn?: any): Promise<string> {
     let context = ctxIn || {};
 
-    content = await Eta.renderAsync(content, context, { 
-      varName: "sk" 
+    content = Eta.renderAsync(content, context, { 
+      varName: this.varName
     }) as string;
 
     return content;
@@ -30,7 +30,7 @@ export class EtaHandler {
     let context = ctxIn || {};
 
     content = Eta.render(content, context, { 
-      varName: "sk" 
+      varName: this.varName
     }) as string;
 
     return content;
