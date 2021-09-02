@@ -1,7 +1,9 @@
-import { App, debounce, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownPreviewRenderer, MarkdownRenderer, Modal, normalizePath, Notice, Plugin, PluginSettingTab, Setting, TFile, TFolder, Vault } from 'obsidian';
+import { App, debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownPreviewRenderer, MarkdownRenderer, Modal, normalizePath, Notice, Plugin, PluginSettingTab, Setting, TFile, TFolder, Vault } from 'obsidian';
 import { Template } from './const';
 import { EtaHandler } from './eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
+import { registerMirror } from './overlay';
+import { getFiles } from './util';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -11,6 +13,10 @@ export default class SkribosPlugin extends Plugin {
 
 	varName: string = "sk";
 
+	loadEvents = new Events();
+	private initLoadRef: EventRef
+	initLoaded: boolean = false;
+
 	async onload() {
 		console.log('Loading Skribos...');
 
@@ -18,14 +24,26 @@ export default class SkribosPlugin extends Plugin {
 		this.addSettingTab(new SkribosSettingTab(this.app, this));
 
 		this.app.workspace.onLayoutReady(() => {this.loadTemplates();})
-		this.eta = new EtaHandler(this.app, this);
+		this.eta = new EtaHandler(this);
 
 		let process: MarkdownPostProcessor = async (el, ctx) => { this.processor(el, ctx) }
 		process.sortOrder = -50
 		this.registerMarkdownPostProcessor((el, ctx) => process(el, ctx))
+
+		let bUpdateTemplate = debounce(this.updateTemplate.bind(this), 500, true)
+		this.registerEvent(this.app.metadataCache.on('changed', (e) => {
+			if (e?.parent.path.contains(this.settings.templateFolder)) {
+				bUpdateTemplate(e); this.eta.definePartials(e);
+			}
+		}))
+
+		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; console.log("init-load-complete")})
+
+		// registerMirror(this);
 	}
 
 	onunload() {
+		this.loadEvents.offref(this.initLoadRef)
 		console.log('Unloading Skribos...');
 	}
 
@@ -35,6 +53,12 @@ export default class SkribosPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	async updateTemplate(f: TFile) {
+		this.app.vault.read(f).then((file) => {
+			this.templates.set(f.basename, {file: f})
+		})
 	}
 
 	async loadTemplateToMemory(f: TFile) {
@@ -47,6 +71,7 @@ export default class SkribosPlugin extends Plugin {
 		let files = getFiles(this.app, this.settings.templateFolder)
 		let set: Map<string, Template> = new Map();
 
+		console.log("Loading templates...")
 		for (let f of files) {
 			set.set(f.basename, {file: f})
 			// this.loadTemplateToMemory(f)
@@ -59,6 +84,11 @@ export default class SkribosPlugin extends Plugin {
 		doc: HTMLElement,
 		ctx: MarkdownPostProcessorContext
 	) {
+		if (!this.initLoaded) {
+
+		} else {
+
+		}
 
 		const elCodes = doc.querySelectorAll("code")
 		elCodes.forEach(async (el) => {
@@ -68,7 +98,11 @@ export default class SkribosPlugin extends Plugin {
 				preparseSkribi(el).then(async (src) => {
 					if (src != null) {
 						switch (src.flag.toString()) {
-							case "1": this.processSkribiTemplate(el, src.text, ctx, t); break; // Template
+							case "1": { // Template
+								this.predicate({el: el, src: src.text, ctx: ctx, t: t})
+								// this.processSkribiTemplate(el, src.text, ctx, t);
+								break;
+							} 
 							case "2": {} // Interpolate
 							case "3": {} // Literal
 						}
@@ -80,6 +114,7 @@ export default class SkribosPlugin extends Plugin {
 				}
 			}
 		})
+
 
 
 		// if (elCodes) {
@@ -150,24 +185,66 @@ export default class SkribosPlugin extends Plugin {
 		// }
 	}
 
-	async processSkribiTemplate(el: HTMLElement, src: string, ctx: MarkdownPostProcessorContext, t: number) {
-		let parsed = await parseSkribi(src);
+	async predicate(args: any) {
+		if (!this.initLoaded) {
+			console.log("not yet loaded")
+			let el = renderWait(args.el)
+			this.initLoadRef = this.loadEvents.on('init-load-complete', () => {
+				this.initLoaded = true
+				this.processSkribiTemplate(el, args.src, args.ctx, args.t)
+			})
+		} else {
+			this.processSkribiTemplate(args.el, args.src, args.ctx, args.t)
+		}
+	}
+
+	async processSkribiTemplate(el: HTMLElement, src: string, ctx: MarkdownPostProcessorContext, t: number): Promise<void> {
+		console.log("processing...", this.initLoaded)
+		let parsed: {id: string, args: any} = null;
+		try {
+			parsed = await parseSkribi(src, this.templates);
+		} catch (e) {
+			renderError(el, e);
+			return null
+		}
+
+		// if (!this.templates.has(parsed.id)) return Promise.reject({msg: `No such template "${parsed.id}"`, flags: {}});
+
 		// let template = await this.app.vault.read(this.templates.get(parsed.id).file)
 		// let template = this.loadedTemplates.get(parsed.id)
-		let template = await this.app.vault.cachedRead(this.templates.get(parsed.id).file)
+		
+		
+		// let template = await this.app.vault.cachedRead(this.templates.get(parsed.id).file)
+
+		// let template = `<%~ include("${parsed.id}", sk) %>`
+
+		let template = this.eta.getPartial(parsed.id)
+		if (!template) {renderError(el, {msg: `No such template "${parsed.id}"`}); return null }
+		
+
 		this.eta.renderAsync(template, parsed.args).then((rendered) => {
 			let e = createDiv()
 			MarkdownRenderer.renderMarkdown(rendered, e, ctx.sourcePath, null)
-			const mke: ChildNode[] = Array.from(e?.childNodes || []);
-			el.replaceWith(...mke)
+			// const mke: ChildNode[] = Array.from(e?.childNodes || []);
+			e.setAttribute("skribi", parsed.id)
+			el.replaceWith(e)
 			console.log(`Skribi "${parsed.id}" rendered in: ${window.performance.now()-t} ms`)
 		})
 	}
+	
 }
 
 async function renderError(el: HTMLElement, e: any) {
-	const pre = createEl("code", {attr: {style: `color: red !important`}, text: "SK"})
+	const pre = createEl("code", {cls: "skribi-error", text: "sk"})
+	// pre.append(createSpan({text: "SK"}))
+	// {attr: {style: `color: red !important`}
 	el.replaceWith(pre)
+}
+
+function renderWait(el: HTMLElement) {
+	const pre = createEl("code", {cls: "skribi-wait", text: "sk"})
+	el.replaceWith(pre)
+	return pre
 }
 
 async function preparseSkribi(el: HTMLElement) {
@@ -186,27 +263,13 @@ async function preparseSkribi(el: HTMLElement) {
 	} else return null
 }
 
-interface Error {
-	name: string;
-	message: string;
-	stack?: string;
-}
-
-interface ErrorConstructor {
-	new(message?: string): Error;
-	(message?: string): Error;
-	readonly prototype: Error;
-}
-
-declare var Error: ErrorConstructor;
-
-async function parseSkribi(src: string): Promise<{
+async function parseSkribi(src: string, templates: Map<string, Template>): Promise<{
 	id: string,
 	args: any
 }> {
 	let sa = src.split(/(?<![\\])\|/)
 	let id = sa.splice(0, 1)[0].trim()
-	// if (!this.templates.has(id)) return;
+	// if (!templates.has(id)) return Promise.reject({msg: `No such template "${id}"`, flags: {}});
 
 	let args: Record<string, string> = {};
 
@@ -231,31 +294,11 @@ async function parseSkribi(src: string): Promise<{
 	return {id: id, args: tpCtx};
 }
 
-async function renderSkribi(parsed: {id: string, args: any}, plugin: SkribosPlugin) {
-	plugin.app.vault.read(plugin.templates.get(parsed.id).file).then((template) => {
-
-	})
-
-}
-
 async function renderLiteral() {
 
 }
 
-function getFiles(app: App, dir: string): TFile[] {
-	let dirPath = normalizePath(dir)
-	let fo = app.vault.getAbstractFileByPath(dirPath);
 
-	// console.log(dirPath), console.log(fo);
-	if (!fo || !(fo instanceof TFolder)) throw "bronk";
-
-	let files: TFile[] = [];
-	Vault.recurseChildren(fo, (fi) => {
-		if (fi instanceof TFile) files.push(fi)
-	})
-
-	return files;
-}
 
 function checkCodes(blocks: NodeListOf<Element>) {
 	let setInterp: Map<ChildNode, string> = new Map();
