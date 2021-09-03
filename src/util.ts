@@ -14,3 +14,7 @@ export function getFiles(app: App, dir: string): TFile[] {
 
 	return files;
 }
+
+export function isExtant(obj: any) {
+	return !((obj === null ) || (obj === undefined))
+}

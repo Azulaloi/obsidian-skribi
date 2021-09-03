@@ -18,7 +18,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Template Directory')
-			.setDesc('Eta will look for templates in this folder.')
+			.setDesc('Skribi will look for templates in this folder.')
 			.addTextArea((text: TextAreaComponent) => text
 				.setValue(this.plugin.settings.templateFolder)
 				.onChange(async (value) => {

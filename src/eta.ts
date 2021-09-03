@@ -1,18 +1,23 @@
 import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
-import { App, Events, TFile } from "obsidian";
-import { isNullOrUndefined } from "util";
+import { App, Events, MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "./main";
-import { getFiles } from "./util";
+import { getFiles, isExtant } from "./util";
 
 const obsidianModule = require("obsidian");
 
 export class EtaHandler {
   plugin: SkribosPlugin;
   varName: string;
+  curFile: TFile = null;
 
   baseContext: {[index: string]: any} = { 
-    obsidian: obsidianModule 
+    obsidian: obsidianModule,
+    render: function(str: string) {
+      let e = createDiv()
+      MarkdownRenderer.renderMarkdown(str, e, "", null);
+      return e.innerHTML
+    }
   }
 
   constructor(plugin: SkribosPlugin) {
@@ -36,8 +41,7 @@ export class EtaHandler {
       Promise.allSettled(reads).then(() => {
         let loaded = files.every((f) => { 
           let g = Eta.templates.get(f.basename)
-          // console.log(f, g, !((g === null ) || (g === undefined)))
-          return !((g === null ) || (g === undefined))
+          return isExtant(g)
         })
 
         if (loaded) {
@@ -52,13 +56,16 @@ export class EtaHandler {
     }
   }
 
-
   getPartial(id: string) {
     return Eta.templates.get(id)
   }
   
-  async renderAsync(content: string | TemplateFunction, ctxIn?: any): Promise<string> {
-    let context = ctxIn || {};
+  async renderAsync(content: string | TemplateFunction, ctxIn?: any, file?: TFile): Promise<string> {
+    if (!isFile(file)) return Promise.reject("not a file");
+    this.curFile = file as TFile;
+
+    // let context = ctxIn || {};
+    let context = Object.assign({}, this.baseContext, ctxIn || {})
 
     content = Eta.renderAsync(content, context, { 
       varName: this.varName
@@ -77,3 +84,5 @@ export class EtaHandler {
     return content;
   }
 }
+
+const isFile = (item: TAbstractFile) => (item) instanceof TFile; 
