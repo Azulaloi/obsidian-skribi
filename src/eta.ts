@@ -62,17 +62,15 @@ export class EtaHandler {
   }
   
   async renderAsync(content: string | TemplateFunction, ctxIn?: any, file?: TFile): Promise<string> {
-    if (!isFile(file)) return Promise.reject("not a file");
+    if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file.path}`);
 
-
-    // let context = ctxIn || {};
     let context = Object.assign({file: file}, this.baseContext, ctxIn || {})
+    let ren = Eta.renderAsync(content, context, {varName: this.varName})
 
-    content = Eta.renderAsync(content, context, { 
-      varName: this.varName
-    }) as string;
-
-    return content;
+    if (ren instanceof Promise) {
+      return await ren.then((r) => {return Promise.resolve(r)}, (r) => {return Promise.reject(r)})
+    } else if (String.isString(ren)) { return Promise.resolve(ren as string) }
+    else return Promise.reject("Unknown error")
   }
 
   render(content: string, ctxIn?: any) {

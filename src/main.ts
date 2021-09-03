@@ -4,7 +4,14 @@ import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings
 import { registerMirror } from './overlay';
 import { isExtant } from './util';
 import { embedMedia } from './embed';
-import { resolve } from 'path';
+import { TemplateFunction } from 'eta/dist/types/compile';
+
+interface SkContext {
+	time: number,
+	flag: number,
+	depth: number,
+	ctx?: any
+}
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -52,7 +59,8 @@ export default class SkribosPlugin extends Plugin {
 
 	async processor (
 		doc: HTMLElement,
-		ctx: MarkdownPostProcessorContext
+		ctx: MarkdownPostProcessorContext,
+		depth?: number
 	) {
 		const elCodes = doc.querySelectorAll("code")
 		elCodes.forEach(async (el) => {
@@ -61,13 +69,18 @@ export default class SkribosPlugin extends Plugin {
 			try {
 				preparseSkribi(el).then(async (src) => {
 					if (src != null) {
-						switch (src.flag.toString()) {
-							case "1": { // Template
-								this.predicate({el: el, src: src.text, ctx: ctx, t: t})
+						switch (src.flag) {
+							case 1: { // Template
+								this.predicate({el: el, src: src.text, mdCtx: ctx, skCtx: {time: t, depth: depth || 0, flag: src.flag}})
 								break;
 							} 
-							case "2": {} // Interpolate
-							case "3": {} // Literal
+							case 2:
+							case 3:
+							case 4: {
+								this.processSkribi(el, src.text, ctx, {time: t, depth: depth || 0, flag: src.flag})
+								break;
+							}
+							default: //return Promise.reject("Invalid flag")
 						}
 					} 
 				})
@@ -85,45 +98,72 @@ export default class SkribosPlugin extends Plugin {
 			let el = renderWait(args.el)
 			this.initLoadRef = this.loadEvents.on('init-load-complete', () => {
 				this.initLoaded = true
-				this.processSkribiTemplate(el, args.src, args.ctx, args.t)
+				return this.processSkribiTemplate(el, args.src, args.mdCtx, args.skCtx)
 			})
-		} else {
-			this.processSkribiTemplate(args.el, args.src, args.ctx, args.t)
-		}
+		} else return this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
 	}
 
-	async processSkribiTemplate(el: HTMLElement, src: string, ctx: MarkdownPostProcessorContext, t: number): Promise<void> {
+	async processSkribiTemplate(
+		el: HTMLElement, 
+		src: string, 
+		mdCtx: MarkdownPostProcessorContext, 
+		skCtx: SkContext
+	): Promise<void> {
 		let parsed: {id: string, args: any} = null;
 		try { parsed = await parseSkribi(src) }
 		catch (e) { renderError(el, e); return null }
 		
 		let template = this.eta.getPartial(parsed.id)
 		if (!isExtant(template)) {renderError(el, {msg: `No such template "${parsed.id}"`}); return null }
-
-		let file = this.app.metadataCache.getFirstLinkpathDest("", ctx.sourcePath)
-		let rendered = await this.eta.renderAsync(template, parsed.args, file)
-			
-		let e = createDiv();
-		MarkdownRenderer.renderMarkdown(rendered, e, ctx.sourcePath, null).then(() => {
-				e.setAttribute("skribi", parsed.id)
-				el.replaceWith(e); console.log("finish: ", t, window.performance.now())
-				console.log(`Skribi "${parsed.id}" rendered in: ${window.performance.now()-t} ms`)
-				return Promise.resolve(e);
-			}).then(() => {return Promise.resolve(embedMedia(e, ctx.sourcePath, this))})
-			.then((e) => this.processor(e, ctx))
+		this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
 	}
-}
 
-async function renderError(el: HTMLElement, e: any) {
-	const pre = createEl("code", {cls: "skribi-error", text: "sk"})
-	if (e?.msg) pre.setAttribute("title", e.msg);
-	el.replaceWith(pre)
-}
+	async processSkribi(
+		el: HTMLElement, 
+		src: string, 
+		mdCtx: MarkdownPostProcessorContext, 
+		skCtx: SkContext
+	): Promise<void> {
+		const prep = function (str: string, flag: number) {
+			switch (flag) { 
+				case 2: return `<%=${src}%>`; 
+				case 3: return `<%~${src}%>`; 
+				case 4: return str;
+			} 
+		}
 
-function renderWait(el: HTMLElement) {
-	const pre = createEl("code", {cls: "skribi-wait", text: "sk"})
-	el.replaceWith(pre)
-	return pre
+		this.renderSkribi(el, prep(src, skCtx.flag), "literal", mdCtx, skCtx)
+	}
+
+	async renderSkribi(
+		el: HTMLElement, 
+		con: string | TemplateFunction, 
+		id: string, 
+		mdCtx: MarkdownPostProcessorContext, 
+		skCtx: SkContext
+	): Promise<void> {
+		let file = this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
+		let rendered = await this.eta.renderAsync(con, skCtx?.ctx || {}, file).then((rendered) => {
+			return Promise.resolve(rendered)
+		}, (err) => {
+			renderError(el, {msg: err || "Render Error"})
+			return Promise.resolve(null)
+		})
+
+		if (isExtant(rendered)) {
+			let e = createDiv();
+			MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
+				e.setAttribute("skribi", id)
+				el.replaceWith(e); console.log("finish: ", skCtx.time, window.performance.now())
+				console.log(`Skribi "${id}" rendered in: ${window.performance.now()-skCtx.time} ms`)
+				return Promise.resolve(e);
+			})
+			.then(() => {return Promise.resolve(embedMedia(e, mdCtx.sourcePath, this))})
+			.then((e) => this.processor(e, mdCtx))
+		} else {
+			// return Promise.reject("Render Error");
+		}
+	}
 }
 
 async function preparseSkribi(el: HTMLElement) {
@@ -134,12 +174,12 @@ async function preparseSkribi(el: HTMLElement) {
 	let s = text.substr(0, 2)
 	
 	if (s.startsWith("{") && e.endsWith("}")) {
-		if (s[1] == ":") { return {flag: 1, text: text.substring(2, text.length-1)}}
-		else if (s[1] == "=") { return {flag: 2, text: text.substring(2, text.length-1)}}
-		else if ((s == "{{") && (e == "}}")) {
-			return {flag: 3, text: text.substring(2, text.length-2)}
-		}
-	} else return null
+		let f = s[1];
+		let flag = (f == ":") ? 1 : (f == "=") ? 2 : (f == "~") ? 3 : (f == "{") ? 4 : -1;
+		if ((flag > 0) && (flag != 4 || (e == "}}"))) {
+			return {flag: flag, text: text.substring(2, text.length - (flag == 4 ? 2 : 1 ))}
+		} else return
+	} else return
 }
 
 async function parseSkribi(src: string): Promise<{
@@ -164,8 +204,14 @@ async function parseSkribi(src: string): Promise<{
 	return {id: id, args: tpCtx};
 }
 
-async function renderLiteral() {
-
+async function renderError(el: HTMLElement, e: any) {
+	const pre = createEl("code", {cls: "skribi-error", text: "sk"})
+	if (e?.msg) pre.setAttribute("title", e.msg);
+	el.replaceWith(pre)
 }
 
-
+function renderWait(el: HTMLElement) {
+	const pre = createEl("code", {cls: "skribi-wait", text: "sk"})
+	el.replaceWith(pre)
+	return pre
+}
