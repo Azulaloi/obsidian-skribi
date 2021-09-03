@@ -1,6 +1,8 @@
 import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
 import { App, Events, MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
+import { resolve } from "path";
+import { embedMedia } from "./embed";
 import SkribosPlugin from "./main";
 import { getFiles, isExtant } from "./util";
 
@@ -9,13 +11,12 @@ const obsidianModule = require("obsidian");
 export class EtaHandler {
   plugin: SkribosPlugin;
   varName: string;
-  curFile: TFile = null;
 
   baseContext: {[index: string]: any} = { 
     obsidian: obsidianModule,
     render: function(str: string) {
-      let e = createDiv()
-      MarkdownRenderer.renderMarkdown(str, e, "", null);
+      let e = createDiv();
+      MarkdownRenderer.renderMarkdown(str, e, this.file.path, null);
       return e.innerHTML
     }
   }
@@ -62,10 +63,10 @@ export class EtaHandler {
   
   async renderAsync(content: string | TemplateFunction, ctxIn?: any, file?: TFile): Promise<string> {
     if (!isFile(file)) return Promise.reject("not a file");
-    this.curFile = file as TFile;
+
 
     // let context = ctxIn || {};
-    let context = Object.assign({}, this.baseContext, ctxIn || {})
+    let context = Object.assign({file: file}, this.baseContext, ctxIn || {})
 
     content = Eta.renderAsync(content, context, { 
       varName: this.varName

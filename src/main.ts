@@ -3,6 +3,8 @@ import { EtaHandler } from './eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { registerMirror } from './overlay';
 import { isExtant } from './util';
+import { embedMedia } from './embed';
+import { resolve } from 'path';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -99,13 +101,16 @@ export default class SkribosPlugin extends Plugin {
 		if (!isExtant(template)) {renderError(el, {msg: `No such template "${parsed.id}"`}); return null }
 
 		let file = this.app.metadataCache.getFirstLinkpathDest("", ctx.sourcePath)
-		this.eta.renderAsync(template, parsed.args, file).then((rendered) => {
-			let e = createDiv(); console.log(rendered)
-			MarkdownRenderer.renderMarkdown(rendered, e, ctx.sourcePath, null)
-			e.setAttribute("skribi", parsed.id)
-			el.replaceWith(e); console.log("finish: ", t, window.performance.now())
-			console.log(`Skribi "${parsed.id}" rendered in: ${window.performance.now()-t} ms`)
-		})
+		let rendered = await this.eta.renderAsync(template, parsed.args, file)
+			
+		let e = createDiv();
+		MarkdownRenderer.renderMarkdown(rendered, e, ctx.sourcePath, null).then(() => {
+				e.setAttribute("skribi", parsed.id)
+				el.replaceWith(e); console.log("finish: ", t, window.performance.now())
+				console.log(`Skribi "${parsed.id}" rendered in: ${window.performance.now()-t} ms`)
+				return Promise.resolve(e);
+			}).then(() => {return Promise.resolve(embedMedia(e, ctx.sourcePath, this))})
+			.then((e) => this.processor(e, ctx))
 	}
 }
 
