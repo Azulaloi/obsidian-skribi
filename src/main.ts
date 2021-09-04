@@ -6,12 +6,22 @@ import { isExtant } from './util';
 import { embedMedia } from './embed';
 import { TemplateFunction } from 'eta/dist/types/compile';
 
+declare module "obsidian" {
+	interface MarkdownPostProcessorContext {
+		containerEl: HTMLElement;
+		el: HTMLElement;
+		remainingNestLevel: number;
+	}
+}
+
 interface SkContext {
 	time: number,
 	flag: number,
 	depth: number,
 	ctx?: any
 }
+
+const SK_DEPTH_LIMIT = 5;
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -31,7 +41,7 @@ export default class SkribosPlugin extends Plugin {
 		this.eta = new EtaHandler(this);
 
 		let process: MarkdownPostProcessor = async (el, ctx) => { this.processor(el, ctx) }
-		process.sortOrder = -50
+		// process.sortOrder = -50
 		this.registerMarkdownPostProcessor((el, ctx) => process(el, ctx))
 
 		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
@@ -60,36 +70,68 @@ export default class SkribosPlugin extends Plugin {
 	async processor (
 		doc: HTMLElement,
 		ctx: MarkdownPostProcessorContext,
-		depth?: number
+		depth?: number,
+		self?: boolean
 	) {
+		let nestExtant = isExtant(ctx.remainingNestLevel)
+		let nestLevel = nestExtant ? ctx.remainingNestLevel : null;
+		/* nestExtant means that we are inside of a natural transclusion */
+
+		self = isExtant(self)
+		depth = self ? depth : null
+		/* self means that we have been called by renderSkribi, to look for codeblocks */
+
+		let elHasDepth = isExtant(doc.getAttribute("depth"))
+		let elElHasDepth = isExtant(ctx.el.getAttribute("depth"))
+		let elDepth = elHasDepth ? parseInt(doc.getAttribute("depth")) : elElHasDepth ? parseInt(ctx.el.getAttribute("depth")) : null;
+
+		let d = self ? depth : (elHasDepth || elElHasDepth) ? elDepth : nestExtant ? nestLevel : 0
+
+		if (!nestExtant && !(elHasDepth || elElHasDepth)) console.log("processor sees no depth")
+
+		if (elHasDepth) { 
+			console.log("elDepth", elDepth, "doc", doc, "el", ctx.el, "conEl", ctx.containerEl) 
+		} else {
+			console.log("processor: ", "doc", doc, "el", ctx.el, "conEl", ctx.containerEl, "nest", ctx.remainingNestLevel)
+		}
+
 		const elCodes = doc.querySelectorAll("code")
-		elCodes.forEach(async (el) => {
-			let t = window.performance.now();
-			console.log("start:", t)
-			try {
-				preparseSkribi(el).then(async (src) => {
-					if (src != null) {
-						switch (src.flag) {
-							case 1: { // Template
-								this.predicate({el: el, src: src.text, mdCtx: ctx, skCtx: {time: t, depth: depth || 0, flag: src.flag}})
-								break;
-							} 
-							case 2:
-							case 3:
-							case 4: {
-								this.processSkribi(el, src.text, ctx, {time: t, depth: depth || 0, flag: src.flag})
-								break;
+		if (!(d <= 0)) {
+			elCodes.forEach(async (el) => {
+				let t = window.performance.now();
+				console.log("start:", t)
+				try {
+					preparseSkribi(el).then(async (src) => {
+						if (src != null) {
+							switch (src.flag) {
+								case 1: { // Template
+									this.predicate({el: el, src: src.text, mdCtx: ctx, skCtx: {time: t, depth: d, flag: src.flag}})
+									break;
+								} 
+								case 2:
+								case 3:
+								case 4: {
+									this.processSkribi(el, src.text, ctx, {time: t, depth: d, flag: src.flag})
+									break;
+								}
+								default: //return Promise.reject("Invalid flag")
 							}
-							default: //return Promise.reject("Invalid flag")
-						}
-					} 
-				})
-			} catch(e) {
-				if (!e.flags.noRender) {
-					renderError(el, e)
+						} 
+					})
+				} catch(e) {
+					if (!e.flags.noRender) {
+						renderError(el, e)
+					}
 				}
-			}
-		})
+			})
+		} else {
+			elCodes.forEach(async (el) => {
+				preparseSkribi(el).then(async (src) => {
+					if (src != null) renderFrozen(el, src.text)
+				})
+			})
+			console.log("processor hit limit"); return; 
+		}
 	}
 
 	async predicate(args: any) {
@@ -115,7 +157,7 @@ export default class SkribosPlugin extends Plugin {
 		
 		let template = this.eta.getPartial(parsed.id)
 		if (!isExtant(template)) {renderError(el, {msg: `No such template "${parsed.id}"`}); return null }
-		this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
+		return this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
 	}
 
 	async processSkribi(
@@ -132,7 +174,7 @@ export default class SkribosPlugin extends Plugin {
 			} 
 		}
 
-		this.renderSkribi(el, prep(src, skCtx.flag), "literal", mdCtx, skCtx)
+		return this.renderSkribi(el, prep(src, skCtx.flag), "literal", mdCtx, skCtx)
 	}
 
 	async renderSkribi(
@@ -150,16 +192,28 @@ export default class SkribosPlugin extends Plugin {
 			return Promise.resolve(null)
 		})
 
+		console.log("renderSkrib:", el, mdCtx, skCtx)
 		if (isExtant(rendered)) {
-			let e = createDiv();
+			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
+			let e = createDiv(); // e.setAttribute("depth", d.toString())
 			MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
-				e.setAttribute("skribi", id)
+				e.setAttribute("skribi", id); //e.setAttribute("depth", d.toString());
 				el.replaceWith(e); console.log("finish: ", skCtx.time, window.performance.now())
 				console.log(`Skribi "${id}" rendered in: ${window.performance.now()-skCtx.time} ms`)
 				return Promise.resolve(e);
 			})
-			.then(() => {return Promise.resolve(embedMedia(e, mdCtx.sourcePath, this))})
-			.then((e) => this.processor(e, mdCtx))
+			.then((e): Promise<any> => {
+				if (isExtant(mdCtx.remainingNestLevel) && (mdCtx.remainingNestLevel > 0) || !isExtant(mdCtx.remainingNestLevel)) {
+					return embedMedia(e, mdCtx.sourcePath, this, skCtx.depth)
+				} else return Promise.resolve()
+				//e.setAttribute("depth", d.toString())
+
+			})
+			.then((x) => {
+				console.log("renderer final: ", d)
+				// e.setAttribute("depth", d.toString())
+				this.processor(e, mdCtx, skCtx.depth-1, true)
+			})
 		} else {
 			// return Promise.reject("Render Error");
 		}
@@ -214,4 +268,8 @@ function renderWait(el: HTMLElement) {
 	const pre = createEl("code", {cls: "skribi-wait", text: "sk"})
 	el.replaceWith(pre)
 	return pre
+}
+
+async function renderFrozen(el: HTMLElement, src: string) {
+	el.addClass("skribi-frozen")
 }
