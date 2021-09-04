@@ -84,7 +84,9 @@ export default class SkribosPlugin extends Plugin {
 		let elHasDepth = isExtant(doc.getAttribute("depth"))
 		let elElHasDepth = isExtant(ctx.el.getAttribute("depth"))
 		let elDepth = elHasDepth ? parseInt(doc.getAttribute("depth")) : elElHasDepth ? parseInt(ctx.el.getAttribute("depth")) : null;
+		/* Used for passing depth to virtual elements (we may be in one even as we speak...)*/
 
+		/* determine our depth condition type */
 		let d = self ? depth : (elHasDepth || elElHasDepth) ? elDepth : nestExtant ? nestLevel : 0
 
 		if (!nestExtant && !(elHasDepth || elElHasDepth)) console.log("processor sees no depth")
@@ -103,6 +105,7 @@ export default class SkribosPlugin extends Plugin {
 				try {
 					preparseSkribi(el).then(async (src) => {
 						if (src != null) {
+							el.addClass("skribi-loading") // is this ever visible?
 							switch (src.flag) {
 								case 1: { // Template
 									this.predicate({el: el, src: src.text, mdCtx: ctx, skCtx: {time: t, depth: d, flag: src.flag}})
@@ -134,6 +137,7 @@ export default class SkribosPlugin extends Plugin {
 		}
 	}
 
+	/* Await initial loading of templates */
 	async predicate(args: any) {
 		if (!this.initLoaded) {
 			console.log("not yet loaded")
@@ -155,6 +159,7 @@ export default class SkribosPlugin extends Plugin {
 		try { parsed = await parseSkribi(src) }
 		catch (e) { renderError(el, e); return null }
 		
+		if (this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) { el.addClass("skribi-self"); return null;}
 		let template = this.eta.getPartial(parsed.id)
 		if (!isExtant(template)) {renderError(el, {msg: `No such template "${parsed.id}"`}); return null }
 		return this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
@@ -203,8 +208,9 @@ export default class SkribosPlugin extends Plugin {
 				return Promise.resolve(e);
 			})
 			.then((e): Promise<any> => {
+				// TODO: only restrict depth for transclusions
 				if (isExtant(mdCtx.remainingNestLevel) && (mdCtx.remainingNestLevel > 0) || !isExtant(mdCtx.remainingNestLevel)) {
-					return embedMedia(e, mdCtx.sourcePath, this, skCtx.depth)
+					return embedMedia(e, mdCtx.sourcePath, this, skCtx.depth) 
 				} else return Promise.resolve()
 				//e.setAttribute("depth", d.toString())
 
@@ -212,7 +218,7 @@ export default class SkribosPlugin extends Plugin {
 			.then((x) => {
 				console.log("renderer final: ", d)
 				// e.setAttribute("depth", d.toString())
-				this.processor(e, mdCtx, skCtx.depth-1, true)
+				this.processor(e, mdCtx, skCtx.depth-1, true) /* Recurse the processor to parse skreeblings */
 			})
 		} else {
 			// return Promise.reject("Render Error");
@@ -220,6 +226,7 @@ export default class SkribosPlugin extends Plugin {
 	}
 }
 
+/* Check if code block is that good good and if so what type of good good */
 async function preparseSkribi(el: HTMLElement) {
 	let text = el.textContent
 	if (text.length < 3) return;
@@ -236,6 +243,7 @@ async function preparseSkribi(el: HTMLElement) {
 	} else return
 }
 
+/* Parse arguments for template skreebs */
 async function parseSkribi(src: string): Promise<{
 	id: string,
 	args: any
