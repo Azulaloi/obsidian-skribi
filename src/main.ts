@@ -159,9 +159,14 @@ export default class SkribosPlugin extends Plugin {
 		try { parsed = await parseSkribi(src) }
 		catch (e) { renderError(el, e); return null }
 		
-		if (this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) { el.addClass("skribi-self"); return null;}
+		if (this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
+			el.addClass("skribi-self"); el.removeClass("skribi-loading", "skribi-wait"); return null; }
 		let template = this.eta.getPartial(parsed.id)
-		if (!isExtant(template)) {renderError(el, {msg: `No such template "${parsed.id}"`}); return null }
+		if (!isExtant(template)) {
+			if (this.eta.failedTemplates.has(parsed.id)) { renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }
+			else {renderError(el, {msg: `No such template "${parsed.id}"`})}
+			return null 
+		}
 		return this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
 	}
 
@@ -268,6 +273,7 @@ async function parseSkribi(src: string): Promise<{
 
 async function renderError(el: HTMLElement, e: any) {
 	const pre = createEl("code", {cls: "skribi-error", text: "sk"})
+	el.removeClass("skribi-loading", "skribi-wait")
 	if (e?.msg) pre.setAttribute("title", e.msg);
 	el.replaceWith(pre)
 }
@@ -279,5 +285,6 @@ function renderWait(el: HTMLElement) {
 }
 
 async function renderFrozen(el: HTMLElement, src: string) {
+	el.removeClass("skribi-loading", "skribi-wait")
 	el.addClass("skribi-frozen")
 }

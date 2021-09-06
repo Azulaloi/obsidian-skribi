@@ -12,6 +12,8 @@ export class EtaHandler {
   plugin: SkribosPlugin;
   varName: string;
 
+  failedTemplates: Map<string, string> = new Map();
+
   baseContext: {[index: string]: any} = { 
     obsidian: obsidianModule,
     render: function(str: string) {
@@ -25,6 +27,10 @@ export class EtaHandler {
     this.plugin = plugin;
     this.varName = plugin.varName;
 
+    this.initPartials();
+  }
+
+  initPartials() {
     this.plugin.app.workspace.onLayoutReady(async () => this.definePartials(
       ...getFiles(this.plugin.app, this.plugin.settings.templateFolder)
     ))
@@ -35,15 +41,30 @@ export class EtaHandler {
     
     const reads = files.map(async f => {
       let read = await this.plugin.app.vault.read(f)
-      Eta.templates.define(f.basename, Eta.compile(read, {varName: this.varName}))
+      let compiled;
+
+      try {
+        compiled = Eta.compile(read, {varName: this.varName})
+      } catch(e) {
+        this.failedTemplates.set(f.basename, e || "Template failed to compile.")
+        console.warn(`Skribi: template "${f.basename}" failed to compile \n`, e)
+      }
+
+      if (isExtant(compiled)) {
+        this.failedTemplates.delete(f.basename)
+        Eta.templates.define(f.basename, compiled)
+      }
+
+      return Promise.resolve();
     })
 
     if (!this.plugin.initLoaded) {
       Promise.allSettled(reads).then(() => {
-        let loaded = files.every((f) => { 
-          let g = Eta.templates.get(f.basename)
-          return isExtant(g)
-        })
+        // let loaded = files.some((f) => { 
+        //   let g = Eta.templates.get(f.basename)
+        //   return isExtant(g)
+        // })
+        let loaded = true;
 
         if (loaded) {
           this.plugin.loadEvents.trigger('init-load-complete')
@@ -53,6 +74,7 @@ export class EtaHandler {
         }
       })
     } else {
+      // let success = files.map((f) => { let g = Eta.templates.get(f.basename) })
       console.log(`Updated template "${files[0].basename}" in ${window.performance.now()-t} ms`)
     }
   }
@@ -60,7 +82,11 @@ export class EtaHandler {
   getPartial(id: string) {
     return Eta.templates.get(id)
   }
-  
+
+  getCache() {
+    return Eta.templates
+  }
+
   async renderAsync(content: string | TemplateFunction, ctxIn?: any, file?: TFile): Promise<string> {
     if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file.path}`);
 
