@@ -1,8 +1,8 @@
 # Skribi
 
-This plugin implements [Eta](https://eta.js.org/) templating in [Obsidian](https://obsidian.md/) in a manner akin to [Scribunto](https://www.mediawiki.org/wiki/Extension:Scribunto), the scripted template framework used by MediaWiki.
+Skribi implements [Eta](https://eta.js.org/) templating in [Obsidian](https://obsidian.md/) in a manner akin to [Scribunto](https://www.mediawiki.org/wiki/Extension:Scribunto), the scripted template framework used by MediaWiki. Create a template, pass variables to it, and render the output in your notes.
 
-Skribi is designed to enable non-destructive templating: seamlessly integrate complex HTML into your notes, instanced from a single source, without clutter or having to repeat yourself. You can even construct normally impossible element structures, such as rendering markdown inside of block elements - including Obsidian syntax media embedding. Inside a skribi, you have access to Eta's powerful templating tools and javascript, letting you imbue your template objects with dynamic behaviours.
+Skribi enables **non-destructive** templating: seamlessly integrate complex HTML into your notes, instanced from a single source, without HTML clutter or having to repeat yourself. You can even construct normally impossible element structures, such as rendering markdown inside of block elements - including Obsidian syntax media embedding. Inside a skribi, you have access to Eta's powerful templating tools and javascript, letting you imbue your template objects with dynamic behaviours.
 
 <img style="width: 60%;" src="https://i.imgur.com/t3i7WZg.png" />
 
@@ -10,25 +10,25 @@ Skribi is designed to enable non-destructive templating: seamlessly integrate co
 
 Skribi recognizes inline code elements with curly brackets `{}` and codeblocks of type `skribi`. The contents are processed with Eta, and the output is rendered in place of the code element. The output is updated automatically as you make changes. These render very quickly - without any scripting that causes a delay (like file reads), skribi render times are practically instant. Because they are rendered asynchronously, many skribis can be placed in a document without delaying a note's rendering.
 
-Skribi has two primary modes: template and non-template. Templates are loaded from files in the configured template folder, and invoked with a colon. They may then be followed by pipe-separated values. Note that any pipes in the values must be escaped. Here is a simple example of a template, using the template, and its output in preview mode.
+Skribi has two primary modes: template and non-template. Templates are loaded from files in the configured template folder, and invoked with a colon. They may then be followed by pipe-separated values. Note that any pipes in the values must be escaped. Here is a simple example of a template, invoking the template, and its output in preview mode.
 
 <img style="width: 30%;" src="https://i.imgur.com/RsMl56L.png"/>
 
 Non-template skribis are simply processed directly by Eta. `{= ... }` is sent to Eta as `<%= ... %>`, `{~ ... }` as `<%~ ... %>`, and `{{ ... }}` as `...`.
 
-After being rendered by Eta, the output is rendered to markdown. They are also processed for embeds, meaning that you may use obsidian syntax to insert images or even transclusions from within Eta. Any span with the class `media-embed` but without `is-loaded` will have its embeds repaired. For technical reasons, this is done by the Skribi post-processor, rather than the Obsidian one, so it may have certain discrepancies (but I'll try and fix them) - for example, transclusions will need to be re-rendered to update to file changes, rather than updating live like normal transclusions. Skribis inside of transclusions are processed as well. You may even invoke a skribi from within a skribi (to a depth of 5).
+After being rendered by Eta, the output is rendered to markdown. They are also processed for embeds, meaning that you may use obsidian syntax to insert images or even transclusions from within Eta. Any span with the class `media-embed` but without `is-loaded` will have its embeds repaired. For technical reasons, this is done by the Skribi post-processor, rather than the Obsidian one, so it may have certain discrepancies (but I'll try and fix them - transclusions need to be re-rendered to update to file changes, rather than updating live like normal transclusions, and also block (#header) transclusions don't work yet). Skribis inside of transclusions are processed as well. You may even invoke a skribi from within a skribi (to a depth of 5).
 
-<hr>
+### Scripting
 
 Within a template skribi's Eta context, values passed in are stored in `sk.v`. You can use the function `sk.hasVal(string)` to check if a value exists.
 
 I've also provided the utility function `sk.render()`, which takes a string, renders it to markdown, and outputs the HTML as text. Placing this within a raw tag (`<%~ %>` in a template or `{~ }` in a doc) will then render the HTML as elements (if it parses), whereas in an interpolate tag you'll just get the escaped HTML as text. HTML in a template will already render like any other HTML written in a page, but this is useful to render markdown elements inside of block elements (which Obsidian will not process markdown inside of). 
 
-For example, `<div> ![[<%=sk.v.imgpath%>]] </div>`  will render as a div with the text `![[imgpath]]`, but ``<div> <%~ sk.render(`![[${sk.v.imgpath}]]`)%> </div>`` will render as an image embed span with src `imgpath` inside the div. As an example of the `{{ }}` tags, you could achieve the same with ``{{ <div><%~sk.render(`![[${sk.v.imgpath}]]`)%></div> }}``. 
+For example, `<div> ![[<%=sk.v.imgpath%>]] </div>` will render as a div with the text `![[imgpath]]`, but ``<div> <%~ sk.render(`![[${sk.v.imgpath}]]`)%> </div>`` will render as an image embed span with src `imgpath` inside the div. As an example of the `{{ }}` tags, you could achieve the same with ``{{ <div><%~sk.render(`![[${sk.v.imgpath}]]`)%></div> }}``. 
 
-Because post processors are not applied to block-level elements, skribis instead of block level elements will not render, even if you create the code span with html. Inside of a rendered skribi, nested skribis will render inside of block elements, and may be created with ``sk.render("`{}`")`` or `<code>{ }</code>`, to a depth of 5 (will add a setting to increase limit later).
+Because post processors are not applied to block-level elements, skribis instead of block level elements will not render, even if you create the code span with html. However, inside of a rendered skribi, nested skribis *will* render even inside of block elements, and may be created with ``sk.render("`{}`")`` or `<code>{ }</code>`, to a depth of 5 (will add a setting to increase limit later). You can also call a template directly in javascript with the Eta function `include()`.
 
-Note: the markdown renderer has a tendency to embed everything in `<p>`s and `<div>`s. I'm not sure the best way to deal with that yet, but it's not really a problem - just kind of clutters the DOM a bit. When styling your templates, make sure to use the inspector to see the actual structure of your rendered elements.
+Note: the markdown renderer likes to embed everything in `<p>`s and `<div>`s. I'm not sure the best way to deal with that yet, but it's not really a problem - just kind of clutters the DOM a bit. When styling your templates, make sure to use the inspector to see the actual structure of your rendered elements.
 
 Also, the output is always placed in a div with the attribute `skribi`, with the value set to the name of the template. In CSS, you can target these with `div[skribi="name"]`. `div[skribi]` will select all skribis.
 
@@ -67,7 +67,7 @@ Also, the times inevitably vary somewhat each execution.
 ## Planned Features
 
 - More utility functions (like printing html objects from js)
-- Ways to pass values in other formats (rest, arrays, etc)
+- Ways to pass values in other formats (rest, arrays, anonymous, etc)
 - Options for how the elements are output (turning off the container divs and suppressing the rendermarkdown fluff, for example)
 - Function to export a skribi as an HTML string
 - Recursion limit setting (currently locked to 5)
