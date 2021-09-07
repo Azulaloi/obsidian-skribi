@@ -11,7 +11,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 
 	display(): void {
 		let {containerEl} = this;
-
+ 
 		containerEl.addClass("skribi-settings");
 		containerEl.empty();
 		containerEl.createEl('h2', {text: 'Skribi Settings'});

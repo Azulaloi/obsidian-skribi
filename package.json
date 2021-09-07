@@ -1,14 +1,15 @@
 {
   "name": "obsidian-skribos",
   "version": "0.0.1",
-  "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+  "description": "This is a plugin for Obsidian (https://obsidian.md)",
   "main": "main.js",
   "scripts": {
+    "install-deps": "npm install",
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js --environment BUILD:production"
   },
   "keywords": [],
-  "author": "",
+  "author": "Azulaloi",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^18.0.0",
@@ -19,6 +20,7 @@
     "eta": "^1.12.3",
     "obsidian": "^0.12.0",
     "rollup": "^2.32.1",
+
     "tslib": "^2.2.0",
     "typescript": "^4.2.4"
   }

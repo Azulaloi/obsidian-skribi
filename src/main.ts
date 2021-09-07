@@ -30,7 +30,6 @@ export default class SkribosPlugin extends Plugin {
 		this.registerMarkdownPostProcessor((el, ctx) => process(el, ctx))
 
 		let processBlock = async (mode: ProcessorMode, str: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => { this.processor(mode, el, ctx, null, null, str.trimEnd()) }
-		// this.registerMarkdownCodeBlockProcessor('skribi', processBlock.bind(this));
 		
 		([["normal", "", Flags.none], 
 		["raw", "-raw", Flags.raw], 
@@ -270,7 +269,6 @@ export default class SkribosPlugin extends Plugin {
 /* Check if code block is that good good and if so what type of good good */
 async function preparseSkribi(el: HTMLElement, str?: string, flg?: any) {
 	let text = isExtant(str) ? str : el.textContent
-	console.log(el, str, text)
 	if (text.length < 3) return;
 
 	let e = text.substr(text.length-2)

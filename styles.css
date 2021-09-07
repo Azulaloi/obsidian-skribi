@@ -1,0 +1,98 @@
+div[skribi], div[skribi] p {
+  display: inline;
+}
+
+:root {
+  --skribi-depth-col: lightblue;
+  --skribi-error-col: red;
+  --skribi-wait-col: rgb(111, 126, 214);
+  --skribi-depth-col: lightblue;
+  --skribi-frozen-col:lightblue;
+  --skribi-loading-col:greenyellow;
+  --skribi-self-col: orange;
+}
+
+code.skribi-error {
+  font-family: "Consolas";
+  font-size: 1.1em;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  color: var(--skribi-error-col);
+  padding-right: 0px;
+}
+code.skribi-error::after {
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2216%22%20height%3D%2216%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%2019H5V5h14m0-2H5a2%202%200%200%200-2%202v14a2%202%200%200%200%202%202h14a2%202%200%200%200%202-2V5a2%202%200%200%200-2-2m-8%2012h2v2h-2v-2m0-8h2v6h-2V7%22%20fill%3D%22red%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  display: inline-block;
+  width: 22px;
+  height: 18px;
+  vertical-align: -0.3em;
+  margin-left: 0.2em;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+code.skribi-wait {
+  font-family: "Consolas";
+  font-size: 1.1em;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  color: var(--skribi-wait-col);
+  padding-right: 0px;
+  padding-top: 0px;
+  padding-left: 0.3em;
+}
+code.skribi-wait::after {
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2216%22%20height%3D%2216%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%2012a9%209%200%200%200%209%209c2.39%200%204.68-.94%206.4-2.6l-1.5-1.5A6.706%206.706%200%200%201%2011%2019c-6.24%200-9.36-7.54-4.95-11.95C10.46%202.64%2018%205.77%2018%2012h-3l4%204h.1l3.9-4h-3a9%209%200%200%200-18%200z%22%20fill%3D%22%23a9f%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  display: inline-block;
+  width: 22px;
+  height: 18px;
+  vertical-align: -0.35em;
+  margin-left: 0.3em;
+  animation: rotation 1s linear 0s infinite;
+  transform-origin: 33% 44%;
+}
+
+div.skribi-depth-limit {
+  font-family: "Consolas";
+  font-size: 1.2em;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  color: var(--skribi-depth-col);
+  padding-right: 0px;
+  padding-top: 0px;
+  padding-left: 0.3em;
+}
+div.skribi-depth-limit::after {
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2216%22%20height%3D%2216%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2011.8c1-.4.7-1.8%200-2.4c-1.1-.9-2.7-.4-3.4.8c-1.5%202.4.9%205%203.4%204.9c2.7-.2%204.3-2.9%203.7-5.4c-.7-3-3.9-4.5-6.7-3.6c-2.6.8-4.2%203.5-4%206.2c.3%203%202.6%205.4%205.5%205.9c2.8.5%205.7-.8%207.2-3.2c.7-1.1%201.2-2.4%201.2-3.8c0-.5.5-1%201.1-.9c.8%200%201%20.8.9%201.4c-.4%204.7-4.5%208.6-9.3%208.6c-5.9%200-10.5-6.2-8-11.8C6.1%203.1%2013.9%202%2016.9%207.3c1.5%202.5%201.2%205.8-.9%207.9c-2%202-5.3%202.4-7.7.7c-2.2-1.6-2.9-4.9-1.1-7.2c1.7-2.3%205.5-2.4%207%20.2c1.1%201.9%200%205.2-2.5%204.9c-1.6%200-3-1.7-2.1-3.2c.6-.9%201.9-.6%202.3.1c.2.8.1%201.1.1%201.1z%22%20fill%3D%22%2388f%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  display: inline-block;
+  width: 22px;
+  height: 18px;
+  vertical-align: -0.3em;
+  margin-left: 0.3em;
+  animation: rotation 1s linear 0s infinite;
+  transform-origin: 33% 44%;
+}
+
+code.skribi-frozen {
+  color: var(--skribi-frozen-col);
+}
+
+code.skribi-loading {
+  color: var(--skribi-loading-col);
+}
+
+code.skribi-self {
+  color: var(--skribi-self-col);
+}

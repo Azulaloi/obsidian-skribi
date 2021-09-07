@@ -32,8 +32,8 @@ export function isExtant(obj: any) {
 	return !((obj === null ) || (obj === undefined))
 }
 
-export function roundTo(x: any, to?: number) {
-  return Number.parseFloat(x).toPrecision(to ?? 4);
+export function roundTo(x: any, to?: number): number {
+  return parseFloat(parseFloat(x).toPrecision(to ?? 4));
 }
 
 function getVerbosity() {

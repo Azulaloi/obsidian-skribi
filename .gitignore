@@ -13,4 +13,8 @@ main.js
 # obsidian
 data.json
 
+# vscode
+/.vscode
+
+# notes
 *.txt

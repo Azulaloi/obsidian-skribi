@@ -1,10 +1,11 @@
 {
-	"id": "obsidian-skribos",
-	"name": "Skribos",
-	"version": "1.0.1",
-	"minAppVersion": "0.9.12",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
+	"id": "obsidian-skribi",
+	"name": "Skribi",
+	"version": "0.0.1",
+	"minAppVersion": "0.12.10",
+	"description": "Dynamic live templating for Obsidian.",
 	"author": "Azulaloi",
-	"authorUrl": "https://obsidian.md/about",
+	"authorUrl": "https://github.com/Azulaloi",
+	"repo": "Azulaloi/obsidian-skribi",
 	"isDesktopOnly": false
 }
