@@ -33,6 +33,20 @@ Skribis may render with colors or icons to indicate their state.
 - An empty div with a spinning spiral is rendered in the place of an embed when the depth limit is reached. 
 - Original code but in orange means that the skribi was not rendered because it is invoking itself (if you want this behaviour for some reason let me know and I'll add an option for it).
 
+### Settings
+
+- **Template Folder**
+
+Files in this folder are loaded as templates.
+
+- **Verbose Logging**
+
+Provides (lots of) additional information in the console.
+
+Note on parsing times: the times displayed are *not* consecutive, they're more or less all processed simultaneously. Because postprocessors are called per-block, I can't get the total time (start first render to finish last render) for a document, but it does log total time for each block. You can see that this is the case if you have several skribis in a single block - their individual logs might say 10ms each, but the block says it rendered all five of them in 20ms.
+
+Also, the times vary somewhat each execution.
+
 ### Planned Features
 
 - More utility functions 

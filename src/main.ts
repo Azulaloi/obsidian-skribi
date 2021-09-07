@@ -2,7 +2,7 @@ import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcesso
 import { EtaHandler } from './eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { registerMirror } from './overlay';
-import { isExtant } from './util';
+import { dLog, isExtant, roundTo, vLog } from './util';
 import { embedMedia } from './embed';
 import { TemplateFunction } from 'eta/dist/types/compile';
 
@@ -33,7 +33,7 @@ export default class SkribosPlugin extends Plugin {
 	initLoaded: boolean = false;
 
 	async onload() {
-		console.log('Loading Skribos...');
+		console.log('Skribi: Loading...');
 
 		await this.loadSettings();
 		this.addSettingTab(new SkribosSettingTab(this.app, this));
@@ -49,14 +49,14 @@ export default class SkribosPlugin extends Plugin {
 			if (e?.parent.path.contains(this.settings.templateFolder)) bUpdate(e);
 		}))
 
-		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; console.log("init-load-complete")})
+		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
 
 		// registerMirror(this);
 	}
 
 	onunload() {
 		this.loadEvents.offref(this.initLoadRef)
-		console.log('Unloading Skribos...');
+		console.log('Skribi: Unloading...');
 	}
 
 	async loadSettings() {
@@ -89,64 +89,96 @@ export default class SkribosPlugin extends Plugin {
 		/* determine our depth condition type */
 		let d = self ? depth : (elHasDepth || elElHasDepth) ? elDepth : nestExtant ? nestLevel : 0
 
-		if (!nestExtant && !(elHasDepth || elElHasDepth)) console.log("processor sees no depth")
+		if (!nestExtant && !(elHasDepth || elElHasDepth)) dLog("processor sees no depth")
 
 		if (elHasDepth) { 
-			console.log("elDepth", elDepth, "doc", doc, "el", ctx.el, "conEl", ctx.containerEl) 
+			dLog("elDepth", elDepth, "doc", doc, "el", ctx.el, "conEl", ctx.containerEl) 
 		} else {
-			console.log("processor: ", "doc", doc, "el", ctx.el, "conEl", ctx.containerEl, "nest", ctx.remainingNestLevel)
+			dLog("processor: ", "doc", doc, "el", ctx.el, "conEl", ctx.containerEl, "nest", ctx.remainingNestLevel)
 		}
 
+		var proms: Promise<any>[] = []
+		var temps = 0;
 		const elCodes = doc.querySelectorAll("code")
 		if (!(d <= 0)) {
-			elCodes.forEach(async (el) => {
+			let tm = window.performance.now();
+
+			// elCodes.forEach(/*async*/ (el) => {
+			const elProms = Array.from(elCodes).map(async (el) => {
 				let t = window.performance.now();
-				console.log("start:", t)
+				dLog("start:", t)
+
+				let src = await preparseSkribi(el)
 				try {
-					preparseSkribi(el).then(async (src) => {
-						if (src != null) {
-							el.addClass("skribi-loading") // is this ever visible?
-							switch (src.flag) {
-								case 1: { // Template
-									this.predicate({el: el, src: src.text, mdCtx: ctx, skCtx: {time: t, depth: d, flag: src.flag}})
-									break;
-								} 
-								case 2:
-								case 3:
-								case 4: {
-									this.processSkribi(el, src.text, ctx, {time: t, depth: d, flag: src.flag})
-									break;
-								}
-								default: //return Promise.reject("Invalid flag")
+					if (src != null) {
+						el.addClass("skribi-loading") // is this ever visible?
+						switch (src.flag) {
+							case 1: { // Template
+								proms.push(this.predicate({el: el, src: src.text, mdCtx: ctx, skCtx: {time: window.performance.now(), depth: d, flag: src.flag}}));
+								temps++;
+								break;
+							} 
+							case 2:
+							case 3:
+							case 4: {
+								proms.push(this.processSkribi(el, src.text, ctx, {time: window.performance.now(), depth: d, flag: src.flag}))
+								break;
 							}
-						} 
-					})
+							default: //return Promise.reject("Invalid flag")
+						}
+					} 
 				} catch(e) {
 					if (!e.flags.noRender) {
 						renderError(el, e)
 					}
 				}
+
+				return Promise.resolve()
 			})
+
+		
+			if (/*!self && */!doc.hasClass("skribi-render-virtual")) {
+				let aps = Promise.all(elProms)
+				aps.then(() => {
+					Promise.allSettled(proms).then(() => {
+						if (proms.length > 0) {
+							if (this.initLoaded) {
+								vLog(`Processed ${proms.length} skribis (${roundTo((window.performance.now()-tm), 4)} ms) in Element`, doc)
+							} else {
+								let str = "";
+								if (temps > 0) {
+									if (proms.length - temps > 0) {
+										str = `Processed ${proms.length-temps} and queued ${temps} skribis`;
+									} else str = `Queued ${temps} skribis`;
+								} else str = `Processed ${proms.length-temps} skribis`;
+
+								vLog(str + ` (${roundTo((window.performance.now()-tm), 4)} ms) in Element`, doc)
+							}
+						}
+					})
+				})
+			}
+
 		} else {
 			elCodes.forEach(async (el) => {
 				preparseSkribi(el).then(async (src) => {
 					if (src != null) renderFrozen(el, src.text)
 				})
 			})
-			console.log("processor hit limit"); return; 
+			dLog("processor hit limit"); return; 
 		}
 	}
 
 	/* Await initial loading of templates */
 	async predicate(args: any) {
 		if (!this.initLoaded) {
-			console.log("not yet loaded")
+			dLog("not yet loaded")
 			let el = renderWait(args.el)
-			this.initLoadRef = this.loadEvents.on('init-load-complete', () => {
+			this.initLoadRef = this.loadEvents.on('init-load-complete', async () => {
 				this.initLoaded = true
-				return this.processSkribiTemplate(el, args.src, args.mdCtx, args.skCtx)
+				return await this.processSkribiTemplate(el, args.src, args.mdCtx, Object.assign(args.skCtx, {time: window.performance.now()}))
 			})
-		} else return this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
+		} else return await this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
 	}
 
 	async processSkribiTemplate(
@@ -193,7 +225,7 @@ export default class SkribosPlugin extends Plugin {
 		id: string, 
 		mdCtx: MarkdownPostProcessorContext, 
 		skCtx: SkContext
-	): Promise<void> {
+	): Promise<any> {
 		let file = this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
 		let rendered = await this.eta.renderAsync(con, skCtx?.ctx || {}, file).then((rendered) => {
 			return Promise.resolve(rendered)
@@ -202,17 +234,21 @@ export default class SkribosPlugin extends Plugin {
 			return Promise.resolve(null)
 		})
 
-		console.log("renderSkrib:", el, mdCtx, skCtx)
+		dLog("renderSkrib:", el, mdCtx, skCtx)
 		if (isExtant(rendered)) {
 			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
-			let e = createDiv(); // e.setAttribute("depth", d.toString())
-			MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
+			let e = createDiv({cls: "skribi-render-virtual"}); // e.setAttribute("depth", d.toString())
+			let r = MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
 				e.setAttribute("skribi", id); //e.setAttribute("depth", d.toString());
-				el.replaceWith(e); console.log("finish: ", skCtx.time, window.performance.now())
-				console.log(`Skribi "${id}" rendered in: ${window.performance.now()-skCtx.time} ms`)
+				e.removeClass("skribi-render-virtual")
+				el.replaceWith(e); dLog("finish: ", skCtx.time, window.performance.now())
+				if (skCtx.flag == 1) {
+					vLog(`Rendered template "${id}" (${roundTo(window.performance.now()-skCtx.time, 4)} ms)`, e)
+				} else vLog(`Rendered literal (f: ${skCtx.flag}) (${roundTo(window.performance.now()-skCtx.time, 4)} ms)`, e)
 				return Promise.resolve(e);
-			})
-			.then((e): Promise<any> => {
+			});
+
+			r.then((e): Promise<any> => {
 				// TODO: only restrict depth for transclusions
 				if (isExtant(mdCtx.remainingNestLevel) && (mdCtx.remainingNestLevel > 0) || !isExtant(mdCtx.remainingNestLevel)) {
 					return embedMedia(e, mdCtx.sourcePath, this, skCtx.depth) 
@@ -221,12 +257,14 @@ export default class SkribosPlugin extends Plugin {
 
 			})
 			.then((x) => {
-				console.log("renderer final: ", d)
+				dLog("renderer final: ", d)
 				// e.setAttribute("depth", d.toString())
 				this.processor(e, mdCtx, skCtx.depth-1, true) /* Recurse the processor to parse skreeblings */
 			})
+
+			return r;
 		} else {
-			// return Promise.reject("Render Error");
+			return Promise.reject("Render Error");
 		}
 	}
 }
@@ -266,7 +304,7 @@ async function parseSkribi(src: string): Promise<{
 	var tpCtx = {
 		v: args	
 	};
-	console.log(args)
+	// console.log(args)
 
 	return {id: id, args: tpCtx};
 }
@@ -287,4 +325,5 @@ function renderWait(el: HTMLElement) {
 async function renderFrozen(el: HTMLElement, src: string) {
 	el.removeClass("skribi-loading", "skribi-wait")
 	el.addClass("skribi-frozen")
+	el.setAttribute("title", "Recursion limit reached!")
 }

@@ -31,3 +31,26 @@ export function getFiles(app: App, dir: string): TFile[] {
 export function isExtant(obj: any) {
 	return !((obj === null ) || (obj === undefined))
 }
+
+export function roundTo(x: any, to?: number) {
+  return Number.parseFloat(x).toPrecision(to ?? 4);
+}
+
+function getVerbosity() {
+	//@ts-ignore
+	return window?.app.plugins.plugins["obsidian-skribos"]?.settings?.verboseLogging || false;
+}
+
+export function vLog(...args: any[]) {
+	if (getVerbosity()) {
+		console.log("Skribi:", ...args )
+	}
+}
+
+
+export function dLog(...args: any[]) {
+	//@ts-ignore
+	if (window?.app.plugins.plugins["obsidian-skribos"]?.settings?.devLogging || false) {
+		console.log(...args)
+	}
+}

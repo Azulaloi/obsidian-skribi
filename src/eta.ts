@@ -1,10 +1,8 @@
 import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
-import { App, Events, MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
-import { resolve } from "path";
-import { embedMedia } from "./embed";
+import { MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "./main";
-import { getFiles, isExtant } from "./util";
+import { getFiles, isExtant, roundTo, vLog } from "./util";
 
 const obsidianModule = require("obsidian");
 
@@ -17,7 +15,7 @@ export class EtaHandler {
   baseContext: {[index: string]: any} = { 
     obsidian: obsidianModule,
     render: function(str: string) {
-      let e = createDiv();
+      let e = createDiv({cls: "skribi-render-virtual"});
       MarkdownRenderer.renderMarkdown(str, e, this.file.path, null);
       return e.innerHTML
     }
@@ -38,7 +36,8 @@ export class EtaHandler {
 
   definePartials(...files: TFile[]) {
     let t = window.performance.now();
-    
+    let x = 0;
+
     const reads = files.map(async f => {
       let read = await this.plugin.app.vault.read(f)
       let compiled;
@@ -48,6 +47,8 @@ export class EtaHandler {
       } catch(e) {
         this.failedTemplates.set(f.basename, e || "Template failed to compile.")
         console.warn(`Skribi: template "${f.basename}" failed to compile \n`, e)
+        Eta.templates.remove(f.basename)
+        x++;
       }
 
       if (isExtant(compiled)) {
@@ -67,15 +68,17 @@ export class EtaHandler {
         let loaded = true;
 
         if (loaded) {
+          let str = `Template folder compiled in: ${roundTo(window.performance.now()-t, 4)} ms`
+          if (x) str += `\n Of ${files.length} templates, ${x} failed to compile.`
+          vLog(str);
           this.plugin.loadEvents.trigger('init-load-complete')
-          console.log(`Template folder compiled in: ${window.performance.now()-t} ms`)
         } else {
           console.warn("Skribi had trouble loading...")
         }
       })
     } else {
       // let success = files.map((f) => { let g = Eta.templates.get(f.basename) })
-      console.log(`Updated template "${files[0].basename}" in ${window.performance.now()-t} ms`)
+      vLog(`Updated template "${files[0].basename}" in ${window.performance.now()-t} ms`)
     }
   }
 

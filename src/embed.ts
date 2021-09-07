@@ -1,6 +1,6 @@
 import { MarkdownPostProcessorContext, normalizePath, parseFrontMatterStringArray, MarkdownRenderer, setIcon, MarkdownPreviewView } from "obsidian"
 import SkribosPlugin from "src/main"
-import { isExtant } from "./util"
+import { dLog, isExtant } from "./util"
 
 const extImg = ["bmp", "png", "jpg", "jpeg", "gif", "svg"]
 const extAud = ["mp3", "wav", "m4a", "3gp", "flac", "ogg", "oga"]
@@ -16,8 +16,8 @@ export async function embedMedia (
   depth?: number,
   self?: boolean
 ) {
-  console.log("embed self:", self)
-  console.log("embed:", el)
+  dLog("embed self:", self)
+  dLog("embed:", el)
   var proms: Promise<void>[] = []
 
   const catches = el.querySelectorAll("span.internal-embed") 
@@ -25,7 +25,7 @@ export async function embedMedia (
   let elDepth = el.getAttribute("depth");
   let d = (isExtant(elDepth) ? parseInt(elDepth) : isExtant(depth) ? depth : 0)
 
-  console.log("embedder depth:", d)
+  dLog("embedder depth:", d)
 
 
   for (let fish of Array.from(catches)) {
@@ -63,7 +63,7 @@ export async function embedMedia (
 
         const createEmbedPromise: ()=>Promise<void> = () => {
           return new Promise (async () => {
-            console.log("new embed prom")
+            dLog("new embed prom")
 
             fish.childNodes.forEach((n) => {fish.removeChild(n)})
   
@@ -101,7 +101,7 @@ export async function embedMedia (
           l.setAttribute("title", "It goes on forever...")
           fish.replaceWith(l)
 
-          console.log("embedder hit limit")
+          dLog("embedder hit limit")
         } else {
           proms.push(createEmbedPromise())
         }
@@ -110,7 +110,7 @@ export async function embedMedia (
   }
 
   return Promise.allSettled(proms).then(values => {
-    console.log("embedder done", proms)
+    dLog("embedder done", proms)
     return Promise.resolve(proms.length)
   })
 }
