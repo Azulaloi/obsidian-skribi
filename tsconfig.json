@@ -18,6 +18,5 @@
       "es2020"
     ]
   },
-  "include": ["**/*.ts" ],
-  "exclude": ["src/codemirror/codemirror.js"]
+  "include": ["**/*.ts" ]
 }
