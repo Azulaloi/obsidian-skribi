@@ -18,7 +18,17 @@ export class EtaHandler {
       let e = createDiv({cls: "skribi-render-virtual"});
       MarkdownRenderer.renderMarkdown(str, e, this.file.path, null);
       return e.innerHTML
-    }
+    },
+    // reqIpa: function(str: string) {
+    //   let e: HTMLSpanElement = null;
+
+    //   //@ts-ignore
+    //   try { e = window.app.plugins.plugins["obsidian-az-ipa-utilities"].requestIPA(str) }
+    //   catch(e) { console.log(e)}
+
+    //   if (e) {let d = createDiv(); d.appendChild(e); console.log(d.innerHTML); return d.innerHTML}
+    //   else {return null}
+    // }
   }
 
   constructor(plugin: SkribosPlugin) {

@@ -13,7 +13,9 @@ Non-template skribis are simply processed directly by Eta. `{= ... }` is sent to
 
 After being rendered by Eta, they are rendered to markdown. They are also processed for embeds, meaning that you may use obsidian syntax to insert images or even transclusions from within Eta. Any span with the class `media-embed` but without `is-loaded` will have its embeds repaired. For technical reasons, this is done by the Skribi post-processor, rather than the Obsidian one, so it may have certain discrepancies (but I'll try and fix them) - for example, transclusions will need to be re-rendered to update to file changes, rather than updating live like normal transclusions. Skribis inside of transclusions are processed as well. You may even invoke a skribi from within a skribi (to a depth of 5).
 
-I've also provided the utility function `sk.render()`, which takes a string, renders it to markdown, and outputs the HTML as text. Placing this within a raw tag (`<%~ %>` in a template or `{~ }` in a doc) will then render the HTML as elements (if it parses) - in interpolate tags you'll just the the escaped HTML as text. HTML as text will already render like any other HTML written in a page, but this is useful to render markdown elements inside of block elements (which Obsidian will not process markdown inside of). For example, `<div> <%~ ![[sk.v.imgpath]] %> </div>` will render as a div with the text `![[imgpath]]`, but `<div> <%~ sk.render(\`![[${sk.v.imgpath}]]\`)%> </div>` will render as an image embed span inside the div. 
+I've also provided the utility function `sk.render()`, which takes a string, renders it to markdown, and outputs the HTML as text. Placing this within a raw tag (`<%~ %>` in a template or `{~ }` in a doc) will then render the HTML as elements (if it parses) - in interpolate tags you'll just get the escaped HTML as text. HTML in a template will already render like any other HTML written in a page, but this is useful to render markdown elements inside of block elements (which Obsidian will not process markdown inside of). For example, `<div> ![[<%=sk.v.imgpath%>]] </div>`  will render as a div with the text `![[imgpath]]`, but `<div> <%~ sk.render(\`![[${sk.v.imgpath}]]\`)%> </div>` will render as an image embed span inside the div (plus that way gives you the text suggestion thing when filling in the template field). 
+
+As an example of the `{{ }}` tags: in the above example, `{{ <div><%~sk.render(\`[[${sk.v.imgpath}]]\`)%></div> }}` may be simpler. Because post processors are not applied to block-level elements, skribis instead of block level elements will not render, even if you create the code span with html. Inside of a rendered skribi, nested skribis will render inside of block elements, and may be created with `sk.render("\`{}\`")` or `<code>{ }</code>`, to a depth of 5 (will add a setting to increase limit later).
 
 Note: the markdown renderer has a tendency to embed everything in `<p>`s and `<div>`s. I'm not sure the best way to deal with that yet, but it's not really a problem - just kind of clutters the DOM a bit. When styling your templates, make sure to use the inspector to see the actual structure of your rendered elements.
 
@@ -41,15 +43,22 @@ Files in this folder are loaded as templates.
 
 - **Verbose Logging**
 
-Provides (lots of) additional information in the console.
+Provides (a lot of) additional information in the console.
 
-Note on parsing times: the times displayed are *not* consecutive, they're more or less all processed simultaneously. Because postprocessors are called per-block, I can't get the total time (start first render to finish last render) for a document, but it does log total time for each block. You can see that this is the case if you have several skribis in a single block - their individual logs might say 10ms each, but the block says it rendered all five of them in 20ms.
+Results from each processed block element and individual skribi is logged. Because postprocessors are called per-block, I can't get the total time (start first render to finish last render) for a document, unfortunately. At least, not easily enough to be worth implementing.
 
-Also, the times vary somewhat each execution.
+Note on parsing times: the times displayed are *not* consecutive, they're more or less all processed simultaneously. You can see that this is the case if you have several skribis in a single block - their individual logs might say 10ms each, but the block says it rendered all five of them in 20ms.
+
+The block logs (the ones that say `Processed X skribis in element`) are inflated by 5-10ms or so because of the way I check the results. I'll try and fix that...
+
+Also, the times inevitably vary somewhat each execution.
 
 ### Planned Features
 
-- More utility functions 
+- Codeblock supporty
+- More utility functions (like printing html objects from js)
+- Ways to pass values in other formats (rest, arrays, etc)
+- Options for how the elements are output (turning off the container divs and suppressing the rendermarkdown fluff, for example)
 - Recursion limit setting (currently locked to 5)
 - Loading custom JS as modules (maybe)
 - Syntax highlighting (maybe)

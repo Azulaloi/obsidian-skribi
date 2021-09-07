@@ -5,23 +5,8 @@ import { registerMirror } from './overlay';
 import { dLog, isExtant, roundTo, vLog } from './util';
 import { embedMedia } from './embed';
 import { TemplateFunction } from 'eta/dist/types/compile';
-
-declare module "obsidian" {
-	interface MarkdownPostProcessorContext {
-		containerEl: HTMLElement;
-		el: HTMLElement;
-		remainingNestLevel: number;
-	}
-}
-
-interface SkContext {
-	time: number,
-	flag: number,
-	depth: number,
-	ctx?: any
-}
-
-const SK_DEPTH_LIMIT = 5;
+import { Modes, Flags } from './const';
+import { ProcessorMode, SkContext } from './types';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -40,9 +25,20 @@ export default class SkribosPlugin extends Plugin {
 
 		this.eta = new EtaHandler(this);
 
-		let process: MarkdownPostProcessor = async (el, ctx) => { this.processor(el, ctx) }
+		let process: MarkdownPostProcessor = async (el, ctx) => { this.processor({srcType: Modes.general}, el, ctx, ) }
 		// process.sortOrder = -50
 		this.registerMarkdownPostProcessor((el, ctx) => process(el, ctx))
+
+		let processBlock = async (mode: ProcessorMode, str: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => { this.processor(mode, el, ctx, null, null, str.trimEnd()) }
+		// this.registerMarkdownCodeBlockProcessor('skribi', processBlock.bind(this));
+		
+		([["normal", "", Flags.none], 
+		["raw", "-raw", Flags.raw], 
+		["literal", "-lit", Flags.literal], 
+		["iterpolate", "-int", Flags.interp]])
+		.forEach((v) => {
+			this.registerMarkdownCodeBlockProcessor(`skribi${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
+		})
 
 		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
 		this.registerEvent(this.app.metadataCache.on('changed', e => {
@@ -68,10 +64,12 @@ export default class SkribosPlugin extends Plugin {
 	}
 
 	async processor (
+		mode: ProcessorMode, // 0: codespan; 1: codeblock;
 		doc: HTMLElement,
 		ctx: MarkdownPostProcessorContext,
 		depth?: number,
-		self?: boolean
+		self?: boolean,
+		srcIn?: string
 	) {
 		let nestExtant = isExtant(ctx.remainingNestLevel)
 		let nestLevel = nestExtant ? ctx.remainingNestLevel : null;
@@ -99,16 +97,17 @@ export default class SkribosPlugin extends Plugin {
 
 		var proms: Promise<any>[] = []
 		var temps = 0;
-		const elCodes = doc.querySelectorAll("code")
+		const elCodes = (mode.srcType == Modes.block) ? [doc] : doc.querySelectorAll("code")
 		if (!(d <= 0)) {
 			let tm = window.performance.now();
-
 			// elCodes.forEach(/*async*/ (el) => {
 			const elProms = Array.from(elCodes).map(async (el) => {
 				let t = window.performance.now();
 				dLog("start:", t)
+				
+				let src = (isExtant(mode.flag) && mode.flag != Flags.none) ?
+					{text: srcIn || doc.textContent, flag: mode.flag} : await preparseSkribi(el);
 
-				let src = await preparseSkribi(el)
 				try {
 					if (src != null) {
 						el.addClass("skribi-loading") // is this ever visible?
@@ -135,7 +134,6 @@ export default class SkribosPlugin extends Plugin {
 
 				return Promise.resolve()
 			})
-
 		
 			if (/*!self && */!doc.hasClass("skribi-render-virtual")) {
 				let aps = Promise.all(elProms)
@@ -233,8 +231,8 @@ export default class SkribosPlugin extends Plugin {
 			renderError(el, {msg: err || "Render Error"})
 			return Promise.resolve(null)
 		})
-
-		dLog("renderSkrib:", el, mdCtx, skCtx)
+		
+		dLog("renderSkrib:", el, mdCtx, skCtx, id)
 		if (isExtant(rendered)) {
 			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
 			let e = createDiv({cls: "skribi-render-virtual"}); // e.setAttribute("depth", d.toString())
@@ -259,7 +257,7 @@ export default class SkribosPlugin extends Plugin {
 			.then((x) => {
 				dLog("renderer final: ", d)
 				// e.setAttribute("depth", d.toString())
-				this.processor(e, mdCtx, skCtx.depth-1, true) /* Recurse the processor to parse skreeblings */
+				this.processor({srcType: Modes.general}, e, mdCtx, skCtx.depth-1, true) /* Recurse the processor to parse skreeblings */
 			})
 
 			return r;
@@ -270,8 +268,9 @@ export default class SkribosPlugin extends Plugin {
 }
 
 /* Check if code block is that good good and if so what type of good good */
-async function preparseSkribi(el: HTMLElement) {
-	let text = el.textContent
+async function preparseSkribi(el: HTMLElement, str?: string, flg?: any) {
+	let text = isExtant(str) ? str : el.textContent
+	console.log(el, str, text)
 	if (text.length < 3) return;
 
 	let e = text.substr(text.length-2)
