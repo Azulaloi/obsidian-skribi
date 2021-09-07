@@ -16,7 +16,9 @@ Skribi has two primary modes: template and non-template. Templates are loaded fr
 
 Non-template skribis are simply processed directly by Eta. `{= ... }` is sent to Eta as `<%= ... %>`, `{~ ... }` as `<%~ ... %>`, and `{{ ... }}` as `...`.
 
-After being rendered by Eta, the output is rendered to markdown. They are also processed for embeds, meaning that you may use obsidian syntax to insert images or even transclusions from within Eta. Any span with the class `media-embed` but without `is-loaded` will have its embeds repaired. For technical reasons, this is done by the Skribi post-processor, rather than the Obsidian one, so it may have certain discrepancies (but I'll try and fix them - transclusions need to be re-rendered to update to file changes, rather than updating live like normal transclusions, and also block (#header) transclusions don't work yet). Skribis inside of transclusions are processed as well. You may even invoke a skribi from within a skribi (to a depth of 5).
+After being rendered by Eta, the output is rendered to markdown. They are also processed for embeds, meaning that you may use obsidian syntax to insert images or even transclusions from within Eta. Any span with the class `media-embed` but without `is-loaded` will have its embeds repaired. For technical reasons, this is done by the Skribi post-processor, rather than the Obsidian one, so it may have certain discrepancies (but I'll try and fix them - transclusions need to be re-rendered to update to file changes, rather than updating live like normal transclusions, and also block (#header) transclusions don't work yet). 
+
+Skribis inside of transclusions are processed as well. You may even invoke a skribi from within a skribi (to a depth of 5).
 
 ### Scripting
 

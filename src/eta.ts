@@ -19,16 +19,19 @@ export class EtaHandler {
       MarkdownRenderer.renderMarkdown(str, e, this.file.path, null);
       return e.innerHTML
     },
-    // reqIpa: function(str: string) {
-    //   let e: HTMLSpanElement = null;
+    hasVal: function(v: string) {
+      return !(this.v?.[v] == null)
+    }
+    /*reqIpa: function(str: string) {
+      let e: HTMLSpanElement = null;
 
-    //   //@ts-ignore
-    //   try { e = window.app.plugins.plugins["obsidian-az-ipa-utilities"].requestIPA(str) }
-    //   catch(e) { console.log(e)}
+      //@ts-ignore
+      try { e = window.app.plugins.plugins["obsidian-az-ipa-utilities"].requestIPA(str) }
+      catch(e) { console.log(e)}
 
-    //   if (e) {let d = createDiv(); d.appendChild(e); console.log(d.innerHTML); return d.innerHTML}
-    //   else {return null}
-    // }
+      if (e) {let d = createDiv(); d.appendChild(e); console.log(d.innerHTML); return d.innerHTML}
+      else {return null}
+    }*/
   }
 
   constructor(plugin: SkribosPlugin) {
@@ -45,21 +48,15 @@ export class EtaHandler {
   }
 
   async definePartials(...files: TFile[]) {
-    // let t = window.performance.now();
     let t = (files.length == 0) ? window.performance.now() : 0  
     let x = 0
     let x2 = 0
-    // let final: number = null;
 
     const reads = files.map(async f => {
-      // console.log("b:", window.performance.now())
-
       if (!["md", "eta", "txt"].contains(f.extension)) return Promise.resolve();
 
       let read = await this.plugin.app.vault.cachedRead(f)
-      // console.log("r:", window.performance.now())
 
-      // if (t == 0) t = window.performance.now() // do this here cause waiting for the first read is like 400ms
       let compiled;
       try {
         compiled = Eta.compile(read, {varName: this.varName})
@@ -76,8 +73,6 @@ export class EtaHandler {
         x2++;
       }
 
-      // final = window.performance.now()
-      // console.log("f:", window.performance.now())
       return Promise.resolve();
     })
 
