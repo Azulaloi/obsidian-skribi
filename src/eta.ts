@@ -103,7 +103,7 @@ export class EtaHandler {
 
         if (loaded) {
           if (files.length > 0) {
-            let str = `${x2} template${(x2 == 1) ? "" : "s"}` + `in: ${roundTo(window.performance.now()-t, 4)}ms`
+            let str = `${x2} template${(x2 == 1) ? "" : "s"}` //+ `in: ${roundTo(window.performance.now()-t, 4)}ms`
             if (x) str += `\n Of ${files.length} total templates, ${x} failed to compile.`
             console.log("Skribi: Loaded " + str)
           } 

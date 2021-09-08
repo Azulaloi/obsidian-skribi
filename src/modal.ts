@@ -68,13 +68,10 @@ export class InsertionModal extends Modal {
 
     var arr: AbstractTextComponent<any>[] = [];
 
-    console.log("generate fields:", id)
     if (this.plugin.eta.templateFrontmatters.has(id)) {
       let fm = this.plugin.eta.templateFrontmatters.get(id)
       let pv = []
-      console.log(fm)
       for (let v of Object.keys(fm)) {
-        console.log(v)
         if (v.charAt(0)=="_") {
           let vn = v.substring(1)
           let fma = this.parsePromptVal(vn, fm[v])
@@ -130,7 +127,6 @@ export class InsertionModal extends Modal {
     let toInsert = `\`{:${id}`
 
     for (let e of Object.entries(this.valFields)) {
-      console.log(e)
       toInsert += ` | ${e[0]}: ${e[1]}`
     }
 
