@@ -96,3 +96,7 @@ code.skribi-loading {
 code.skribi-self {
   color: var(--skribi-self-col);
 }
+
+.skribi-modal-field-append {
+  font-style: italic;
+}

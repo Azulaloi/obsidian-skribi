@@ -25,4 +25,21 @@ export interface Template {
 	file: TFile
 }
 
+export interface Stringdex {
+	[index: string]: any
+}
+
 export interface ArgSet {[index: string]: string | string[]};
+
+export enum promptTypes {
+  string = "string"
+}
+
+export interface fieldPrompt {
+	[index: string]: any
+	id: string
+	type: promptTypes
+	name: string
+	placeholder: string
+	default: string
+}

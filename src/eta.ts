@@ -3,7 +3,8 @@ import { TemplateFunction } from "eta/dist/types/compile";
 import { Cacher } from "eta/dist/types/storage";
 import { FrontMatterCache, MarkdownRenderer, parseFrontMatterStringArray, parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "./main";
-import { getFiles, isExtant, roundTo, vLog } from "./util";
+import { Stringdex } from "./types";
+import { getFiles, isExtant, roundTo, vLog, withoutKey } from "./util";
 
 const obsidianModule = require("obsidian");
 
@@ -89,7 +90,7 @@ export class EtaHandler {
       if (isExtant(compiled)) {
         this.failedTemplates.delete(f.basename)
         Eta.templates.define(f.basename, compiled)
-        if (ff) this.templateFrontmatters.set(f.basename, ff)
+        if (ff) this.templateFrontmatters.set(f.basename, withoutKey(ff, "position") as FrontMatterCache)
         x2++;
       }
 
@@ -155,4 +156,3 @@ export class EtaHandler {
 }
 
 const isFile = (item: TAbstractFile) => (item) instanceof TFile; 
-

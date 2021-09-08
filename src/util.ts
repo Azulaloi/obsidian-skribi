@@ -47,10 +47,23 @@ export function vLog(...args: any[]) {
 	}
 }
 
-
 export function dLog(...args: any[]) {
 	//@ts-ignore
 	if (window?.app.plugins.plugins["obsidian-skribos"]?.settings?.devLogging || false) {
 		console.log(...args)
 	}
+}
+
+export function toDupeRecord(arr: string[]): Record<string, string> {
+  return arr.reduce((a, i) => ({...a, [i]: i}), {} as Record<string, string>)
+}
+
+export function withoutKey<T extends { [K in keyof T]: string | number | symbol }>(input: {[index: string]: any}, key: string | string[]) {
+  const clone = { ...input };
+  if (Array.isArray(key)) {
+      (key as string[]).forEach((k) => {
+          delete clone[k]
+      })
+  } else { delete clone[key] }
+  return clone;
 }
