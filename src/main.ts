@@ -7,6 +7,7 @@ import { embedMedia } from './embed';
 import { TemplateFunction } from 'eta/dist/types/compile';
 import { Modes, Flags } from './const';
 import { ProcessorMode, SkContext } from './types';
+import { InsertionModal, SuggestionModal } from './modal';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -31,12 +32,10 @@ export default class SkribosPlugin extends Plugin {
 
 		let processBlock = async (mode: ProcessorMode, str: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => { this.processor(mode, el, ctx, null, null, str.trimEnd()) }
 		
-		([["normal", "", Flags.none], 
-		["raw", "-raw", Flags.raw], 
-		["literal", "-lit", Flags.literal], 
-		["iterpolate", "-int", Flags.interp]])
+		([["normal", "", Flags.none], ["raw", "-raw", Flags.raw], ["literal", "-lit", Flags.literal], ["iterpolate", "-int", Flags.interp]])
 		.forEach((v) => {
 			this.registerMarkdownCodeBlockProcessor(`skribi${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
+			this.registerMarkdownCodeBlockProcessor(`sk${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
 		})
 
 		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
@@ -46,6 +45,20 @@ export default class SkribosPlugin extends Plugin {
 
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
 
+		this.addCommand({id: "insert-skribi", name: "Insert Skribi", 
+			editorCallback: (editor, view) => {
+				if (!this.initLoaded) return;
+				let x = new SuggestionModal(this);
+				new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
+				.then(result => {
+					if (this.eta.hasPartial(result)) {
+						let i = new InsertionModal(this, editor, result)
+						i.open();
+					}
+				}, (r) => {});
+			}})
+
+		
 		// registerMirror(this);
 	}
 

@@ -34,9 +34,10 @@ export async function embedMedia (
     let src = normalizePath(fish.getAttribute("src"))
 
     let dest = plugin.app.metadataCache.getFirstLinkpathDest(src, srcPath)
-    let path = plugin.app.vault.adapter.getResourcePath(dest.path)
     
     if (dest) {
+      let path = plugin.app.vault.adapter.getResourcePath(dest.path)
+
       let ext = dest.extension;
 
       if (extImg.contains(ext)) {// Embed Image

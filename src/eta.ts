@@ -1,6 +1,7 @@
 import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
-import { MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
+import { Cacher } from "eta/dist/types/storage";
+import { FrontMatterCache, MarkdownRenderer, parseFrontMatterStringArray, parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "./main";
 import { getFiles, isExtant, roundTo, vLog } from "./util";
 
@@ -11,6 +12,7 @@ export class EtaHandler {
   varName: string;
 
   failedTemplates: Map<string, string> = new Map();
+  templateFrontmatters: Map<string, FrontMatterCache> = new Map();
 
   baseContext: {[index: string]: any} = { 
     obsidian: obsidianModule,
@@ -21,7 +23,15 @@ export class EtaHandler {
     },
     hasVal: function(v: string) {
       return !(this.v?.[v] == null)
-    }
+    }/*,
+    getWeather: function () {
+      let e = null
+      //@ts-ignore
+      try { e = window.app.plugins.plugins["obsidian-az-style-extender"].weatherHandler.cache }
+      catch(e) { console.log(e)}      
+    
+      return e
+    } */
     /*reqIpa: function(str: string) {
       let e: HTMLSpanElement = null;
 
@@ -55,7 +65,15 @@ export class EtaHandler {
     const reads = files.map(async f => {
       if (!["md", "eta", "txt"].contains(f.extension)) return Promise.resolve();
 
-      let read = await this.plugin.app.vault.cachedRead(f)
+      let read = await this.plugin.app.vault.cachedRead(f);
+      
+      let ff = this.plugin.app.metadataCache.getFileCache(f)?.frontmatter
+      
+      if (ff) {
+        let n = (/(?<frontmatter>^---.*?(?=\n---)\n---)/s).exec(read);
+        let nf = isExtant(n?.groups?.frontmatter) ? n.groups.frontmatter : null
+        if (nf) { read = read.substr(nf?.length || 0); } //console.log(parseFrontMatterStringArray(ff, "prompt"));
+      }
 
       let compiled;
       try {
@@ -64,12 +82,14 @@ export class EtaHandler {
         this.failedTemplates.set(f.basename, e || "Template failed to compile.")
         console.warn(`Skribi: template "${f.basename}" failed to compile \n`, e)
         Eta.templates.remove(f.basename)
+        this.templateFrontmatters.delete(f.basename)
         x++;
       }
 
       if (isExtant(compiled)) {
         this.failedTemplates.delete(f.basename)
         Eta.templates.define(f.basename, compiled)
+        if (ff) this.templateFrontmatters.set(f.basename, ff)
         x2++;
       }
 
@@ -82,7 +102,7 @@ export class EtaHandler {
 
         if (loaded) {
           if (files.length > 0) {
-            let str = `${x2} template${(x2 == 1) ? "" : "s"}` //in: ${roundTo(final-t, 4)}ms`
+            let str = `${x2} template${(x2 == 1) ? "" : "s"}` + `in: ${roundTo(window.performance.now()-t, 4)}ms`
             if (x) str += `\n Of ${files.length} total templates, ${x} failed to compile.`
             console.log("Skribi: Loaded " + str)
           } 
@@ -96,12 +116,19 @@ export class EtaHandler {
     }
   }
 
-  getPartial(id: string) {
-    return Eta.templates.get(id)
+  getPartial(id: string) {return Eta.templates.get(id)}
+
+  hasPartial(id: string) {return isExtant(Eta.templates.get(id))}
+
+  getCache(): Cacher<TemplateFunction> {return Eta.templates}
+
+  getCacheStore(): Record<string, TemplateFunction> {
+    //@ts-ignore
+    return Eta.templates.cache as Record<string, TemplateFunction>
   }
 
-  getCache() {
-    return Eta.templates
+  getCacheKeys(): string[] {
+    return Object.keys(this.getCacheStore())
   }
 
   async renderAsync(content: string | TemplateFunction, ctxIn?: any, file?: TFile): Promise<string> {
@@ -128,3 +155,4 @@ export class EtaHandler {
 }
 
 const isFile = (item: TAbstractFile) => (item) instanceof TFile; 
+
