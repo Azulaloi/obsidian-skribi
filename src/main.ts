@@ -1,12 +1,10 @@
-import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer, Plugin } from 'obsidian';
-import { EtaHandler } from './eta';
+import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownRenderer, Plugin } from 'obsidian';
+import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
-import { registerMirror } from './overlay';
 import { dLog, isExtant, roundTo, vLog } from './util';
 import { embedMedia } from './embed';
-import { TemplateFunction } from 'eta/dist/types/compile';
 import { Modes, Flags } from './const';
-import { ProcessorMode, SkContext } from './types';
+import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types';
 import { InsertionModal, SuggestionModal } from './modal';
 
 export default class SkribosPlugin extends Plugin {
@@ -41,6 +39,7 @@ export default class SkribosPlugin extends Plugin {
 		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
 		this.registerEvent(this.app.metadataCache.on('changed', e => {
 			if (e?.parent.path.contains(this.settings.templateFolder)) bUpdate(e);
+			if (e?.parent.path.contains(this.settings.scriptFolder)) this.eta.bus.scriptLoader.fileUpdated(e);
 		}))
 
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
@@ -177,6 +176,8 @@ export default class SkribosPlugin extends Plugin {
 			})
 			dLog("processor hit limit"); return; 
 		}
+
+		return Promise.resolve();
 	}
 
 	/* Await initial loading of templates */
@@ -231,13 +232,26 @@ export default class SkribosPlugin extends Plugin {
 
 	async renderSkribi(
 		el: HTMLElement, 
-		con: string | TemplateFunction, 
+		con: string | TemplateFunctionScoped, 
 		id: string, 
 		mdCtx: MarkdownPostProcessorContext, 
 		skCtx: SkContext
 	): Promise<any> {
 		let file = this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
-		let rendered = await this.eta.renderAsync(con, skCtx?.ctx || {}, file).then((rendered) => {
+
+		let e = createDiv({cls: "skribi-render-virtual"});
+		let c = new SkribiChild(e)
+		Object.assign(c, { rerender: (() => {console.log("e"); c.clear(); this.renderSkribi(e, con, id, mdCtx, skCtx)}).bind(this)}) 
+		let ctx = Object.assign({}, skCtx?.ctx || {}, {
+			child: {
+				setInterval: c.setInterval.bind(c),
+				reload: c.rerender,
+			}
+		})
+
+		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file).then((rendered) => {
+			// console.log("rendered:", rendered)
+
 			return Promise.resolve(rendered)
 		}, (err) => {
 			renderError(el, {msg: err || "Render Error"})
@@ -247,7 +261,6 @@ export default class SkribosPlugin extends Plugin {
 		dLog("renderSkrib:", el, mdCtx, skCtx, id)
 		if (isExtant(rendered)) {
 			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
-			let e = createDiv({cls: "skribi-render-virtual"}); // e.setAttribute("depth", d.toString())
 			let r = MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
 				e.setAttribute("skribi", id); //e.setAttribute("depth", d.toString());
 				e.removeClass("skribi-render-virtual")
@@ -257,6 +270,9 @@ export default class SkribosPlugin extends Plugin {
 				} else vLog(`Rendered literal (f: ${skCtx.flag}) (${roundTo(window.performance.now()-skCtx.time, 4)} ms)`, e)
 				return Promise.resolve(e);
 			});
+
+			c.setPacket(packet)
+			mdCtx.addChild(c);
 
 			r.then((e): Promise<any> => {
 				// TODO: only restrict depth for transclusions
@@ -274,6 +290,7 @@ export default class SkribosPlugin extends Plugin {
 
 			return r;
 		} else {
+			c.clear();
 			return Promise.reject("Render Error");
 		}
 	}
@@ -336,4 +353,41 @@ async function renderFrozen(el: HTMLElement, src: string) {
 	el.removeClass("skribi-loading", "skribi-wait")
 	el.addClass("skribi-frozen")
 	el.setAttribute("title", "Recursion limit reached!")
+}
+
+class SkribiChild extends MarkdownRenderChild {
+	packet: Stringdex
+	intervals: number[] = [];
+	
+	constructor(el: HTMLElement) {
+		super(el)
+	}
+
+	setPacket(packet: Stringdex) {
+		if (this.packet == null) {
+			this.packet = packet;
+		}
+	}
+
+	setInterval(cb: Function, time: number, ...args: any[]) {
+		let x = window.setInterval((...x: any) => cb(...x), time * 1000 * 60, ...args)
+		this.intervals.push(x)
+		return x;
+	}
+
+	onload() {
+
+	}
+
+	rerender() {}
+
+	clear() {
+		//console.log("clear")
+		for (let i of this.intervals) window.clearInterval(i)
+	}
+
+	onunload() {
+		this.clear()
+		//console.log("ah, I die")
+	}
 }

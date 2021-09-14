@@ -1,3 +1,5 @@
+import { EtaConfig } from "eta/dist/types/config";
+import { CallbackFn } from "eta/dist/types/file-handlers";
 import { TFile } from "obsidian";
 import { Modes, Flags } from "./const";
 
@@ -43,3 +45,12 @@ export interface fieldPrompt {
 	placeholder: string
 	default: string
 }
+
+export interface scopedVars extends Stringdex {
+  sk: object, 
+  E: EtaConfig, 
+  cb?: CallbackFn, 
+  scope?: Stringdex
+}
+
+export declare type TemplateFunctionScoped = (scope: scopedVars) => Promise<string>;

@@ -1,5 +1,7 @@
 # Skribi
 
+**Warning**: this plugin is not yet released, and may be subject to breaking changes (such as syntax alterations).
+
 Skribi implements [Eta](https://eta.js.org/) templating in [Obsidian](https://obsidian.md/) in a manner akin to [Scribunto](https://www.mediawiki.org/wiki/Extension:Scribunto), the scripted template framework used by MediaWiki. Create a template, pass variables to it, and render the output in your notes.
 
 Skribi enables **non-destructive** templating: seamlessly integrate complex HTML into your notes, instanced from a single source, without HTML clutter or having to repeat yourself. You can even construct normally impossible element structures, such as rendering markdown inside of block elements - including Obsidian syntax media embedding. Inside a skribi, you have access to Eta's powerful templating tools and javascript, letting you imbue your template objects with dynamic behaviours.
@@ -22,9 +24,44 @@ Skribis inside of transclusions are processed as well. You may even invoke a skr
 
 ### Scripting
 
-Within a template skribi's Eta context, values passed in are stored in `sk.v`. You can use the function `sk.hasVal(string)` to check if a value exists.
+First, understand the **[Eta Syntax](https://eta.js.org/docs/syntax)**.
 
-I've also provided the utility function `sk.render()`, which takes a string, renders it to markdown, and outputs the HTML as text. Placing this within a raw tag (`<%~ %>` in a template or `{~ }` in a doc) will then render the HTML as elements (if it parses), whereas in an interpolate tag you'll just get the escaped HTML as text. HTML in a template will already render like any other HTML written in a page, but this is useful to render markdown elements inside of block elements (which Obsidian will not process markdown inside of). 
+Here is what your local context looks like:
+
+- `E, cb`: Internal values.
+- `tR`: Holds the text to be returned. I recommend only interacting with this if you're familiar with Eta. 
+- `this`: Contains objects belonging to the skribi context.
+- `sk`: Contains Skribi functions.
+- `v: {[index: string]: string}`: Values passed to a template. Empty in a non-template context. 
+- `s: {[index: string]: Function | {[index: string]: Function}}`: Loaded JS modules, [details](#loading-javascript-modules)
+
+#### `this`
+
+##### - `file: TFile`
+
+The file in which the skribi is located. ![TFile definition](https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts#L2872).
+
+##### - `plugin: SkribosPlugin`
+
+The Skribi plugin itself. 
+
+#### `sk`
+
+##### - `has(foo: string)`
+
+Shorthand for `!((v[foo] == null) || (v[foo] == undefined))`
+
+##### - `child.reload()`
+
+Forces the skribi to rerender.
+
+##### - `child.setInterval(cb: Function, time: number, ...args: any[])`
+
+Creates an interval that executes the callback `cb` every `time` minutes (`time * 1000 * 60`ms) with `args`. Interval is unregistered when skribi render child is destroyed.
+
+##### - `render(str: string)`
+
+Takes a string, renders it to markdown, and outputs the HTML as text. Placing this within a raw tag (`<%~ %>` in a template or `{~ }` in a doc) will then render the HTML as elements (if it parses), whereas in an interpolate tag you'll just get the escaped HTML as text. HTML in a template will already render like any other HTML written in a page, but this is useful to render markdown elements inside of block elements (which Obsidian will not process markdown inside of). 
 
 For example, `<div> ![[<%=sk.v.imgpath%>]] </div>` will render as a div with the text `![[imgpath]]`, but ``<div> <%~ sk.render(`![[${sk.v.imgpath}]]`)%> </div>`` will render as an image embed span with src `imgpath` inside the div. As an example of the `{{ }}` tags, you could achieve the same with ``{{ <div><%~sk.render(`![[${sk.v.imgpath}]]`)%></div> }}``. 
 
@@ -33,6 +70,10 @@ Because post processors are not applied to block-level elements, skribis instead
 Note: the markdown renderer likes to embed everything in `<p>`s and `<div>`s. I'm not sure the best way to deal with that yet, but it's not really a problem - just kind of clutters the DOM a bit. When styling your templates, make sure to use the inspector to see the actual structure of your rendered elements.
 
 Also, the output is always placed in a div with the attribute `skribi`, with the value set to the name of the template. In CSS, you can target these with `div[skribi="name"]`. `div[skribi]` will select all skribis.
+
+### Loading Javascript Modules
+
+Any `js` files inside the directory configured in the **Script Directory** setting (path relative to vault) will be loaded by Skribi and made available within the local context under the `s` object. Declare the exports with `module.exports = exports`, where exports is either: a function, or an object containing functions, ex: `module.exports = {foo, fum}`. If only one function is exported, it will exist as `s.x()` where `x` is the name of the **file**. If multiple functions are exported, they will exist *in* `s.x`, ex: `s.x.foo(), s.x.fum()`.    
 
 ## State Indicators
 

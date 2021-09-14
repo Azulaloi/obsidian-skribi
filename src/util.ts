@@ -1,4 +1,4 @@
-import { App, normalizePath, TFile, TFolder, Vault } from "obsidian";
+import { App, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
 
 declare global {
 	interface Element {
@@ -18,7 +18,7 @@ export function getFiles(app: App, dir: string): TFile[] {
 	let fo = app.vault.getAbstractFileByPath(dirPath);
 
 	// console.log(dirPath), console.log(fo);
-	if (!fo || !(fo instanceof TFolder)) throw "bronk";
+	if (!fo || !(fo instanceof TFolder)) throw `Skribi: Could not find folder ${dirPath}`;
 
 	let files: TFile[] = [];
 	Vault.recurseChildren(fo, (fi) => {
@@ -26,6 +26,23 @@ export function getFiles(app: App, dir: string): TFile[] {
 	})
 
 	return files;
+}
+
+export const isFile = (item: TAbstractFile) => (item) instanceof TFile; 
+
+
+export function checkFileExt(files: TFile[] | TFile, exts: string[] | string): boolean {
+	exts = toArray(exts)
+	return toArray(files).every((f) => {return exts.contains(f.extension)})
+}
+
+export function filterFileExt(files: TFile[] | TFile, exts: string[] | string): TFile[] {
+	exts = toArray(exts)
+	return toArray(files).filter((f) => {if (checkFileExt(f, exts)) return f})
+}
+
+export function toArray(args: any | any[]): any[] {
+	return (Array.isArray(args) ? args : [args])
 }
 
 export function isExtant(obj: any) {
@@ -38,7 +55,7 @@ export function roundTo(x: any, to?: number): number {
 
 function getVerbosity() {
 	//@ts-ignore
-	return window?.app.plugins.plugins["obsidian-skribos"]?.settings?.verboseLogging || false;
+	return window.app.plugins.plugins["obsidian-skribi"]?.settings.verboseLogging || false;
 }
 
 export function vLog(...args: any[]) {
@@ -49,7 +66,7 @@ export function vLog(...args: any[]) {
 
 export function dLog(...args: any[]) {
 	//@ts-ignore
-	if (window?.app.plugins.plugins["obsidian-skribos"]?.settings?.devLogging || false) {
+	if (window?.app.plugins.plugins["obsidian-skribi"]?.settings?.devLogging || false) {
 		console.log(...args)
 	}
 }
@@ -67,3 +84,8 @@ export function withoutKey<T extends { [K in keyof T]: string | number | symbol 
   } else { delete clone[key] }
   return clone;
 }
+
+export const asyncFunc = Object.getPrototypeOf(async function(){}).constructor
+export const promiseImpl: PromiseConstructor = new Function('return this')().Promise
+
+

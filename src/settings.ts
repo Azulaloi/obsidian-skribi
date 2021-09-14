@@ -19,12 +19,22 @@ export class SkribosSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Template Directory')
 			.setDesc('Skribi will look for templates in this folder.')
-			.addTextArea((text: TextAreaComponent) => text
+			.addTextArea((text: TextAreaComponent) => {text
 				.setValue(this.plugin.settings.templateFolder)
 				.onChange(async (value) => {
 					this.plugin.settings.templateFolder = value;
 					await this.plugin.saveSettings();
-				}));
+				}); text.inputEl.cols = 30; return text});
+
+		new Setting(containerEl)
+			.setName('Skript Directory')
+			.setDesc('Skribi will look for JS files in this folder.')
+			.addTextArea((text: TextAreaComponent) => {text
+				.setValue(this.plugin.settings.scriptFolder)
+				.onChange(async (value) => {
+					this.plugin.settings.scriptFolder = value;
+					await this.plugin.saveSettings();
+				}); text.inputEl.cols = 30; return text});
 
 		new Setting(containerEl)
 			.setName('Verbose Logging')
@@ -40,12 +50,14 @@ export class SkribosSettingTab extends PluginSettingTab {
 
 export interface SkribosSettings {
 	templateFolder: string;
+	scriptFolder: string;
 	verboseLogging: boolean;
 	devLogging: boolean;
 }
 
 export const DEFAULT_SETTINGS: SkribosSettings = {
 	templateFolder: "",
+	scriptFolder: "",
 	verboseLogging: false,
 	devLogging: false,
 }
