@@ -40,9 +40,19 @@ export class EtaHandler {
     this.varName = plugin.varName;
 
     if (!this.plugin.app.workspace.layoutReady) {
-      this.plugin.app.workspace.onLayoutReady((async () => {this.bus.init()}).bind(this.bus))
-      this.plugin.app.workspace.onLayoutReady(async () => this.initPartials())  
-    } else {this.initPartials(); this.bus.init();}
+      this.plugin.app.workspace.onLayoutReady(async () => this.initLoad())
+    } else {this.initLoad()}
+  }
+
+  async initLoad() {
+    let a = this.bus.init()
+    let b = this.initPartials()
+
+    return Promise.allSettled([a, b])
+  }
+
+  unload() {
+    this.bus.unload()
   }
 
   // Testing closures in skript context
@@ -105,25 +115,32 @@ export class EtaHandler {
       return Promise.resolve();
     })
 
-    if (!this.plugin.initLoaded ) {
-      Promise.allSettled(reads).then(() => {
-        let loaded = true;
 
-        if (loaded) {
-          if (files.length > 0) {
-            let str = `${x2} template${(x2 == 1) ? "" : "s"}` //+ `in: ${roundTo(window.performance.now()-t, 4)}ms`
-            if (x) str += `\n Of ${files.length} total templates, ${x} failed to compile.`
-            console.log("Skribi: Loaded " + str)
-          } 
-          this.plugin.loadEvents.trigger('init-load-complete')
-        } else {
-          console.warn("Skribi had trouble loading...")
-        }
-      })
+    await Promise.allSettled(reads)
+
+    if (!this.plugin.initLoaded ) {
+      let loaded = true;
+
+      if (loaded) {
+        if (files.length > 0) {
+          let str = `${x2} template${(x2 == 1) ? "" : "s"}` //+ `in: ${roundTo(window.performance.now()-t, 4)}ms`
+          if (x) str += `\n Of ${files.length} total templates, ${x} failed to compile.`
+          console.log("Skribi: Loaded " + str)
+        } 
+        this.plugin.loadEvents.trigger('init-load-complete')
+      } else {
+        console.warn("Skribi had trouble loading...")
+      }
     } else {
       this.setDirty(false);
       vLog(`Updated template "${files[0].basename}" in ${window.performance.now()-t}ms`)
     }
+
+    return Promise.resolve()
+  }
+
+  deleteTemplate(...files: TFile[]) {
+    /* do deletion */
   }
 
   setDirty(dirty: boolean) {
@@ -132,23 +149,19 @@ export class EtaHandler {
   }
 
   getPartial(id: string) {
-    // return Eta.templates.get(id)
     return this.templates.get(id)
   }
 
   hasPartial(id: string) {
-    // return isExtant(Eta.templates.get(id))
     return isExtant(this.templates.get(id))
   }
 
   getCache(): Cacher<TemplateFunctionScoped> {
-    // return Eta.templates
     return this.templates
   }
 
   getCacheStore(): Record<string, TemplateFunctionScoped> {
     //@ts-ignore
-    // return Eta.templates.cache as Record<string, TemplateFunction>
     return this.templates.cache as Record<string, TemplateFunctionScoped>
   }
 

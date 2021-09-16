@@ -1,7 +1,7 @@
-import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownRenderer, Plugin } from 'obsidian';
+import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderChild, MarkdownRenderer, Plugin, TAbstractFile, TFile } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
-import { dLog, isExtant, roundTo, vLog } from './util';
+import { dLog, isExtant, isFile, roundTo, vLog } from './util';
 import { embedMedia } from './embed';
 import { Modes, Flags } from './const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types';
@@ -38,19 +38,23 @@ export default class SkribosPlugin extends Plugin {
 
 		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
 		this.registerEvent(this.app.metadataCache.on('changed', e => {
-			if (e?.parent.path.contains(this.settings.templateFolder)) { bUpdate(e); }
+			// if (e?.parent.path.contains(this.settings.templateFolder)) { bUpdate(e); }
 		}))
 
 		this.registerEvent(this.app.vault.on('modify', e => {
-			if (e?.parent.path.contains(this.settings.scriptFolder)) { this.eta.bus.scriptLoader.fileUpdated(e); }
+			if (this.isInScripts(e)) this.eta.bus.scriptLoader.fileUpdated(e);
+			if (this.isInTemplates(e)) bUpdate(e);
+
 		}))
 
 		this.registerEvent(this.app.vault.on('delete', e => {
-			if (e?.parent.path.contains(this.settings.scriptFolder)) { this.eta.bus.scriptLoader.fileDeleted(e); }
+			if (this.isInScripts(e)) this.eta.bus.scriptLoader.fileDeleted(e);
+			if (this.isInTemplates(e)) this.eta.deleteTemplate(e as TFile)
 		}))
 
 		this.registerEvent(this.app.vault.on('create', e => {
-			if (e?.parent.path.contains(this.settings.scriptFolder)) { this.eta.bus.scriptLoader.fileAdded(e); }
+			if (this.isInScripts(e)) this.eta.bus.scriptLoader.fileAdded(e);
+			if (this.isInTemplates(e)) bUpdate(e);
 		}))
 
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
@@ -72,7 +76,12 @@ export default class SkribosPlugin extends Plugin {
 		// registerMirror(this);
 	}
 
+	isInTemplates = (e: TAbstractFile) => this.isInFolder(e, this.settings.templateFolder)
+	isInScripts = (e: TAbstractFile) => this.isInFolder(e, this.settings.scriptFolder)
+	isInFolder = (e: TAbstractFile, path: string) => (isFile(e) && e.path.contains(path))
+	
 	onunload() {
+		this.eta.unload()
 		this.loadEvents.offref(this.initLoadRef)
 		console.log('Skribi: Unloading...');
 	}
@@ -122,7 +131,6 @@ export default class SkribosPlugin extends Plugin {
 		const elCodes = (mode.srcType == Modes.block) ? [doc] : doc.querySelectorAll("code")
 		if (!(d <= 0)) {
 			let tm = window.performance.now();
-			// elCodes.forEach(/*async*/ (el) => {
 			const elProms = Array.from(elCodes).map(async (el) => {
 				let t = window.performance.now();
 				dLog("start:", t)
@@ -394,7 +402,7 @@ class SkribiChild extends MarkdownRenderChild {
 
 	clear() {
 		//console.log("clear")
-		for (let i of this.intervals) window.clearInterval(i)
+		for (let i of this.intervals) window.clearInterval(i) // there might be cases where this doesn't get called properly
 	}
 
 	onunload() {

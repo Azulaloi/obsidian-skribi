@@ -4,9 +4,7 @@ import { Provider } from "../provider_abs";
 import { ProviderBus } from "../provider_bus";
 
 export class ProviderScriptloader extends Provider {
-
   namespace = "s"
-  initLoaded = false;
 
   constructor(bus: ProviderBus) {
     super(bus)    
@@ -16,8 +14,7 @@ export class ProviderScriptloader extends Provider {
     return this.loadFiles(...getFiles(this.bus.plugin.app, this.bus.plugin.settings.scriptFolder))
     .then((ret) => {
       this.setFunc(ret)
-      this.initLoaded = true;
-      return Promise.resolve();
+      return super.init()
     })
   }
 
