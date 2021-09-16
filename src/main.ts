@@ -38,8 +38,19 @@ export default class SkribosPlugin extends Plugin {
 
 		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
 		this.registerEvent(this.app.metadataCache.on('changed', e => {
-			if (e?.parent.path.contains(this.settings.templateFolder)) bUpdate(e);
-			if (e?.parent.path.contains(this.settings.scriptFolder)) this.eta.bus.scriptLoader.fileUpdated(e);
+			if (e?.parent.path.contains(this.settings.templateFolder)) { bUpdate(e); }
+		}))
+
+		this.registerEvent(this.app.vault.on('modify', e => {
+			if (e?.parent.path.contains(this.settings.scriptFolder)) { this.eta.bus.scriptLoader.fileUpdated(e); }
+		}))
+
+		this.registerEvent(this.app.vault.on('delete', e => {
+			if (e?.parent.path.contains(this.settings.scriptFolder)) { this.eta.bus.scriptLoader.fileDeleted(e); }
+		}))
+
+		this.registerEvent(this.app.vault.on('create', e => {
+			if (e?.parent.path.contains(this.settings.scriptFolder)) { this.eta.bus.scriptLoader.fileAdded(e); }
 		}))
 
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})

@@ -16,10 +16,11 @@ export class ProviderBus {
   constructor(handler: EtaHandler) {
     this.handler = handler
     this.plugin = handler.plugin
+    
+    this.scriptLoader = new ProviderScriptloader(this);
   }
 
   async init() {
-    this.scriptLoader = new ProviderScriptloader(this);
     await this.scriptLoader.init(); this.providers.push(this.scriptLoader);
 
     this.createScope()

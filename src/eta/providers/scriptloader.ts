@@ -1,4 +1,4 @@
-import { FileSystemAdapter, TFile } from "obsidian";
+import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
 import { filterFileExt, getFiles, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
 import { ProviderBus } from "../provider_bus";
@@ -22,6 +22,7 @@ export class ProviderScriptloader extends Provider {
   }
 
   setFunc(funcs: [string, Function][]) {
+    
     funcs.map((r) => {if (r) {
       this.functions.delete(r[0])
       if (Array.isArray(r[1]))
@@ -59,10 +60,28 @@ export class ProviderScriptloader extends Provider {
     })
   }
 
-  fileUpdated(e: TFile) {
+  clearJS(...files: TFile[]) {
+    for (let f of filterFileExt(files, "js")) {
+      this.functions.delete(f.basename)
+    }
+  }
+
+  fileUpdated(e: TAbstractFile) {
+    if (!(e instanceof TFile)) return;
     this.bus.handler.setDirty(true)
-		this.loadFiles(e).then((ret) => this.setFunc(ret), (err) => this.functions.delete(e.basename))
+
+    this.clearJS(e)
+		this.loadFiles(e).then((ret) => this.setFunc(ret), (err) => this.clearJS(e))
 	}
+
+  fileDeleted(e: TAbstractFile) {
+    if (!(e instanceof TFile)) return;
+    this.clearJS(e)
+  }
+
+  fileAdded(e: TAbstractFile) {
+    this.fileUpdated(e)
+  }
 
   reload() {
     this.functions.clear()
