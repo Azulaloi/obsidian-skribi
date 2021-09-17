@@ -31,6 +31,12 @@ export class EtaHandler {
     has: function(v: string) {
       return !((this.v?.[v] == null) || (this.v?.[v] == undefined))
     },
+    abort: function(s: string | Stringdex) {
+      let abortPacket = String.isString(s) 
+      ? {hasData: true, flag: 'abort', hover: s} 
+      : Object.assign({hasData: true, flag: 'abort'}, s)
+      throw abortPacket
+    },
     provide_stat: this.provide_stat()
   }
 
@@ -94,12 +100,10 @@ export class EtaHandler {
           'E': null,
           'cb': null,
           ...busScope})
-        // compiled = Eta.compile(read, {varName: this.varName})
       } catch(e) {
         this.failedTemplates.set(f.basename, e || "Template failed to compile.")
         console.warn(`Skribi: template "${f.basename}" failed to compile \n`, e, read)
         this.templates.remove(f.basename)
-        // Eta.templates.remove(f.basename)
         this.templateFrontmatters.delete(f.basename)
         x++;
       }
@@ -107,7 +111,6 @@ export class EtaHandler {
       if (isExtant(compiled)) {
         this.failedTemplates.delete(f.basename)
         this.templates.define(f.basename, await compiled)
-        // Eta.templates.define(f.basename, compiled)
         if (ff) this.templateFrontmatters.set(f.basename, withoutKey(ff, "position") as FrontMatterCache)
         x2++;
       }
@@ -208,7 +211,7 @@ export class EtaHandler {
     if (ren instanceof Promise) {
       return await ren.then((r) => {return Promise.resolve([r, z])}, (r) => {return Promise.reject(r)})
     } else if (String.isString(ren)) { return Promise.resolve([ren as string, z]) }
-    else return Promise.reject("Unknown error")
+    else return Promise.reject("EtaHandler.renderAsync: Unknown Error")
   }
 
   async renderAsyncNaive(content: string, ctxIn?: any, varName?: any) {
@@ -236,7 +239,7 @@ export class EtaHandler {
       return (binder) ? this.templates.get(options.name).bind(binder) : this.templates.get(options.name)
     }
   
-    const templateFunc = typeof template === 'function' ? template : compileWithScope(Eta.compileToString(template, options), scope || {})
+    const templateFunc = typeof template === 'function' ? template : compileWithScope(Eta.compileToString(template, options), scope || {}, options.async)
   
     if (options.name) this.templates.define(options.name, templateFunc);
   
@@ -256,14 +259,14 @@ function renderEta(
   const options = Eta.getConfig(config || {})
 
   if (options.async) {
-    if (cb) {
-      try {
-        const templateFn = handler.getCached(template, options, scope, binder)
-        templateFn(scope)
-      } catch(e) {
-        return cb(e)
-      }
-    } else {
+    // if (cb) { /* haven't even tested this but I have no use for it right now cause I don't use the callback */
+      // try { 
+        // const templateFn = handler.getCached(template, options, scope, binder)
+        // templateFn(scope)
+      // } catch(e) {
+        // return cb(e)
+      // }
+    // } else {
       return new promiseImpl(function (resolve: Function, reject: Function) {
         try {
           resolve(handler.getCached(template, options, scope, binder)(scope))
@@ -271,7 +274,7 @@ function renderEta(
           reject(e)
         }
       })
-    }
+    // }
   } else {
     return handler.getCached(template, options, scope, binder)(scope)
   }
@@ -289,7 +292,11 @@ function renderEtaAsync(
     return renderEta(handler, template, data, Object.assign({}, config, {async: false}), cb, scope, binder)
 }
 
-function compileWithScope(f: string, scope: Stringdex): TemplateFunctionScoped {
+function getAsyncConstructor(): Function {
+  return new Function('return (async function(){}).constructor')()
+}
+
+function compileWithScope(f: string, scope: Stringdex, async?: boolean): TemplateFunctionScoped {
   var a = ""; var b = "";
   for (var v in scope) {
     a += `${v},`;
@@ -298,13 +305,10 @@ function compileWithScope(f: string, scope: Stringdex): TemplateFunctionScoped {
 
   let func = `var {${a.substr(0, a.length-1)}} = scope;\n` + f
 
-  // console.log(func)
-  // let AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
-  // let c = new AsyncFunction('scope', func)
+  let constructor = (async) ? (getAsyncConstructor() as FunctionConstructor) : Function 
 
-  // let c = new Function('sk', 'E', 'cb', 'scope', func)
+  // let compiled = new Function('scope', func)
+  let compiled = new constructor('scope', func)
 
-  let c = new Function('scope', func)
-
-  return c as TemplateFunctionScoped
+  return compiled as TemplateFunctionScoped
 }

@@ -55,6 +55,9 @@ export class ProviderBus {
     
     for (let p of this.providers) spaces[p.namespace] = p.createObject();
 
+    //@ts-ignore
+    spaces['dv'] = this.plugin.app.plugins.plugins['dataview'].api || null
+
     this.curScope = spaces
     return this.curScope
   }

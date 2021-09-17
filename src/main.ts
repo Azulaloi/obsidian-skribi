@@ -6,6 +6,9 @@ import { embedMedia } from './embed';
 import { Modes, Flags } from './const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types';
 import { InsertionModal, SuggestionModal } from './modal';
+import { SkribiChild } from './render/child';
+import { preparseSkribi, parseSkribi } from './render/parse';
+import { renderError, renderState, renderWait } from './render/regent';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -30,7 +33,7 @@ export default class SkribosPlugin extends Plugin {
 
 		let processBlock = async (mode: ProcessorMode, str: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => { this.processor(mode, el, ctx, null, null, str.trimEnd()) }
 		
-		([["normal", "", Flags.none], ["raw", "-raw", Flags.raw], ["literal", "-lit", Flags.literal], ["iterpolate", "-int", Flags.interp]])
+		([["normal", "", Flags.none], ["raw", "-raw", Flags.raw], ["literal", "-lit", Flags.literal], ["interpolate", "-int", Flags.interp], ["evaluate", "-eval", Flags.eval]])
 		.forEach((v) => {
 			this.registerMarkdownCodeBlockProcessor(`skribi${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
 			this.registerMarkdownCodeBlockProcessor(`sk${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
@@ -126,6 +129,8 @@ export default class SkribosPlugin extends Plugin {
 			dLog("processor: ", "doc", doc, "el", ctx.el, "conEl", ctx.containerEl, "nest", ctx.remainingNestLevel)
 		}
 
+
+		/* Dispatch render promises */
 		var proms: Promise<any>[] = []
 		var temps = 0;
 		const elCodes = (mode.srcType == Modes.block) ? [doc] : doc.querySelectorAll("code")
@@ -149,7 +154,8 @@ export default class SkribosPlugin extends Plugin {
 							} 
 							case 2:
 							case 3:
-							case 4: {
+							case 4: 
+							case 5: {
 								proms.push(this.processSkribi(el, src.text, ctx, {time: window.performance.now(), depth: d, flag: src.flag}))
 								break;
 							}
@@ -188,9 +194,11 @@ export default class SkribosPlugin extends Plugin {
 			}
 
 		} else {
+			/* Depth too high! */
+
 			elCodes.forEach(async (el) => {
 				preparseSkribi(el).then(async (src) => {
-					if (src != null) renderFrozen(el, src.text)
+					if (src != null) renderState(el, {hover: "Recursion limit reached!", class: 'stasis'})
 				})
 			})
 			dLog("processor hit limit"); return; 
@@ -243,6 +251,7 @@ export default class SkribosPlugin extends Plugin {
 				case 2: return `<%=${src}%>`; 
 				case 3: return `<%~${src}%>`; 
 				case 4: return str;
+				case 5: return `<%${src}%>`;
 			} 
 		}
 
@@ -260,20 +269,21 @@ export default class SkribosPlugin extends Plugin {
 
 		let e = createDiv({cls: "skribi-render-virtual"});
 		let c = new SkribiChild(e)
-		Object.assign(c, { rerender: (() => {console.log("e"); c.clear(); this.renderSkribi(e, con, id, mdCtx, skCtx)}).bind(this)}) 
-		let ctx = Object.assign({}, skCtx?.ctx || {}, {
-			child: {
-				setInterval: c.setInterval.bind(c),
-				reload: c.rerender,
-			}
-		})
+		Object.assign(c, { rerender: (() => {
+				console.log("e"); 
+				c.clear(); 
+				this.renderSkribi(e, con, id, mdCtx, skCtx)}).bind(this)
+			}) 
+			
+		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: c.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file).then((rendered) => {
 			// console.log("rendered:", rendered)
-
 			return Promise.resolve(rendered)
 		}, (err) => {
-			renderError(el, {msg: err || "Render Error"})
+			/* Errors thrown inside the skribi are caught here */
+			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"})
+			c.unload()
 			return Promise.resolve(null)
 		})
 		
@@ -312,101 +322,5 @@ export default class SkribosPlugin extends Plugin {
 			c.clear();
 			return Promise.reject("Render Error");
 		}
-	}
-}
-
-/* Check if code block is that good good and if so what type of good good */
-async function preparseSkribi(el: HTMLElement, str?: string, flg?: any) {
-	let text = isExtant(str) ? str : el.textContent
-	if (text.length < 3) return;
-
-	let e = text.substr(text.length-2)
-	let s = text.substr(0, 2)
-	
-	if (s.startsWith("{") && e.endsWith("}")) {
-		let f = s[1];
-		let flag = (f == ":") ? 1 : (f == "=") ? 2 : (f == "~") ? 3 : (f == "{") ? 4 : -1;
-		if ((flag > 0) && (flag != 4 || (e == "}}"))) {
-			return {flag: flag, text: text.substring(2, text.length - (flag == 4 ? 2 : 1 ))}
-		} else return
-	} else return
-}
-
-/* Parse arguments for template skreebs */
-async function parseSkribi(src: string): Promise<{
-	id: string,
-	args: any
-}> {
-	let sa = src.split(/(?<![\\])\|/)
-	let id = sa.splice(0, 1)[0].trim()
-
-	let args: Record<string, string> = {};
-	for (let seg of sa) {
-		let si = seg.indexOf(":")
-		if (si == -1) continue;
-		args[seg.slice(0, si).trim()] = seg.slice(si+1).trim();
-	}
-
-	var tpCtx = {
-		v: args	
-	};
-	// console.log(args)
-
-	return {id: id, args: tpCtx};
-}
-
-async function renderError(el: HTMLElement, e: any) {
-	const pre = createEl("code", {cls: "skribi-error", text: "sk"})
-	el.removeClass("skribi-loading", "skribi-wait")
-	if (e?.msg) pre.setAttribute("title", e.msg);
-	el.replaceWith(pre)
-}
-
-function renderWait(el: HTMLElement) {
-	const pre = createEl("code", {cls: "skribi-wait", text: "sk"})
-	el.replaceWith(pre)
-	return pre
-}
-
-async function renderFrozen(el: HTMLElement, src: string) {
-	el.removeClass("skribi-loading", "skribi-wait")
-	el.addClass("skribi-frozen")
-	el.setAttribute("title", "Recursion limit reached!")
-}
-
-class SkribiChild extends MarkdownRenderChild {
-	packet: Stringdex
-	intervals: number[] = [];
-	
-	constructor(el: HTMLElement) {
-		super(el)
-	}
-
-	setPacket(packet: Stringdex) {
-		if (this.packet == null) {
-			this.packet = packet;
-		}
-	}
-
-	setInterval(cb: Function, time: number, ...args: any[]) {
-		let x = window.setInterval((...x: any) => cb(...x), time * 1000 * 60, ...args)
-		this.intervals.push(x)
-		return x;
-	}
-
-	onload() {
-
-	}
-
-	rerender() {}
-
-	clear() {
-		//console.log("clear")
-		for (let i of this.intervals) window.clearInterval(i) // there might be cases where this doesn't get called properly
-	}
-
-	onunload() {
-		this.clear()
-		//console.log("ah, I die")
 	}
 }

@@ -16,5 +16,6 @@ export const enum Flags {
 	template = 1,
 	interp = 2,
 	raw = 3,
-	literal = 4
+	literal = 4,
+	eval = 5
 }

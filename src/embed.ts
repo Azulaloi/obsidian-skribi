@@ -1,5 +1,6 @@
 import { MarkdownPostProcessorContext, normalizePath, parseFrontMatterStringArray, MarkdownRenderer, setIcon, MarkdownPreviewView } from "obsidian"
 import SkribosPlugin from "src/main"
+import { createRegent } from "./render/regent"
 import { dLog, isExtant } from "./util"
 
 const extImg = ["bmp", "png", "jpg", "jpeg", "gif", "svg"]
@@ -98,8 +99,7 @@ export async function embedMedia (
         }
 
         if (d <= 0)  {
-          let l = createDiv({cls: "skribi-depth-limit"})
-          l.setAttribute("title", "It goes on forever...")
+          let [l] = createRegent({class: "depth-limit", hover: "It goes on forever..."})
           fish.replaceWith(l)
 
           dLog("embedder hit limit")
