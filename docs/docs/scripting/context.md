@@ -4,7 +4,7 @@ Within the skribi evaluation context, a number of functions and variables are av
 
 - `this`: A container object.
     - `plugin`: A reference to the Skribi plugin. 
-    - `file`: The `TFile` inside of which the skribi is being rendered. 
+    - `file`: The `TFile` inside of which the skribi is being rendered. See: ![TFile](https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts#L2872).
     - `app`: The Obsidian app.
 - `sk`: Contains various utility functions and references.   
     - `child`: The MarkdownRenderChild descendant.

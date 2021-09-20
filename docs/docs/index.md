@@ -1,26 +1,13 @@
 # Outline
 
-Skribi provides live templating inside of Obsidian, powered by Eta.
+Skribi implements [Eta](https://eta.js.org/) templating in [Obsidian](https://obsidian.md/) in a manner akin to [Scribunto](https://www.mediawiki.org/wiki/Extension:Scribunto), the scripted template framework used by MediaWiki. Create a template, pass variables to it, and render the output in your notes.
+
+Skribi enables **non-destructive** templating: seamlessly integrate complex HTML into your notes, instanced from a single source, without HTML clutter or having to repeat yourself. You can even construct normally impossible element structures, such as rendering markdown inside of block elements - including Obsidian syntax media embedding. Inside a skribi, you have access to Eta's powerful templating tools and javascript, letting you imbue your template objects with dynamic behaviours.
 
 ## Usage Details
 
-Skribis are placed inside of inline or block code elements, and are processed asynchronously during markdown rendering. There are two primary types of skribis: template and non-template. The contents of template invocations are sent to the template, while that of non-templates are processed by Eta.
+Skribi recognizes inline code elements with curly brackets `{}` and codeblocks of type `skribi`. The contents are processed with Eta, and the output is rendered in place of the code element. The output is updated automatically as you make changes. These render very quickly - without any scripting that causes a delay (like file reads), skribi render times are practically instant. Because they are rendered asynchronously, many skribis can be placed in a document without delaying a note's rendering.
 
-To create an inline skribi, use curly brackets. There are four types of non-template flags that wrap the contents in Eta tags for convenience. 
+Skribi has two primary modes: template and non-template. Templates are loaded from files in the configured template folder, and invoked with a colon. They may then be followed by pipe-separated values. Note that any pipes in the values must be escaped.
 
-- `{: }` - **Template**: Invokes a template.
-- `{= }` - **Interpolate**: Processed as `<%= ... %>`
-- `{~ }` - **Raw Interpolate**: Processed as `<%~ ... %>`
-- `{. }` - **Evaluation**: Processed as `<% ... %>`
-- `{{ }}` - **Literal**: Processed as ` ... `
-
-To use a codeblock, set the block's language to `skribi` or `sk`. Without a flag, these are processed literally, meaning that they must start and end with `{ }`, just like an inline. To add a flag, suffix the type with `-flag` where flag is one of the following:
-
-- `int` - **Interpolate**: Processed as `{= ... }`
-- `raw` - **Raw Interpolate**: Processed as `{~ ... }`
-- `eval` - **Evaluate**: Processed as `{. ... }`
-- `lit` - **Literal**: Processed as `{{ ... }}`
-
-## Template Invocation
-
-Skribi compiles files in the configured **Template Directory** as templates. When invoked, variables can be passed to the template. The name and value are separated by a colon, and the variables are separated by pipes: `|`. Pipes inside variables must be backslash-escaped: `\|`.
+See: [Skribi Syntax](/syntax/skribi) and [Template Invocation](/syntax/templates)
