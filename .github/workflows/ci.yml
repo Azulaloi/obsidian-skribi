@@ -14,6 +14,6 @@ jobs:
         with:
           python-version: 3.x
       - run: |
-          pip install mkdocs pymdownx admonition
+          pip install mkdocs pymdownx.highlight pymdownx.superfences pymdownx.inlinehilite admonition
           cd docs
           mkdocs gh-deploy --force
