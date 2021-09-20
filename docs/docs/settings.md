@@ -1,4 +1,4 @@
-# Settings
+# Plugin Settings
 
 ## **Template Folder**
 

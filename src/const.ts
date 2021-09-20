@@ -1,4 +1,4 @@
-import { ArgSet } from "./types";
+import { ArgSet } from "./types/types";
 
 export const DELIMITERS: ArgSet = {
 	"PASS_VALUE": [":"]

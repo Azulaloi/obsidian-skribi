@@ -4,8 +4,6 @@ import { Provider } from "../provider_abs";
 import { ProviderBus } from "../provider_bus";
 
 export class ProviderScriptloader extends Provider {
-  namespace = "s"
-
   constructor(bus: ProviderBus) {
     super(bus)    
   }

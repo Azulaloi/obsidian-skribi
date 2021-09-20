@@ -1,4 +1,4 @@
-import { App, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
 
 declare global {
 	interface Element {
@@ -89,3 +89,22 @@ export const asyncFunc = Object.getPrototypeOf(async function(){}).constructor
 export const promiseImpl: PromiseConstructor = new Function('return this')().Promise
 
 
+/* Will get active view, or first preview view with same file as active view */
+export function getPreviewView(app: App, flip?: boolean): MarkdownView {
+	let t1 = flip ? "preview" : "source"
+	let t2 = flip ? "source" : "preview"
+
+	var view = app.workspace.getActiveViewOfType(MarkdownView);
+	if (view.getMode() == t1) {
+		app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
+			if ((leaf.view as MarkdownView).getMode() == t2) {
+				let z = (leaf.view as MarkdownView).previewMode
+				if (z.getFile() == view.file) {
+					view = leaf.view as MarkdownView
+				}
+			}
+		})
+	}
+
+	return view;
+}

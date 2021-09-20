@@ -1,6 +1,6 @@
 import { AbstractTextComponent, App, Editor, EditorRangeOrCaret, EditorSelection, FuzzySuggestModal, KeymapEventHandler, Modal, Setting, TextComponent, ValueComponent } from "obsidian";
 import SkribosPlugin from "./main";
-import { fieldPrompt, promptTypes, Stringdex } from "./types";
+import { fieldPrompt, promptTypes, Stringdex } from "./types/types";
 import { isExtant, toDupeRecord } from "./util";
 
 export class InsertionModal extends Modal {

@@ -22,7 +22,7 @@ export default {
     exports: 'default',
     banner,
   },
-  external: ['obsidian'],
+  external: ['obsidian', 'obsidian-dataview'],
   plugins: [
     typescript(),
     nodeResolve({browser: true}),

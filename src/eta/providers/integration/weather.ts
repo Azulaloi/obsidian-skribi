@@ -1,29 +1,9 @@
-import { Provider } from "../provider_abs";
-import { ProviderBus } from "../provider_bus";
-import type WeatherAPI from "../../../../obsidian-weather/src/api";
-
+import { Provider } from "../../provider_abs";
+import { ProviderBus } from "../../provider_bus";
+import type WeatherAPI from "../../../../../obsidian-weather/src/api";
 import { EventRef } from "obsidian";
 
-declare module 'obsidian' {
-  interface App {
-    plugins: {
-      plugins: {
-        "obsidian-weather"?: {
-          API: WeatherAPI
-        }  
-      }
-    }
-  }
-
-  interface Workspace {
-		on(name: 'az-weather:api-ready', callback: () => any, ctx?: any): EventRef;
-		on(name: 'az-weather:api-unload', callback: () => any, ctx?: any): EventRef;
-		on(name: 'az-weather:api-tick', callback: () => any, ctx?: any): EventRef;
-	}
-}
-
 export class ProviderWeather extends Provider {
-  namespace = "weather"
   weatherAPI: WeatherAPI = null
 
   private eventRefs: {

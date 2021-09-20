@@ -1,4 +1,4 @@
-# Metadata
+# Template Metadata
 
 Frontmatter in a template file is omitted from the template, and used to inform Skribi about your template.
 

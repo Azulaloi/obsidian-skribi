@@ -1,10 +1,9 @@
-import { Stringdex } from "src/types";
+import { Stringdex } from "src/types/types";
 import { ProviderBus } from "./provider_bus";
 
 export interface IProvider {
 
   bus: ProviderBus
-  namespace: string;
   functions: Map<string, any>;
   createObject(): Stringdex;
   init(): Promise<void>;                   // Called once, on bus load
@@ -14,7 +13,6 @@ export interface IProvider {
 
 export abstract class Provider implements IProvider {
   bus: ProviderBus;
-  namespace: string;
   functions: Map<string, any> = new Map()
   initLoaded = false;
 

@@ -1,5 +1,5 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
-import { Stringdex } from "src/types";
+import { Stringdex } from "src/types/types";
 
 export class SkribiChild extends MarkdownRenderChild {
 	packet: Stringdex
@@ -47,7 +47,10 @@ export class SkribiChild extends MarkdownRenderChild {
   /* To Provide */
 
   skRegisterInterval(cb: Function, time: number, ...args: any[]) {
-		let x = window.setInterval((...x: any) => cb(...x), time * 1000, ...args)
+		//@ts-ignore
+		let x = window.setInterval((...a: any) => {if (this._loaded == false) {window.clearInterval(x)}
+			cb(...a)}, time * 1000, ...args)
+		// this.registerInterval(x)
 		this.intervals.push(x)
 		return x;
 	}

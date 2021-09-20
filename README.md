@@ -138,7 +138,6 @@ Also, the times inevitably vary somewhat each execution.
 - Options for how the elements are output (turning off the container divs and suppressing the rendermarkdown fluff, for example)
 - Function to export a skribi as an HTML string
 - Recursion limit setting (currently locked to 5)
-- Loading custom JS as modules (maybe)
 - Syntax highlighting (maybe)
   
 ## Why "Skribi"?

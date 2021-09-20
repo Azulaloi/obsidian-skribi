@@ -1,14 +1,13 @@
 import * as Eta from "eta";
+import { TemplateFunction } from "eta/dist/types/compile";
 import { EtaConfig, PartialConfig } from "eta/dist/types/config";
 import { CallbackFn } from "eta/dist/types/file-handlers";
 import { FrontMatterCache, MarkdownRenderer, TFile } from "obsidian";
 import SkribosPlugin from "../main";
-import { scopedVars, Stringdex, TemplateFunctionScoped } from "../types";
+import { DynamicState, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { checkFileExt, getFiles, isExtant, isFile, promiseImpl, vLog, withoutKey } from "../util";
 import { Cacher } from "./cacher";
 import { ProviderBus } from "./provider_bus";
-
-const obsidianModule = require("obsidian");
 
 export class EtaHandler {
   plugin: SkribosPlugin;
@@ -21,23 +20,7 @@ export class EtaHandler {
   templatesDirty: boolean = false;
 
   baseContext: {[index: string]: any} = { 
-    // obsidian: obsidianModule,
-    render: function(str: string) {
-      let e = createDiv({cls: "skribi-render-virtual"});
-      console.log(this)
-      MarkdownRenderer.renderMarkdown(str, e, this.this.file.path, null);
-      return e.innerHTML
-    },
-    has: function(v: string) {
-      return !((this.v?.[v] == null) || (this.v?.[v] == undefined))
-    },
-    abort: function(s: string | Stringdex) {
-      let abortPacket = String.isString(s) 
-      ? {hasData: true, flag: 'abort', hover: s} 
-      : Object.assign({hasData: true, flag: 'abort'}, s)
-      throw abortPacket
-    },
-    provide_stat: this.provide_stat()
+    // provide_stat: this.provide_stat()
   }
 
   constructor(plugin: SkribosPlugin) {
@@ -77,7 +60,7 @@ export class EtaHandler {
     let x = 0
     let x2 = 0
 
-    var busScope = this.bus.getScope(true)
+    var busScope = this.bus.getScope(null, true)
 
     const reads = files.map(async f => {
       if (!checkFileExt(f, ["md", "eta", "txt"])) return Promise.resolve();
@@ -147,7 +130,7 @@ export class EtaHandler {
   }
 
   setDirty(dirty: boolean) {
-    if (dirty) this.bus.createScope()
+    if (dirty) this.bus.createStaticScope()
     this.templatesDirty = dirty
   }
 
@@ -172,7 +155,7 @@ export class EtaHandler {
     return Object.keys(this.getCacheStore())
   }
 
-  async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile, packet?: any): Promise<[string, Stringdex]> {
+  async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
     if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file.path}`);
 
     let z: Stringdex = {};
@@ -187,7 +170,8 @@ export class EtaHandler {
     /* the 'this' object of the sk context*/
     let binder = {
       file: file,
-      plugin: this.plugin
+      plugin: this.plugin,
+      app: this.plugin.app
     }
 
     /* The 'sk' object */
@@ -195,6 +179,7 @@ export class EtaHandler {
       this.baseContext,
       ctxIn || {}, 
       {up: p(), this: binder},
+      this.bus.getBase()
     )
 
     /* scope of the tfunc env */
@@ -202,10 +187,12 @@ export class EtaHandler {
       'sk': sk,
       'E': cfg,
       'cb': null,
-      ...this.bus.getScope()
+      ...this.bus.getScope(),
     }
 
-    let ren = renderEtaAsync(this, content, {}, cfg, null, scope, binder)
+    let ren = (content.toString().contains('await')) 
+    ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
+    : renderEta(this, content, {}, cfg, null, scope, binder)
 
     // console.log("psuedo post:", sk)
     if (ren instanceof Promise) {
@@ -214,9 +201,11 @@ export class EtaHandler {
     else return Promise.reject("EtaHandler.renderAsync: Unknown Error")
   }
 
-  async renderAsyncNaive(content: string, ctxIn?: any, varName?: any) {
+  /* this is somehow 1.3x slower than renderAsync */
+  async renderAsyncNaive(content: string | Function, ctxIn?: any, varName?: any) {
+    console.log('Skribos: renderAsyncNaive invoked', content, ctxIn)
     let context = Object.assign({}, this.baseContext, ctxIn || {})
-    let ren = Eta.renderAsync(content, context, {varName: varName ?? this.varName})
+    let ren = Eta.renderAsync(content as (string | TemplateFunction), context, {varName: varName ?? this.varName})
 
     if (ren instanceof Promise) {
       return await ren.then((r) => {return Promise.resolve(r)}, (r) => {return Promise.reject(r)})
@@ -280,6 +269,7 @@ function renderEta(
   }
 }
 
+/* Using async templatefunctions has very small perf impact */
 function renderEtaAsync(
   handler: EtaHandler,
   template: string | TemplateFunctionScoped,
@@ -289,7 +279,8 @@ function renderEtaAsync(
   scope?: scopedVars,
   binder?: any
   ): string | Promise<string> | void {
-    return renderEta(handler, template, data, Object.assign({}, config, {async: false}), cb, scope, binder)
+    console.log()
+    return renderEta(handler, template, data, Object.assign({}, config, {async: true}), cb, scope, binder)
 }
 
 function getAsyncConstructor(): Function {

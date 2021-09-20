@@ -5,12 +5,16 @@ Within the skribi evaluation context, a number of functions and variables are av
 - `this`: A container object.
     - `plugin`: A reference to the Skribi plugin. 
     - `file`: The `TFile` inside of which the skribi is being rendered. 
+    - `app`: The Obsidian app.
 - `sk`: Contains various utility functions and references.   
-    - `child`: The MarkdownRenderChild descendant
+    - `child`: The MarkdownRenderChild descendant.
+- `scope`: Contains the objects added to the local context.
 - `E, cb`: Internal Eta values.
 - `tR`: The text return object that contains the output.
 - `v`: Contains variables passed to the template. In a non-template context, this object is empty.
 - `s`: Contains JS functions and function-containing objects loaded from the configured **Script Directory**, as outlined in [Scriptloading](/scripting/scriptloading).
+- `moment`: A reference to the global moment object. See [MomentJS](https://momentjs.com/) for documentation
+- Any loaded [Integration Modules](#conditional-integrations)
 
 ## sk
 
@@ -35,15 +39,19 @@ Registers the function `cb` to be called every `t` seconds with the arguments `a
 - `#!ts registerUnload(cb: Function, ...args: any[]): void`  
 Registers a callback to be executed on unload.
 - `#!ts registerEvent(event: EventRef): void`
-Registers an EventRef to be properly cleared on unload.
-
+Registers an EventRef to be offref'd on unload.
+- `#!ts c: SkribiChild extends MarkdownRenderChild`   
+A direct reference to the MarkdownRenderChild object. Note: use the functions on `sk.child` rather than those `sk.child.c`. 
 
 ## Conditional Integrations
 
 If certain plugins are found to be loaded, an object containing functions for interacting with the plugin will be available.
 
-- [Weather](https://github.com/Azulaloi/obsidian-weather)  
-Available as `weather`. Access the current weather cache with `weather.dispenseCache()`. Better documentation for this will be added when Weather is released. Also, Weather adds three events to `app.workspace`: `az-weather:api-ready`, `az-weather:api-unload`, and `az-weather:api-tick`. Tick triggers whenever the weathercache is updated, and can be used to trigger a rerender through `sk.child.registerEvent()`.
-
 - [Dataview](https://github.com/blacksmithgu/obsidian-dataview)  
-Available as `dv`. Currently this is just a direct reference to the plugin API, but I'll add all the gizmos to make it work smoothly soon. 
+Available as `dv`. Currently this is just a direct reference to the [plugin API](https://github.com/blacksmithgu/obsidian-dataview/blob/master/src/api/plugin-api.ts) (NOT the inline API aka dataviewjs), but I'll add all the gizmos to make it work smoothly soon. 
+
+As an example, to render a dataview table, one would call `#!ts dv.table(tableColumns, tableData, sk.child.el, sk.child.c, this.file.path)`. Note that dataview render functions like `dv.table` are not synchronous, so the rendered table will be appended to the element after it is rendered.
+
+- [Weather](https://github.com/Azulaloi/obsidian-weather)  
+Available as `weather`. Access the current weather cache with `weather.dispenseCache()`. Better documentation for this will be added when Weather is released. 
+

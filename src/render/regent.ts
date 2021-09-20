@@ -54,4 +54,6 @@ export function renderRegent(el: HTMLElement, dataIn?: RegentData) {
 	let [pre, data] = createRegent(dataIn)
 	if (data.clear) el.className = "";
 	el.replaceWith(pre)
+
+	return pre
 }

@@ -1,15 +1,8 @@
 import { EtaConfig } from "eta/dist/types/config";
 import { CallbackFn } from "eta/dist/types/file-handlers";
 import { TFile } from "obsidian";
-import { Modes, Flags } from "./const";
-
-declare module "obsidian" {
-	interface MarkdownPostProcessorContext {
-		containerEl: HTMLElement;
-		el: HTMLElement;
-		remainingNestLevel: number;
-	}
-}
+import { SkribiChild } from "src/render/child";
+import { Modes, Flags } from "../const";
 
 export interface SkContext {
 	time: number,
@@ -54,3 +47,9 @@ export interface scopedVars extends Stringdex {
 }
 
 export declare type TemplateFunctionScoped = (scope: scopedVars) => Promise<string>;
+
+export interface DynamicState {
+  el: HTMLElement,
+  file: TFile,
+  child: SkribiChild
+}
