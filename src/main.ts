@@ -2,8 +2,8 @@ import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcesso
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { dLog, getPreviewView, isExtant, isFile, roundTo, vLog } from './util';
-import { embedMedia } from './embed';
-import { Modes, Flags } from './const';
+import { embedMedia } from './render/embed';
+import { Modes, Flags } from './types/const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types/types';
 import { InsertionModal, SuggestionModal } from './modal';
 import { SkribiChild } from './render/child';
@@ -39,25 +39,8 @@ export default class SkribosPlugin extends Plugin {
 			this.registerMarkdownCodeBlockProcessor(`sk${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
 		})
 
-		let bUpdate = debounce(this.eta.definePartials.bind(this.eta), 500, true)
 		this.registerEvent(this.app.metadataCache.on('changed', e => {
 			// if (e?.parent.path.contains(this.settings.templateFolder)) { bUpdate(e); }
-		}))
-
-		this.registerEvent(this.app.vault.on('modify', e => {
-			if (this.isInScripts(e)) this.eta.bus.scriptLoader.fileUpdated(e);
-			if (this.isInTemplates(e)) bUpdate(e);
-
-		}))
-
-		this.registerEvent(this.app.vault.on('delete', e => {
-			if (this.isInScripts(e)) this.eta.bus.scriptLoader.fileDeleted(e);
-			if (this.isInTemplates(e)) this.eta.deleteTemplate(e as TFile)
-		}))
-
-		this.registerEvent(this.app.vault.on('create', e => {
-			if (this.isInScripts(e)) this.eta.bus.scriptLoader.fileAdded(e);
-			if (this.isInTemplates(e)) bUpdate(e);
 		}))
 
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
@@ -130,10 +113,6 @@ export default class SkribosPlugin extends Plugin {
 		
 		// registerMirror(this);
 	}
-
-	isInTemplates = (e: TAbstractFile) => this.isInFolder(e, this.settings.templateFolder)
-	isInScripts = (e: TAbstractFile) => this.isInFolder(e, this.settings.scriptFolder)
-	isInFolder = (e: TAbstractFile, path: string) => (isFile(e) && e.path.contains(path))
 	
 	onunload() {
 		this.eta.unload()

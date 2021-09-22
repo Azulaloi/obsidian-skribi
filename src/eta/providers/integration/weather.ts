@@ -12,10 +12,6 @@ export class ProviderWeather extends Provider {
     tick: EventRef
   }
 
-  constructor(bus: ProviderBus) {
-    super(bus)
-  }
-
   async init() {
     this.checkForAPI()
     console.log("init providerweather")

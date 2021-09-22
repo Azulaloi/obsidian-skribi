@@ -2,7 +2,7 @@ import { EtaConfig } from "eta/dist/types/config";
 import { CallbackFn } from "eta/dist/types/file-handlers";
 import { TFile } from "obsidian";
 import { SkribiChild } from "src/render/child";
-import { Modes, Flags } from "../const";
+import { Modes, Flags } from "./const";
 
 export interface SkContext {
 	time: number,

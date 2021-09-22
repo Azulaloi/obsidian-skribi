@@ -1,7 +1,7 @@
 import { MarkdownPostProcessorContext, normalizePath, parseFrontMatterStringArray, MarkdownRenderer, setIcon, MarkdownPreviewView } from "obsidian"
 import SkribosPlugin from "src/main"
-import { createRegent } from "./render/regent"
-import { dLog, isExtant } from "./util"
+import { createRegent } from "./regent"
+import { dLog, isExtant } from "../util"
 
 const extImg = ["bmp", "png", "jpg", "jpeg", "gif", "svg"]
 const extAud = ["mp3", "wav", "m4a", "3gp", "flac", "ogg", "oga"]

@@ -1,23 +1,25 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
-import { filterFileExt, getFiles, withoutKey } from "src/util";
+import { dLog, filterFileExt, getFiles, isFile, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
-import { ProviderBus } from "../provider_bus";
 
 export class ProviderScriptloader extends Provider {
-  constructor(bus: ProviderBus) {
-    super(bus)    
-  }
 
   async init() {
-    return this.loadFiles(...getFiles(this.bus.plugin.app, this.bus.plugin.settings.scriptFolder))
-    .then((ret) => {
-      this.setFunc(ret)
-      return super.init()
-    })
+    return this.initLoad().then(() => super.init())
+  }
+
+  async initLoad() {
+    return this.loadAndSet(...getFiles(this.bus.plugin.app, this.bus.plugin.settings.scriptFolder))
+  }
+
+  async loadAndSet(...file: TFile[]) {
+    return this.readFiles(...file)
+    .then((ret) => {this.setFunc(ret); return Promise.resolve()});
   }
 
   setFunc(funcs: [string, Function][]) {
-    
+    console.log('Scriptloader: setFunc', funcs)
+
     funcs.map((r) => {if (r) {
       this.functions.delete(r[0])
       if (Array.isArray(r[1]))
@@ -26,17 +28,17 @@ export class ProviderScriptloader extends Provider {
     }})
   }
 
-  async loadFiles(...files: TFile[]): Promise<[string, Function][]> {
+  async readFiles(...files: TFile[]): Promise<[string, Function][]> {
     let filtered = filterFileExt(files, "js")
     const reads = filtered.map(async (f) => {
       try {
         if (!(this.bus.plugin.app.vault.adapter instanceof FileSystemAdapter)) return Promise.reject();
         let path = this.bus.plugin.app.vault.adapter.getBasePath() + "/" + f.path
-
-        if (Object.keys(window.require.cache).contains(path)) delete window.require.cache[window.require.resolve(path)]
+        
+        if (Object.keys(window.require.cache).contains(window.require.resolve(path))) delete window.require.cache[window.require.resolve(path)]
 
         let func = await import(path)
-        
+
         if (func?.default) {
           return (func.default instanceof Function) 
             ? Promise.resolve([f.basename, func.default])
@@ -56,30 +58,38 @@ export class ProviderScriptloader extends Provider {
   }
 
   clearJS(...files: TFile[]) {
+    console.log('Scriptloader: clearing', files)
     for (let f of filterFileExt(files, "js")) {
       this.functions.delete(f.basename)
     }
   }
 
-  fileUpdated(e: TAbstractFile) {
-    if (!(e instanceof TFile)) return;
-    this.bus.handler.setDirty(true)
-
-    this.clearJS(e)
-		this.loadFiles(e).then((ret) => this.setFunc(ret), (err) => this.clearJS(e))
-	}
-
-  fileDeleted(e: TAbstractFile) {
-    if (!(e instanceof TFile)) return;
-    this.clearJS(e)
+  // Event listeners for file events registered by EtaHander
+  fileUpdated(file: TAbstractFile): void {
+    if (!isFile(file)) return;
+    dLog('Scriptloader: fileUpdated', file)
+    this.clearJS(file)
+    this.loadAndSet(file)
+    .then(() => {this.setDirty()}, () => this.clearJS(file))
   }
 
-  fileAdded(e: TAbstractFile) {
-    this.fileUpdated(e)
+  fileDeleted(file: TAbstractFile): void {
+    if (!isFile(file)) return;
+    dLog('Scriptloader: fileDeleted', file)
+    this.clearJS(file)
+    this.setDirty()
   }
 
-  reload() {
+  fileAdded(file: TAbstractFile): void {
+    if (!isFile(file)) return;
+    dLog('Scriptloader: fileAdded', file)
+    this.loadAndSet(file)
+    .then(() => {this.setDirty()}, () => this.clearJS(file))
+  }
+
+  async reload() {
     this.functions.clear()
-    return this.init()
+    await this.initLoad()
+    return super.reload()
   }
 }

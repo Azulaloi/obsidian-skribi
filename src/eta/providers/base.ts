@@ -4,10 +4,6 @@ import { ProviderBus } from "src/eta/provider_bus";
 import { Stringdex } from "src/types/types";
 
 export class ProviderSK extends Provider {
-  constructor(bus: ProviderBus) {
-    super(bus)
-  }
-
   async init() {
     return super.init()
   }

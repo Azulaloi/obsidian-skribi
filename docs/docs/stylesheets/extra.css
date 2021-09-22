@@ -83,3 +83,9 @@ code {
   background-color var(--transit) linear,
   color var(--transit) linear;
 }
+
+.md-typeset table:not([class]) tH {
+  border-top: .05rem solid var(--md-typeset-table-color);
+  padding: .9375em 1.25em;
+  vertical-align: top;
+}

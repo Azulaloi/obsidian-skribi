@@ -2,7 +2,7 @@ import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
 import { EtaConfig, PartialConfig } from "eta/dist/types/config";
 import { CallbackFn } from "eta/dist/types/file-handlers";
-import { FrontMatterCache, MarkdownRenderer, TFile } from "obsidian";
+import { debounce, FrontMatterCache, MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "../main";
 import { DynamicState, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { checkFileExt, getFiles, isExtant, isFile, promiseImpl, vLog, withoutKey } from "../util";
@@ -31,7 +31,29 @@ export class EtaHandler {
     if (!this.plugin.app.workspace.layoutReady) {
       this.plugin.app.workspace.onLayoutReady(async () => this.initLoad())
     } else {this.initLoad()}
+
+
+
+		let bUpdate = debounce(this.definePartials.bind(this), 500, true)
+    plugin.registerEvent(plugin.app.vault.on('modify', e => {
+			if (this.isInScripts(e)) this.bus.scriptLoader.fileUpdated(e);
+			if (this.isInTemplates(e)) bUpdate(e);
+		}))
+
+		plugin.registerEvent(plugin.app.vault.on('delete', e => {
+			if (this.isInScripts(e)) this.bus.scriptLoader.fileDeleted(e);
+			if (this.isInTemplates(e)) this.deleteTemplate(e as TFile)
+		}))
+
+		plugin.registerEvent(plugin.app.vault.on('create', e => {
+			if (this.isInScripts(e)) this.bus.scriptLoader.fileAdded(e);
+			if (this.isInTemplates(e)) bUpdate(e);
+		}))
   }
+
+  isInTemplates = (e: TAbstractFile) => this.isInFolder(e, this.plugin.settings.templateFolder)
+	isInScripts = (e: TAbstractFile) => this.isInFolder(e, this.plugin.settings.scriptFolder)
+	isInFolder = (e: TAbstractFile, path: string) => (isFile(e) && e.path.contains(path))
 
   async initLoad() {
     let a = this.bus.init()
@@ -55,6 +77,7 @@ export class EtaHandler {
     this.definePartials(...getFiles(this.plugin.app, this.plugin.settings.templateFolder))
   }
 
+  /* Load and compile files into the template cache */
   async definePartials(...files: TFile[]) {
     let t = (files.length == 0) ? window.performance.now() : 0  
     let x = 0
@@ -155,6 +178,12 @@ export class EtaHandler {
     return Object.keys(this.getCacheStore())
   }
 
+  /**   
+  * Primary skribi render function. Renders asynchronously (template function syncronicity determined by )
+  * @param content String or scoped template function to render
+  * @param ctxIn Context object to be added to `sk` object
+  * @param file File in which the skribi is being rendered  
+  * @returns [rendered string, returned packet (currently unused)] */
   async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
     if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file.path}`);
 
@@ -179,7 +208,7 @@ export class EtaHandler {
       this.baseContext,
       ctxIn || {}, 
       {up: p(), this: binder},
-      this.bus.getBase()
+      this.bus.getScopeSK()
     )
 
     /* scope of the tfunc env */
@@ -190,7 +219,7 @@ export class EtaHandler {
       ...this.bus.getScope(),
     }
 
-    let ren = (content.toString().contains('await')) 
+    let ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
     ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
     : renderEta(this, content, {}, cfg, null, scope, binder)
 
@@ -223,6 +252,12 @@ export class EtaHandler {
     return content;
   }
 
+  /** TemplateFunction handler, will return cached or compiled function, appropriately bound and scoped
+   * @param template String or scoped template function
+   * @param options EtaConfig 
+   * @param scope Object containing objects that should be available in the returned function's scope 
+   * @param binder Object to which the returned function will be bound
+   */
   getCached(template: string | TemplateFunctionScoped, options: EtaConfig, scope?: Stringdex, binder?: any): TemplateFunctionScoped {
     if (options.name && this.templates.get(options.name)) {
       return (binder) ? this.templates.get(options.name).bind(binder) : this.templates.get(options.name)
@@ -236,6 +271,7 @@ export class EtaHandler {
   }
 }
 
+/* Version of Eta's render function, modified to handle scoped templates */
 function renderEta(
   handler: EtaHandler,
   template: string | TemplateFunctionScoped,
@@ -248,7 +284,7 @@ function renderEta(
   const options = Eta.getConfig(config || {})
 
   if (options.async) {
-    // if (cb) { /* haven't even tested this but I have no use for it right now cause I don't use the callback */
+    // if (cb) {
       // try { 
         // const templateFn = handler.getCached(template, options, scope, binder)
         // templateFn(scope)
@@ -269,7 +305,8 @@ function renderEta(
   }
 }
 
-/* Using async templatefunctions has very small perf impact */
+/* Version of Eta's async render function, just sets async to true */
+/* Note: perf impact of using async templatefunctions is negligible */
 function renderEtaAsync(
   handler: EtaHandler,
   template: string | TemplateFunctionScoped,
@@ -287,14 +324,18 @@ function getAsyncConstructor(): Function {
   return new Function('return (async function(){}).constructor')()
 }
 
-function compileWithScope(f: string, scope: Stringdex, async?: boolean): TemplateFunctionScoped {
+/** Adds the entries of scope to a function string. 
+* @param functionString A string function compiled by Eta's compileToString() 
+* @param scope Object containing entries to be added to function scope 
+* @param async If true, returned function will be asynchronous */
+function compileWithScope(functionString: string, scope: Stringdex, async?: boolean): TemplateFunctionScoped {
   var a = ""; var b = "";
   for (var v in scope) {
     a += `${v},`;
     b += `'${v}',`
   }
 
-  let func = `var {${a.substr(0, a.length-1)}} = scope;\n` + f
+  let func = `var {${a.substr(0, a.length-1)}} = scope;\n` + functionString
 
   let constructor = (async) ? (getAsyncConstructor() as FunctionConstructor) : Function 
 

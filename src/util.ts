@@ -28,7 +28,7 @@ export function getFiles(app: App, dir: string): TFile[] {
 	return files;
 }
 
-export const isFile = (item: TAbstractFile) => (item) instanceof TFile; 
+export const isFile = (item: TAbstractFile): item is TFile => (item) instanceof TFile; 
 
 
 export function checkFileExt(files: TFile[] | TFile, exts: string[] | string): boolean {

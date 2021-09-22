@@ -15,9 +15,9 @@ export class SkribiChild extends MarkdownRenderChild {
     return {
       el: this.containerEl,
       registerInterval: this.skRegisterInterval.bind(this),
-      registerUnload: this.registerUnload.bind(this),
+      registerUnload: this.skRegisterUnload.bind(this),
       registerEvent: this.skRegisterEvent.bind(this),
-      reload: this.rerender,
+      reload: this.rerender, // Bound on assignment
       c: this
     }
   }
@@ -28,10 +28,7 @@ export class SkribiChild extends MarkdownRenderChild {
 		}
 	}
 
-	onload() {
-
-	}
-
+	onload() {}
 
 	clear() {
 		console.log("skreeb clear")
@@ -44,13 +41,13 @@ export class SkribiChild extends MarkdownRenderChild {
 		this.clear()
 	}
 
-  /* To Provide */
 
-  skRegisterInterval(cb: Function, time: number, ...args: any[]) {
+  /* Provider Functions */
+  
+	skRegisterInterval(cb: Function, time: number, ...args: any[]) {
 		//@ts-ignore
-		let x = window.setInterval((...a: any) => {if (this._loaded == false) {window.clearInterval(x)}
+		let x = window.setInterval((...a: any) => { if (this._loaded == false) {window.clearInterval(x)}
 			cb(...a)}, time * 1000, ...args)
-		// this.registerInterval(x)
 		this.intervals.push(x)
 		return x;
 	}
@@ -60,7 +57,7 @@ export class SkribiChild extends MarkdownRenderChild {
     this.registerEvent(event)
   }
 
-	registerUnload(cb: Function, ...args: any[]) {
+	skRegisterUnload(cb: Function, ...args: any[]) {
 		this.cbOnUnload.push([(...x: any) => cb(...x), args])
 	}
 

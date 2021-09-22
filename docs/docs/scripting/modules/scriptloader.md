@@ -1,4 +1,4 @@
-# Scriptloading
+# Scriptloader
 
 Any `js` files inside the directory configured in the **Script Directory** setting (path relative to vault) will be loaded by Skribi and made available within the local context under the `s` object. 
 

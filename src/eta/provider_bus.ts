@@ -10,6 +10,7 @@ import { IProvider, Provider } from "./provider_abs";
 
 const obsidianModule = require("obsidian");
 
+/* Handles all script function providers */
 export class ProviderBus {
   handler: EtaHandler
   plugin: SkribosPlugin
@@ -22,51 +23,77 @@ export class ProviderBus {
 
   skBase: ProviderSK;
 
-  scopeStatic: Stringdex = {}
+  private scopeStatic: Stringdex = {}
 
   constructor(handler: EtaHandler) {
     this.handler = handler
     this.plugin = handler.plugin
 
-    this.scriptLoader = new ProviderScriptloader(this);
+    this.scriptLoader = new ProviderScriptloader(this, 'js');
   }
 
-  async init() {    
-    this.providers.set('s', this.scriptLoader);
-    this.providers.set('weather', new ProviderWeather(this))
+  async init() {
+    this.addProvider(this.scriptLoader)
+    this.addProvider(new ProviderWeather(this, 'weather'))
 
-    // this.providersDynamic.set('dv', new ProviderDataview(this))
+    this.addProviderDynamic(new ProviderDataview(this, 'dv'))
 
-    this.skBase = new ProviderSK(this)
+    this.skBase = new ProviderSK(this, 'sk')
 
-    const inits = Array.from(this.providers).map(async (p) => {return await p[1].init()})
+    const inits = Object.values(this.execOnProviders('init')) //Array.from(this.providers).map(async (p) => {return await p[1].init()})
 
     await Promise.allSettled(inits)
     this.createStaticScope()
     return Promise.resolve()
   }
 
+  addProvider = (provider: Provider) => this.providers.set(provider.id, provider)
+  addProviderDynamic = (provider: Provider) => this.providersDynamic.set(provider.id, provider)
+
   unload() {
     this.execOnProviders('unload')
   }
 
+  /* Invoked by providers to indicate their provision must be regenerated */
+  providerNotificationDirty(provider: Provider, isDirty: boolean) {
+    if (isDirty) this.refreshProvider(provider)
+  }
+
+  /* Clean dirty providers by regenerating their provision */
+  refreshProvider(...providers: Provider[]) {
+    let proxy: any = {};
+
+    for (let provider of providers) {
+      proxy[provider.id] = provider.createObject()
+      provider.setDirty(false)
+    }
+
+    Object.assign(this.scopeStatic, proxy)
+  }
+
+  /* Reloads all providers */
   async reloadProviders() {
-    this.execOnProviders('reload')
+    let proms = this.execOnProviders('reload')
 
-    return Promise.resolve() // not actually awaiting reloads
+    return Promise.allSettled(Object.values(proms))
   }
 
-  getScope(ctx?: DynamicState, refresh?: boolean) {
-    return this.scopeStatic
-    // return (ctx) ? Object.assign({}, this.scopeStatic, this.createDynamicScope(ctx)) : this.scopeStatic
+  /* Retrieves scope object */
+  public getScope(ctx?: DynamicState, refresh?: boolean) {
+    let dirties = Object.values(this.providers).filter((p: Provider) => {return p.isDirty})
+    if (dirties) this.refreshProvider(...dirties)
+
+    return Object.assign({}, this.scopeStatic, this.createDynamicScope(ctx || null))
   }
 
+  /* Create scope object */
   createStaticScope() {
     let spaces: {[key: string]: any} = {};
     
     for (let p of this.providers) spaces[p[0]] = p[1].createObject();
 
-    if (this.plugin.app.plugins.enabledPlugins.has("dataview")) spaces['dv'] = new ProviderDataview(this).createObject()
+    // Temporary, until I implement an API load/unload listener
+    // if (this.plugin.app.plugins.enabledPlugins.has("dataview")) spaces['dv'] = new ProviderDataview(this, 'dv').createObject()
 
     spaces['moment'] = window.moment
     spaces['obsidian'] = obsidianModule
@@ -75,22 +102,38 @@ export class ProviderBus {
     return this.scopeStatic
   }
 
-  createDynamicScope(ctx: DynamicState) {
-    let spaces: {[key: string]: any} = {};
+  /* Used for providers that need to generate their provision with knowledge of context. 
+    Currently there are no such providers so this is unused (thought I was gonna need it for dataview) */
+  createDynamicScope(ctx?: DynamicState) {
+    let spaces: {[key: string]: any} = {
+      get dv() {
+        return this.plugin
+      }
+    };
   
-    for (let p of this.providersDynamic) spaces[p[0]] = p[1].createObject();
+    // for (let p of this.providersDynamic) spaces[p[0]] = p[1].createObject();
 
     return spaces
   }
 
-  getBase() {
+  /* Get the base provider scope*/
+  getScopeSK() {
     return this.skBase.createObject()
   }
 
-  execOnProviders(...func: (keyof IProvider)[]) {
-    for (let p of this.providers) if (p != null) 
-      for (let f of func) if (isFunc(p[1][f])) (p[1][f] as Function)(); 
+  /* Invoke function on all providers and return array of results */
+  execOnProviders(func: (keyof IProvider)): Stringdex {
+    let rets: Stringdex = {};
+
+    for (let p of this.providers) if ((p != null) && (isFunc(p[1][func]))) {
+      rets[p[0]] = (p[1][func] as Function)() }
+    return rets
 	}
+}
+
+export interface ProviderBus {
+  execOnProviders(func: 'reload'): {[index: string]: Promise<void>}
+  execOnProvider(func: 'init'): {[index: string]: Promise<void>}
 }
 
 const isFunc = (v: any) => (v instanceof Function)
