@@ -5,7 +5,7 @@ import { CallbackFn } from "eta/dist/types/file-handlers";
 import { debounce, FrontMatterCache, MarkdownRenderer, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "../main";
 import { DynamicState, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
-import { checkFileExt, getFiles, isExtant, isFile, promiseImpl, vLog, withoutKey } from "../util";
+import { checkFileExt, dLog, getFiles, isExtant, isFile, promiseImpl, vLog, withoutKey } from "../util";
 import { Cacher } from "./cacher";
 import { ProviderBus } from "./provider_bus";
 
@@ -222,9 +222,14 @@ export class EtaHandler {
       ...this.bus.getScope(),
     }
 
-    let ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
-    ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
-    : renderEta(this, content, {}, cfg, null, scope, binder)
+    let ren = null
+    try {
+      ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
+        ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
+        : renderEta(this, content, {}, cfg, null, scope, binder)
+    } catch (e) {
+      console.log(e)
+    }
 
     // console.log("psuedo post:", sk)
     if (ren instanceof Promise) {
@@ -295,6 +300,8 @@ function renderEta(
         // return cb(e)
       // }
     // } else {
+
+      // return (async () => handler.getCached(template, options, scope, binder)(scope))()
       return new promiseImpl(function (resolve: Function, reject: Function) {
         try {
           resolve(handler.getCached(template, options, scope, binder)(scope))
@@ -304,7 +311,9 @@ function renderEta(
       })
     // }
   } else {
-    return handler.getCached(template, options, scope, binder)(scope)
+    let func = handler.getCached(template, options, scope, binder)
+    dLog(`Rendering function`, func)
+    return func(scope)
   }
 }
 

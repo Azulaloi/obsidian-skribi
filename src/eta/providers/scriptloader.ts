@@ -38,7 +38,6 @@ export class ProviderScriptloader extends Provider {
     let exports: Map<string, any> = new Map()
     this.loadedModules.forEach((value, key) => {
       let entries = Object.entries(value.properties)
-      console.log(entries)
       let single = (Object.keys(value.properties).length == 1) 
 
       exports.set((value.name ?? (single ? Object.keys(value.properties)[0] : key)),
@@ -78,7 +77,6 @@ export class ProviderScriptloader extends Provider {
   }
 
   clearJS(...files: TFile[]) {
-    console.log('Scriptloader: clearing', files)
     for (let f of filterFileExt(files, "js")) {
       this.loadedModules.delete(f.basename)
     }

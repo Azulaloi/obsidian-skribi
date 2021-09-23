@@ -24,6 +24,10 @@ By throwing an error yourself, or calling the utility function `sk.abort()` ([Se
 
 Also, if you log anything to the console, you can click on the `VMXXXX` trace to view the compiled function. This is helpful for understanding exactly what's actually happening internally.
 
+<hr id="escaped">
+
+If you're getting a `SyntaxError: Unexpected token` and you're really super certain that it should be parsing, check that your code does not contain **escaped characters** such as non-breaking spaces (`&nbsp;`), which render as normal spaces. Rather obnoxiously, any code copy-pasted from this documentation will have these villanous false spaces. I'll look into a fix.
+
 ## Async
 
 If the compiled string contains `await` anywhere (including as plaintext), the template function will be compiled to a promise. While awaiting the resolution of the template function, a placeholder element will be rendered - similar to an error element (but green!). This element will be replaced with the actual element (accessible in `sk.child.el`) upon resolution.

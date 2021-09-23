@@ -1,5 +1,6 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import { Stringdex } from "src/types/types";
+import { dLog } from "src/util";
 
 export class SkribiChild extends MarkdownRenderChild {
 	packet: Stringdex
@@ -31,13 +32,13 @@ export class SkribiChild extends MarkdownRenderChild {
 	onload() {}
 
 	clear() {
-		console.log("skreeb clear")
+		dLog("skreeb clear")
 		for (let i of this.intervals) window.clearInterval(i); // there might be cases where this doesn't get called properly
 		for (let cb of this.cbOnUnload) cb[0](cb[1]);
 	}
 
 	onunload() {
-		console.log("skreeb unload")
+		dLog("skreeb unload")
 		this.clear()
 	}
 
