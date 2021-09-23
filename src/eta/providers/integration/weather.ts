@@ -1,9 +1,10 @@
-import { Provider } from "../../provider_abs";
+import { Provider, ProviderPredicated } from "../../provider_abs";
 import { ProviderBus } from "../../provider_bus";
 import type WeatherAPI from "../../../../../obsidian-weather/src/api";
 import { EventRef } from "obsidian";
 
-export class ProviderWeather extends Provider {
+export class ProviderWeather extends ProviderPredicated {
+  predicatePluginName: string = 'obsidian-weather'
   weatherAPI: WeatherAPI = null
 
   private eventRefs: {
@@ -54,7 +55,7 @@ export class ProviderWeather extends Provider {
     return (this.hasAPI()) ? func : () => {return new Error("WeatherPluginAPI not found!")}
   }
 
-  /* Functions */
+  /* Provisions */
 
   provide_predicate(): Function {
     return () => {
@@ -63,6 +64,6 @@ export class ProviderWeather extends Provider {
   }
 
   provide_dispenseCache(): Function {
-    return this.predicated(this.weatherAPI.dispenseCache.bind(this.weatherAPI))
+    return this.weatherAPI.dispenseCache.bind(this.weatherAPI)
   }
 }

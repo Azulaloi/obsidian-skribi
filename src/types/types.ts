@@ -24,6 +24,8 @@ export interface Stringdex {
 	[index: string]: any
 }
 
+export declare type Stringdexed<T> = {[index: string]: T}
+
 export interface ArgSet {[index: string]: string | string[]};
 
 export enum promptTypes {

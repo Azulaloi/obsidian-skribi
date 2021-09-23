@@ -148,12 +148,15 @@ export class EtaHandler {
     return Promise.resolve()
   }
 
-  deleteTemplate(...files: TFile[]) {
-    /* do deletion */
+  /* Remove templates from cache by string name or file of origin */
+  deleteTemplate(...items: Array<TFile | string>) {
+    for (let item of items) {
+      let name = isFile(item) ? item.basename : item
+      this.templates.remove(name)
+    }
   }
 
   setDirty(dirty: boolean) {
-    if (dirty) this.bus.createStaticScope()
     this.templatesDirty = dirty
   }
 
@@ -179,13 +182,13 @@ export class EtaHandler {
   }
 
   /**   
-  * Primary skribi render function. Renders asynchronously (template function syncronicity determined by )
+  * Primary skribi render function. Renders asynchronously (TemplateFunction may or may not be async)
   * @param content String or scoped template function to render
   * @param ctxIn Context object to be added to `sk` object
   * @param file File in which the skribi is being rendered  
   * @returns [rendered string, returned packet (currently unused)] */
   async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
-    if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file.path}`);
+    if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file}`);
 
     let z: Stringdex = {};
     function p() {
@@ -316,7 +319,6 @@ function renderEtaAsync(
   scope?: scopedVars,
   binder?: any
   ): string | Promise<string> | void {
-    console.log()
     return renderEta(handler, template, data, Object.assign({}, config, {async: true}), cb, scope, binder)
 }
 

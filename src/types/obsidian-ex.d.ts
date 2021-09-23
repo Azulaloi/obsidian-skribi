@@ -1,7 +1,14 @@
 import "obsidian";
+import { App } from "obsidian";
 import { DataviewApi } from "obsidian-dataview";
 import DataviewPlugin from "obsidian-dataview/lib/main";
 import type WeatherAPI from "../../../obsidian-weather/src/api";
+
+declare global {
+  interface Window {
+    app: App;
+  }
+}
 
 declare module 'obsidian' {
   interface App {

@@ -49,3 +49,26 @@ export abstract class Provider implements IProvider {
     this.bus.providerNotificationDirty(this, this.isDirty)
   }
 }
+
+/** 
+ * Predicated providers are responsible for modules that require certain conditions to function */
+export interface IProviderPredicated extends IProvider {
+  predicateCheck(): boolean
+  predicateError(): string
+}
+ 
+export abstract class ProviderPredicated extends Provider implements IProviderPredicated {
+  predicatePluginName: string = ''
+  
+  /**
+   * @returns true only when the predicate condition is met */
+  predicateCheck() {
+    return this.bus.plugin.app.plugins.enabledPlugins.has(this.predicatePluginName)
+  }
+
+  /**
+   * @returns An error string describing the unmet predicate condition */
+  predicateError() {
+    return `Provider ${this.id} missing predicate: ${this.predicatePluginName}`
+  }
+}

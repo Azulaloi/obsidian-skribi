@@ -1,4 +1,5 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { Stringdex, Stringdexed } from "./types/types";
 
 declare global {
 	interface Element {
@@ -28,11 +29,8 @@ export function getFiles(app: App, dir: string): TFile[] {
 	return files;
 }
 
-export const isFile = (item: TAbstractFile): item is TFile => (item) instanceof TFile; 
-
-
 export function checkFileExt(files: TFile[] | TFile, exts: string[] | string): boolean {
-	exts = toArray(exts)
+	exts = toArray(exts); 
 	return toArray(files).every((f) => {return exts.contains(f.extension)})
 }
 
@@ -89,6 +87,7 @@ export const asyncFunc = Object.getPrototypeOf(async function(){}).constructor
 export const promiseImpl: PromiseConstructor = new Function('return this')().Promise
 
 
+
 /* Will get active view, or first preview view with same file as active view */
 export function getPreviewView(app: App, flip?: boolean): MarkdownView {
 	let t1 = flip ? "preview" : "source"
@@ -107,4 +106,31 @@ export function getPreviewView(app: App, flip?: boolean): MarkdownView {
 	}
 
 	return view;
+}
+
+
+export const isFunc = (func: any): func is Function => (func instanceof Function)
+export const isFile = (item: any): item is TFile => (item) instanceof TFile; 
+export const isType = <T extends Function>(item: any, type: T): item is T => item instanceof type
+
+function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdexed<T>) {
+  let rets: Stringdex = {};
+  for (let o of Object.entries(objects)) {
+    if ((o != null) && (isFunc(o[func]))) {
+      rets[o[0]] = (o[1][func] as Function)()
+    }
+  }
+  return rets
+}
+
+function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
+  for (let o of objects) {
+    if ((o != null) && (isFunc(o[func]))) {
+      try {
+        (o[func] as unknown as Function)()
+      } catch(err) {
+        console.warn(`invokeMethodOf: caught error! \n`, `Key called as method:`, func,  `Called on:`, o, `Error:`, err)
+      }
+    }
+  }
 }
