@@ -1,8 +1,10 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
-import { dLog, filterFileExt, getFiles, isFile, withoutKey } from "src/util";
+import { Stringdex } from "src/types/types";
+import { dLog, filterFileExt, getFiles, isExtant, isFile, vLog, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
 
 export class ProviderScriptloader extends Provider {
+  loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
 
   async init() {
     return this.initLoad().then(() => super.init())
@@ -14,36 +16,54 @@ export class ProviderScriptloader extends Provider {
 
   async loadAndSet(...file: TFile[]) {
     return this.readFiles(...file)
-    .then((ret) => {this.setFunc(ret); return Promise.resolve()});
+    .then((ret) => {vLog('Loading JS modules...', ret); this.stashModule(ret); return Promise.resolve()});
   }
 
-  setFunc(funcs: [string, Function][]) {
-    console.log('Scriptloader: setFunc', funcs)
+  stashModule(modules: [string, Stringdex][]) {
+    dLog('Scriptloader: stashModule', modules)
 
-    funcs.map((r) => {if (r) {
-      this.functions.delete(r[0])
-      if (Array.isArray(r[1]))
-        this.functions.set(r[0], 
-          (Array.isArray(r[1]) ? Object.fromEntries(r[1]) : r[1]))
-    }})
+    modules.map((r) => {
+      if (r) {
+        this.loadedModules.delete(r[0])
+        this.loadedModules.set(r[0], {
+          name: (String.isString(r[1]?._name ?? null) ? r[1]._name : null), 
+          properties: withoutKey(r[1], '_name')
+          }          
+        )
+      }
+    })
   }
 
-  async readFiles(...files: TFile[]): Promise<[string, Function][]> {
+  createObject() {
+    let exports: Map<string, any> = new Map()
+    this.loadedModules.forEach((value, key) => {
+      let entries = Object.entries(value.properties)
+      console.log(entries)
+      let single = (Object.keys(value.properties).length == 1) 
+
+      exports.set((value.name ?? (single ? Object.keys(value.properties)[0] : key)),
+        single ? Object.values(value.properties)[0] : value.properties
+      )
+    })
+
+    return {...Object.fromEntries(exports)}
+  }
+
+  async readFiles(...files: TFile[]): Promise<[string, Stringdex][]> {
     let filtered = filterFileExt(files, "js")
     const reads = filtered.map(async (f) => {
       try {
         if (!(this.bus.plugin.app.vault.adapter instanceof FileSystemAdapter)) return Promise.reject();
         let path = this.bus.plugin.app.vault.adapter.getBasePath() + "/" + f.path
         
-        if (Object.keys(window.require.cache).contains(window.require.resolve(path))) delete window.require.cache[window.require.resolve(path)]
+        let resPath = window.require.resolve(path)
+        if (Object.keys(window.require.cache).contains(resPath)) delete window.require.cache[window.require.resolve(resPath)]
 
-        let func = await import(path)
+        const mod = require(path)
 
-        if (func?.default) {
-          return (func.default instanceof Function) 
-            ? Promise.resolve([f.basename, func.default])
-            : Promise.resolve([f.basename, Object.keys(withoutKey(func, "default")).map((k) => [k, func[k]])])
-        } else return Promise.reject()
+        return (isExtant(mod)) 
+          ? Promise.resolve([f.basename, mod])
+          : Promise.reject()
       } catch(e) {
         console.warn(e)
         return Promise.reject()
@@ -53,14 +73,14 @@ export class ProviderScriptloader extends Provider {
     return await Promise.allSettled(reads)
     .then((settled) => { return settled
       .filter((r) => {return r.status == "fulfilled"})
-      .map((v) => {return (v as PromiseFulfilledResult<[string, Function]>).value})
+      .map((v) => {return (v as PromiseFulfilledResult<[string, Stringdex]>).value})
     })
   }
 
   clearJS(...files: TFile[]) {
     console.log('Scriptloader: clearing', files)
     for (let f of filterFileExt(files, "js")) {
-      this.functions.delete(f.basename)
+      this.loadedModules.delete(f.basename)
     }
   }
 
@@ -88,7 +108,7 @@ export class ProviderScriptloader extends Provider {
   }
 
   async reload() {
-    this.functions.clear()
+    this.loadedModules.clear()
     await this.initLoad()
     return super.reload()
   }

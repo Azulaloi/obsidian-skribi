@@ -1,5 +1,6 @@
 # Examples
 
+I'll add plenty of examples here at some point.
 
 ## Using **sk.render()**
 
@@ -12,3 +13,17 @@ Because post processors are not applied to block-level elements, skribis instead
 Note: the markdown renderer likes to embed everything in `<p>`s and `<div>`s. I'm not sure the best way to deal with that yet, but it's not really a problem - just kind of clutters the DOM a bit. When styling your templates, make sure to use the inspector to see the actual structure of your rendered elements.
 
 Also, the output is always placed in a div with the attribute `skribi`, with the value set to the name of the template. In CSS, you can target these with `div[skribi="name"]`. `div[skribi]` will select all skribis.
+
+
+## Using **sk.child.registerInterval()**
+
+Here is a very simple example of creating an updating clock.
+
+```
+<% 
+let time = moment().format('HH:mm:ss')
+sk.child.registerInterval(() => sk.child.reload(), 1)
+%>
+
+<%=time%>
+```

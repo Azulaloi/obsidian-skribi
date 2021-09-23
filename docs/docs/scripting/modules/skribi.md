@@ -24,7 +24,7 @@
       <td>Renders <code>text</code> as Obsidian Markdown inside a virtual element, then returns the element's <code>innerHTML</code>.</td>
 </td>
     </tr>
-    <tr>
+    <tr id="abort">
       <th><code>sk.abort(data?: string | any): void</code></th>
       <td>Function</td>
       <td>Aborts the render execution and renders an error block. If `data` is a string, the message will be `data`. Multiple values can optionally be passed to the abort block, by placing them in an string-indexed object. Valid values (<code>key</code> - description):  <ul>

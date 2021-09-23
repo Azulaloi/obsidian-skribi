@@ -1,4 +1,5 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { type } from "os";
 import { Stringdex, Stringdexed } from "./types/types";
 
 declare global {
@@ -111,7 +112,19 @@ export function getPreviewView(app: App, flip?: boolean): MarkdownView {
 
 export const isFunc = (func: any): func is Function => (func instanceof Function)
 export const isFile = (item: any): item is TFile => (item) instanceof TFile; 
-export const isType = <T extends Function>(item: any, type: T): item is T => item instanceof type
+// export const isType = <T>(item: any, type: T): item is T => { 
+	// return getID<(identity(item)), (identity(type))>(item)
+// }
+
+// dude what even is a type actually
+
+// declare function getID<T, K>(item: T): T extends K ? T : never;
+
+// let s = getID<string, number>('a')
+
+// function identity<Type>(arg: Type): Type {
+  // return arg;
+// }
 
 function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdexed<T>) {
   let rets: Stringdex = {};
