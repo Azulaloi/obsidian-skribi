@@ -1,9 +1,6 @@
 import { EventRef } from "obsidian";
-import DataviewPlugin from "obsidian-dataview/lib/main";
 // import { DataviewInlineApi } from "obsidian-dataview/lib/api/inline-api";
-import { Provider, ProviderPredicated } from "src/eta/provider_abs";
-import { ProviderBus } from "src/eta/provider_bus";
-import { DynamicState } from "src/types/types";
+import { ProviderPredicated } from "src/eta/provider_abs";
 
 export class ProviderDataview extends ProviderPredicated {
   predicatePluginName = 'dataview'
@@ -36,6 +33,4 @@ export class ProviderDataview extends ProviderPredicated {
 
     // return this?.dvp?.api || null
   // }
-
-  predicateError = () => "Dataview plugin not found!"
 }

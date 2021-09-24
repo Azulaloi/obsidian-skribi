@@ -54,7 +54,7 @@ export class SkribiChild extends MarkdownRenderChild {
 	}
 
   skRegisterEvent(event: EventRef) {
-    console.log('sk regevent:', event)
+    dLog('SkChild registered event:', event)
     this.registerEvent(event)
   }
 

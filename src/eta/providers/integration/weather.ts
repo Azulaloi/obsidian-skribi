@@ -1,11 +1,9 @@
-import { Provider, ProviderPredicated } from "../../provider_abs";
-import { ProviderBus } from "../../provider_bus";
+import { ProviderPredicated } from "../../provider_abs";
 import type WeatherAPI from "../../../../../obsidian-weather/src/api";
 import { EventRef } from "obsidian";
 
 export class ProviderWeather extends ProviderPredicated {
   predicatePluginName: string = 'obsidian-weather'
-  weatherAPI: WeatherAPI = null
 
   private eventRefs: {
     ready: EventRef 
@@ -14,9 +12,6 @@ export class ProviderWeather extends ProviderPredicated {
   }
 
   async init() {
-    this.checkForAPI()
-    console.log("init providerweather")
-
     this.eventRefs = {
       ready: this.bus.plugin.app.workspace.on("az-weather:api-ready", () => {}),
       unload: this.bus.plugin.app.workspace.on("az-weather:api-unload", () => {}),
@@ -25,6 +20,7 @@ export class ProviderWeather extends ProviderPredicated {
 
     this.functions.set("check", this.provide_predicate())
     this.functions.set("cache", this.provide_dispenseCache())
+    this.functions.set("tickEventRef", this.provide_tickEventRef())
 
     return super.init()
   }
@@ -33,26 +29,6 @@ export class ProviderWeather extends ProviderPredicated {
     for (let r of Object.values(this.eventRefs)) {
       this.bus.plugin.app.workspace.offref(r)
     }
-  }
-
-  checkForAPI() {
-    try {
-    if (this.bus.plugin.app.plugins.plugins["obsidian-weather"]) {
-      this.weatherAPI = this.bus.plugin.app.plugins.plugins["obsidian-weather"].API
-    } else {
-      this.weatherAPI = null
-    }
-  } catch(e) {
-    console.warn(e)
-  }
-  }
-
-  hasAPI() {
-    return (!!this.weatherAPI)
-  }
-
-  predicated(func: Function) {
-    return (this.hasAPI()) ? func : () => {return new Error("WeatherPluginAPI not found!")}
   }
 
   /* Provisions */
@@ -64,6 +40,15 @@ export class ProviderWeather extends ProviderPredicated {
   }
 
   provide_dispenseCache(): Function {
-    return this.weatherAPI.dispenseCache.bind(this.weatherAPI)
+    return () => {
+      let p: any = this.getPredicate();
+      return p?.API?.dispenseCache.bind(p.API)()
+    } 
+  }
+
+  provide_tickEventRef(): Function {
+    return (cb: Function) => {
+      return this.bus.plugin.app.workspace.on("az-weather:api-tick", (...a: any) => cb(...a))
+    }
   }
 }

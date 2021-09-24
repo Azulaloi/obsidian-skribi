@@ -1,3 +1,4 @@
+import { Plugin } from "obsidian";
 import { Stringdex } from "src/types/types";
 import { isExtant } from "src/util";
 import { ProviderBus } from "./provider_bus";
@@ -55,11 +56,16 @@ export abstract class Provider implements IProvider {
 export interface IProviderPredicated extends IProvider {
   predicateCheck(): boolean
   predicateError(): string
+  getPredicate(): Plugin
 }
  
 export abstract class ProviderPredicated extends Provider implements IProviderPredicated {
   predicatePluginName: string = ''
   
+  getPredicate() {
+    return this.bus.plugin.app.plugins.plugins?.[this.predicatePluginName] || null
+  }
+
   /**
    * @returns true only when the predicate condition is met */
   predicateCheck() {
@@ -69,6 +75,6 @@ export abstract class ProviderPredicated extends Provider implements IProviderPr
   /**
    * @returns An error string describing the unmet predicate condition */
   predicateError() {
-    return `Provider ${this.id} missing predicate: ${this.predicatePluginName}`
+    return `Integration Module '${this.id}' not available, could not find required plugin: '${this.predicatePluginName}'`
   }
 }
