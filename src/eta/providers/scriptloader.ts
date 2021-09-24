@@ -16,7 +16,7 @@ export class ProviderScriptloader extends Provider {
 
   async loadAndSet(...file: TFile[]) {
     return this.readFiles(...file)
-    .then((ret) => {vLog('Loading JS modules...', ret); this.stashModule(ret); return Promise.resolve()});
+    .then((ret) => {/*vLog('Loading JS modules...', ret);*/ this.stashModule(ret); return Promise.resolve()});
   }
 
   stashModule(modules: [string, Stringdex][]) {
@@ -37,7 +37,6 @@ export class ProviderScriptloader extends Provider {
   createObject() {
     let exports: Map<string, any> = new Map()
     this.loadedModules.forEach((value, key) => {
-      let entries = Object.entries(value.properties)
       let single = (Object.keys(value.properties).length == 1) 
 
       exports.set((value.name ?? (single ? Object.keys(value.properties)[0] : key)),
@@ -85,7 +84,7 @@ export class ProviderScriptloader extends Provider {
   // Event listeners for file events registered by EtaHander
   fileUpdated(file: TAbstractFile): void {
     if (!isFile(file)) return;
-    dLog('Scriptloader: fileUpdated', file)
+    vLog(`File '${file.name}' in script directory modified, updating...`)
     this.clearJS(file)
     this.loadAndSet(file)
     .then(() => {this.setDirty()}, () => this.clearJS(file))
@@ -93,16 +92,21 @@ export class ProviderScriptloader extends Provider {
 
   fileDeleted(file: TAbstractFile): void {
     if (!isFile(file)) return;
-    dLog('Scriptloader: fileDeleted', file)
+    vLog(`File '${file.name}' removed from script directory, unloading...`)
     this.clearJS(file)
     this.setDirty()
   }
 
   fileAdded(file: TAbstractFile): void {
     if (!isFile(file)) return;
-    dLog('Scriptloader: fileAdded', file)
+    vLog(`File '${file.name}' added to script directory, loading...`)
     this.loadAndSet(file)
     .then(() => {this.setDirty()}, () => this.clearJS(file))
+  }
+
+  directoryChanged() {
+    vLog(`Script directory changed, reloading scripts...`)
+    this.reload().then(() => this.setDirty(), (e) => {console.warn(e)})
   }
 
   async reload() {

@@ -1,5 +1,6 @@
-import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent } from "obsidian";
+import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, debounce } from "obsidian";
 import SkribosPlugin from "./main";
+import { isExtant, isFile, isFunc } from "./util";
 
 export class SkribosSettingTab extends PluginSettingTab {
 	plugin: SkribosPlugin;
@@ -32,13 +33,14 @@ export class SkribosSettingTab extends PluginSettingTab {
 			.addTextArea((text: TextAreaComponent) => {text
 				.setValue(this.plugin.settings.scriptFolder)
 				.onChange(async (value) => {
-					this.plugin.settings.scriptFolder = value;
-					await this.plugin.saveSettings();
+					this.saveSetting('scriptFolder', value, () => this.plugin.eta.bus.scriptLoader.directoryChanged())
 				}); text.inputEl.cols = 30; return text});
 
 		new Setting(containerEl)
 			.setName('Error Logging')
-			.setDesc('Enable to dump any errored renders to the console. If false, will still add the error as tooltip on the errored element.')
+			.setDesc('Enable to dump any errored renders to the console.' 
+			+ 'If false, will still add the error as tooltip on the errored element. \n' 
+			+ 'Will spam your console if typing into a skribi with a preview window open.')
 			.addToggle((toggle: ToggleComponent) => { toggle
 				.setValue(this.plugin.settings.errorLogging)
 				.onChange(async (value) => {
@@ -56,9 +58,17 @@ export class SkribosSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})});
 	}
+
+	saveSetting = debounce(async (setting: string, value: string | number | boolean, cb?: Function, ...args: any[]) => {
+		// console.log("saving: " + setting + " = " + value)
+		this.plugin.settings[setting] = value;
+		this.plugin.saveSettings().then(() => {if (isExtant(cb) && isFunc(cb)) cb(...args || null)})
+	}, 2000, true)
 }
 
 export interface SkribosSettings {
+	[key: string] : boolean | string | string[] | number;
+
 	templateFolder: string;
 	scriptFolder: string;
 	verboseLogging: boolean;
@@ -71,5 +81,5 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	scriptFolder: "",
 	verboseLogging: false,
 	devLogging: false,
-	errorLogging: true,
+	errorLogging: false,
 }
