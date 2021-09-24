@@ -37,6 +37,16 @@ export class SkribosSettingTab extends PluginSettingTab {
 				}); text.inputEl.cols = 30; return text});
 
 		new Setting(containerEl)
+			.setName('Error Logging')
+			.setDesc('Enable to dump any errored renders to the console. If false, will still add the error as tooltip on the errored element.')
+			.addToggle((toggle: ToggleComponent) => { toggle
+				.setValue(this.plugin.settings.errorLogging)
+				.onChange(async (value) => {
+					this.plugin.settings.errorLogging = value;
+					await this.plugin.saveSettings();
+				})});
+
+		new Setting(containerEl)
 			.setName('Verbose Logging')
 			.setDesc('Enable to get more detailed logs in the console.')
 			.addToggle((toggle: ToggleComponent) => { toggle
@@ -53,6 +63,7 @@ export interface SkribosSettings {
 	scriptFolder: string;
 	verboseLogging: boolean;
 	devLogging: boolean;
+	errorLogging: boolean;
 }
 
 export const DEFAULT_SETTINGS: SkribosSettings = {
@@ -60,4 +71,5 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	scriptFolder: "",
 	verboseLogging: false,
 	devLogging: false,
+	errorLogging: true,
 }

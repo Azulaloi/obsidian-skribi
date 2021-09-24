@@ -6,7 +6,7 @@ Files in this folder are loaded as templates.
 
 ## **Script Folder**
 
-JS files in this folder are loaded as functions. See: [Scriptloading](/scripting/scriptloading)
+JS files in this folder are loaded as functions. See: [Scriptloading](/obsidian-skribi/scripting/scriptloading)
 
 ## **Verbose Logging**
 

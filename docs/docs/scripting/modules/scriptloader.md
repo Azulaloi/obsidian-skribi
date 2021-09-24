@@ -1,6 +1,6 @@
 # Scriptloader
 
-Any `.js` files inside of the configured [Script Directory](/settings/#script-folder) are automatically loaded by Skribi, and their exported properties made available in the `js` object. Any file modifications, additions, or deletions are detected and the modules reloaded automatically.  
+Any `.js` files inside of the configured [Script Directory](/obsidian-skribi/settings/#script-folder) are automatically loaded by Skribi, and their exported properties made available in the `js` object. Any file modifications, additions, or deletions are detected and the modules reloaded automatically.  
 
 ## Exporting
 

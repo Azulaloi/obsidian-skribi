@@ -20,7 +20,7 @@ When an error is thrown during skribi evaluation, the render will be aborted and
 
 Most error cases should have descriptive messages (insofar as typescript has descriptive errors, that is) - if it says something like 'Skribi: Unknown Error' then I probably made a mistake somewhere and you should let me know. 
 
-By throwing an error yourself, or calling the utility function `sk.abort()` ([See `sk.abort()` Documentation](/scripting/modules/skribi/#abort)), the execution of the skribi function is aborted and an error element is rendered with the error message as a tooltip, like any other error.
+By throwing an error yourself, or calling the utility function `sk.abort()` ([See `sk.abort()` Documentation](/obsidian-skribi/scripting/modules/skribi/#abort)), the execution of the skribi function is aborted and an error element is rendered with the error message as a tooltip, like any other error.
 
 Also, if you log anything to the console, you can click on the `VMXXXX` trace to view the compiled function. This is helpful for understanding exactly what's actually happening internally.
 

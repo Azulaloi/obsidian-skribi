@@ -222,14 +222,10 @@ export class EtaHandler {
       ...this.bus.getScope(),
     }
 
-    let ren = null
-    try {
-      ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
-        ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
-        : renderEta(this, content, {}, cfg, null, scope, binder)
-    } catch (e) {
-      console.log(e)
-    }
+
+    let ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
+      ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
+      : renderEta(this, content, {}, cfg, null, scope, binder)
 
     // console.log("psuedo post:", sk)
     if (ren instanceof Promise) {

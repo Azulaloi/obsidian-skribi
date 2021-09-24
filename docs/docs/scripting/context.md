@@ -17,9 +17,9 @@ The string content of a skribi is parsed by Eta into a function, which returns t
         <tr><th><code>scope</code> </th><td> Internal object used to provide objects to the local scope. You may inspect this object to view the provided objects.</td></tr>
         <tr><th><code>E</code>, <code>cb</code></th><td> Internal Eta values, do not assign to them.</td></tr>
         <tr><th><code>tR</code></th><td> The string that will be returned by the template function.</td></tr>
-        <tr><th><code>sk</code></th><td><a href='/scripting/modules/sk/child'>Skribi Module</a> - Contains various objects and functions, including template variables.</td></tr>
-        <tr><th><code>js</code></th><td><a href="/scripting/scriptloader/">Scriptloader Module</a> - Contains JS functions and function-containing objects loaded from the configured Script Directory</td></tr>
-        <tr><th><code>int</code></th><td><a href='/scripting/integrations/'>Integration Modules</a> - Contains any loaded integration modules. These modules will throw an error if accessed without the relevant plugin enabled. </td></th>
+        <tr><th><code>sk</code></th><td><a href='/obsidian-skribi/scripting/modules/sk/child'>Skribi Module</a> - Contains various objects and functions, including template variables.</td></tr>
+        <tr><th><code>js</code></th><td><a href='/obsidian-skribi/scripting/scriptloader/'>Scriptloader Module</a> - Contains JS functions and function-containing objects loaded from the configured Script Directory</td></tr>
+        <tr><th><code>int</code></th><td><a href='/obsidian-skribi/scripting/integrations/'>Integration Modules</a> - Contains any loaded integration modules. These modules will throw an error if accessed without the relevant plugin enabled. </td></th>
     <tbody>
 </table>
 

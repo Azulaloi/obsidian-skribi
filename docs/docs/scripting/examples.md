@@ -19,7 +19,7 @@ Also, the output is always placed in a div with the attribute `skribi`, with the
 
 Here is a very simple example of creating an updating clock.
 
-Note that the documentation system I'm using [replaces spaces in codeblocks with non-breaking spaces](/scripting/errors/#escape), so copy-pasting from the code block below will not work (sorry about that).
+Note that the documentation system I'm using [replaces spaces in codeblocks with non-breaking spaces](/obsidian-skribi/scripting/errors/#escape), so copy-pasting from the code block below will not work (sorry about that).
 
 ```
 <% 

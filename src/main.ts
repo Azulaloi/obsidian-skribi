@@ -322,7 +322,10 @@ export default class SkribosPlugin extends Plugin {
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: c.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file).catch((err) => {
-			console.log(err)
+			if (this.settings.errorLogging) {
+				let bar = `\n---------------------------\n`
+				console.warn(`Skribi render threw error! Displaying content and error...`, bar, con, bar, err);
+			}
 			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"})
 			c.unload()
 			return Promise.resolve(null)
