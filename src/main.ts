@@ -3,7 +3,7 @@ import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { dLog, getPreviewView, isExtant, isFile, roundTo, vLog } from './util';
 import { embedMedia } from './render/embed';
-import { Modes, Flags } from './types/const';
+import { Modes, Flags, EBAR } from './types/const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types/types';
 import { InsertionModal, SuggestionModal } from './modal';
 import { SkribiChild } from './render/child';
@@ -322,10 +322,7 @@ export default class SkribosPlugin extends Plugin {
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: c.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file).catch((err) => {
-			if (this.settings.errorLogging) {
-				let bar = `\n---------------------------\n`
-				console.warn(`Skribi render threw error! Displaying content and error...`, bar, con, bar, err);
-			}
+			if (this.settings.errorLogging) console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err);
 			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"})
 			c.unload()
 			return Promise.resolve(null)

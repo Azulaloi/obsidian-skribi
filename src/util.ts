@@ -44,6 +44,12 @@ export function toArray(args: any | any[]): any[] {
 	return (Array.isArray(args) ? args : [args])
 }
 
+export function isInFolder(e: TAbstractFile, dir: string) {
+	let boo = (e.parent == window.app.vault.getAbstractFileByPath(normalizePath(dir)))
+
+	return boo
+}
+
 export function isExtant(obj: any) {
 	return !((obj === null ) || (obj === undefined))
 }
@@ -112,19 +118,6 @@ export function getPreviewView(app: App, flip?: boolean): MarkdownView {
 
 export const isFunc = (func: any): func is Function => (func instanceof Function)
 export const isFile = (item: any): item is TFile => (item) instanceof TFile; 
-// export const isType = <T>(item: any, type: T): item is T => { 
-	// return getID<(identity(item)), (identity(type))>(item)
-// }
-
-// dude what even is a type actually
-
-// declare function getID<T, K>(item: T): T extends K ? T : never;
-
-// let s = getID<string, number>('a')
-
-// function identity<Type>(arg: Type): Type {
-  // return arg;
-// }
 
 function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdexed<T>) {
   let rets: Stringdex = {};
@@ -147,3 +140,5 @@ function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
     }
   }
 }
+
+export const getAsyncConstructor = (): FunctionConstructor => new Function('return (async function(){}).constructor')()

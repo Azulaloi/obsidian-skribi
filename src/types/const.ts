@@ -1,5 +1,7 @@
 import { ArgSet } from "./types";
 
+export const VAR_NAME: string = 'sk'
+
 export const DELIMITERS: ArgSet = {
 	"PASS_VALUE": [":"]
 }
@@ -19,3 +21,5 @@ export const enum Flags {
 	literal = 4,
 	eval = 5
 }
+
+export const EBAR = `\n---------------------------\n`

@@ -1,5 +1,6 @@
 import { App, MarkdownRenderer } from "obsidian";
 import SkribosPlugin from "src/main";
+import { VAR_NAME } from "src/types/const";
 import { DynamicState, Stringdex, Stringdexed } from "src/types/types";
 import { isFunc } from "src/util";
 import { EtaHandler } from "./eta";
@@ -12,6 +13,8 @@ import { IProvider, Provider, ProviderPredicated } from "./provider_abs";
 const obsidianModule = require("obsidian");
 
 const MODULE_NAME_INTEGRATIONS: string = 'int';
+
+type Providerish = IProvider
 
 /* Handles all script function providers */
 export class ProviderBus {
@@ -39,14 +42,16 @@ export class ProviderBus {
     this.scriptLoader = new ProviderScriptloader(this, 'js'); // assigned here so that we can register file events in handler
   }
 
+  /* Construct all providers but do not initialize them yet, so that we can compile and cache templates ASAP */
+  async preInit() {
+    this.addTo(this.providers, this.scriptLoader)
+    this.addTo(this.providersPredicated, new ProviderDataview(this, 'dv'))
+    this.addTo(this.providersPredicated, new ProviderWeather(this, 'weather'))
+    this.skBase = new ProviderSK(this, VAR_NAME)
+    return Promise.resolve()
+  }
+
   async init() {
-    this.addProvider(this.scriptLoader, true)
-
-    this.addProviderPredicated(new ProviderDataview(this, 'dv'), true)
-    this.addProviderPredicated(new ProviderWeather(this, 'weather'), true)
-
-    this.skBase = new ProviderSK(this, this.handler.varName)
-
     const inits = Object.values(this.execOnProviders('init'))
 
     await Promise.allSettled(inits)
@@ -54,17 +59,24 @@ export class ProviderBus {
     return Promise.resolve()
   }
 
+  private addTo(providers: Map<string, IProvider>, provider: Provider) {
+    providers.set(provider.id, provider)
+  }
+
   /**
-   * @param provider IProvider object to add
-   * @param suppress Set true to not mark scope as dirty */
-  addProvider = (provider: Provider, suppress?: boolean) => {
+   * Integration point for other plugins to add a provider 
+   * @param provider Provider implementation to add */
+  public addProvider = (provider: Provider) => {
     this.providers.set(provider.id, provider)
-    if (!suppress) this.isStaticScopeDirty = true
+    this.isStaticScopeDirty = true
+    this.handler.recompileTemplates()
   }
   
-  addProviderPredicated = (provider: ProviderPredicated, suppress?: boolean) => {
+  /**
+   * Integration point for other plugins to add a predicated provider
+   * @param provider ProviderPredicated implementation to add */
+  addProviderPredicated = (provider: ProviderPredicated) => {
     this.providersPredicated.set(provider.id, provider)
-    if (!suppress) this.isStaticScopeDirty = true
   }
 
   unload() {
@@ -95,6 +107,10 @@ export class ProviderBus {
     return Promise.allSettled(Object.values(proms))
   }
 
+  public getScopeKeys() {
+    return [...this.providers.keys(), MODULE_NAME_INTEGRATIONS, 'moment', 'obsidian']
+  }
+
   /* Retrieves providers object */
   public getScope(ctx?: DynamicState, refresh?: boolean) {
     let dirties = Object.values(this.providers).filter((p: Provider) => {return p.isDirty})
@@ -102,10 +118,7 @@ export class ProviderBus {
 
     if (this.isStaticScopeDirty) this.createStaticScope()
 
-    let proxy: Stringdex = {}
-    proxy[MODULE_NAME_INTEGRATIONS] = this.createPredicatedScope(ctx || null)
-
-    return Object.assign({}, this.scopeStatic, proxy)
+    return Object.assign({}, this.scopeStatic, {[MODULE_NAME_INTEGRATIONS]: this.createPredicatedScope(ctx || null)})
   }
 
   /* Creates scope object. Should not be used to get the scope. */
