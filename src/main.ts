@@ -58,6 +58,11 @@ export default class SkribosPlugin extends Plugin {
 				}, (r) => {});
 			}})
 
+		this.addCommand({id: "skribi-reload-scripts", name: "Reload Scripts",
+			callback: () => {
+				this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
+			}})
+
 		/* Run bulk skribi rendering to test processing times */
 		if (false) this.addCommand({id: "skribi-test", name: 'Skribi Test', editorCallback: async (editor, view) => {
 			let container = createDiv()

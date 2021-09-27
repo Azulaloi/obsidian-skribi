@@ -17,7 +17,7 @@ export class TemplateLoader {
   templateFailures: Map<string, string> = new Map();
   templateFrontmatters: Map<string, FrontMatterCache> = new Map();
 
-  get directory() { return this.plugin.settings.templateFolder }
+  get directory(): string { return this.plugin.settings.templateFolder }
 
   constructor(handler: EtaHandler) {
     this.handler = handler
@@ -109,10 +109,11 @@ export class TemplateLoader {
     this.definePartials(file)
   }
 
-  fileDeleted(file: TAbstractFile): void {
-    if (!isFile(file)) return;
-    vLog(`File '${file.name}' removed from template directory, unloading...`)
-    this.deletePartial(file)
+  fileDeleted(file: TAbstractFile | string): void {
+    let isf = isFile(file)
+    if ((!isf && !(String.isString(file) && this.templateCache.get(file)))) return;
+    vLog(`File '${isf ? (file as TFile).name : file}' removed from template directory, unloading...`)
+    this.deletePartial(file as (TFile | string))
   }
 
   fileAdded(file: TAbstractFile): void {
@@ -121,9 +122,11 @@ export class TemplateLoader {
     this.definePartials(file)
   }
 
-  fileRenamed(file: TAbstractFile, oldPath: string): void {
-    vLog(`Template file '${oldPath}' renamed to '${file.name}', updating...`)
-    
+  fileRenamed(file: TAbstractFile, oldName: string): void {
+    if (!isFile(file)) return;
+    vLog(`Template file '${oldName}' renamed to '${file.name}', updating...`)
+    this.deletePartial(oldName)
+    this.definePartials(file)
   }
 
   directoryChanged(): void {

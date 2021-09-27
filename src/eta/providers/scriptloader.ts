@@ -1,10 +1,12 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
-import { Stringdex } from "src/types/types";
+import { Stringdex, Stringdexed } from "src/types/types";
 import { dLog, filterFileExt, getFiles, isExtant, isFile, vLog, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
 
 export class ProviderScriptloader extends Provider {
   loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
+
+  get directory(): string { return this.bus.plugin.settings.scriptFolder }
 
   async init() {
     return this.initLoad().then(() => super.init())
@@ -34,7 +36,7 @@ export class ProviderScriptloader extends Provider {
     })
   }
 
-  createObject() {
+  createObject(): Stringdex {
     let exports: Map<string, any> = new Map()
     this.loadedModules.forEach((value, key) => {
       let single = (Object.keys(value.properties).length == 1) 
@@ -75,10 +77,19 @@ export class ProviderScriptloader extends Provider {
     })
   }
 
-  clearJS(...files: TFile[]) {
-    for (let f of filterFileExt(files, "js")) {
-      this.loadedModules.delete(f.basename)
-    }
+  clearJS(...items: Array<TFile | string>): void {
+    let names = items.map((item) => {
+      if (isFile(item)) return filterFileExt(item, 'js')[0].basename
+      else if (String.isString(item)) return item 
+    })
+
+    for (let name of names) this.loadedModules.delete(name)
+  }
+
+  async reload(): Promise<void> {
+    this.loadedModules.clear()
+    await this.initLoad()
+    return super.reload()
   }
 
   // Event listeners for file events registered by EtaHander
@@ -104,14 +115,16 @@ export class ProviderScriptloader extends Provider {
     .then(() => {this.setDirty()}, () => this.clearJS(file))
   }
 
-  directoryChanged() {
-    vLog(`Script directory changed, reloading scripts...`)
-    this.reload().then(() => this.setDirty(), (e) => {console.warn(e)})
+  fileRenamed(file: TAbstractFile, oldName: string): void {
+    if (!isFile(file)) return;
+    vLog(`Script file '${oldName}' renamed to '${file.name}', updating...`)
+    this.clearJS(oldName)
+    this.loadAndSet(file)
+    .then(() => {this.setDirty()}, () => {})
   }
 
-  async reload() {
-    this.loadedModules.clear()
-    await this.initLoad()
-    return super.reload()
+  directoryChanged(): void {
+    vLog(`Script directory changed, reloading scripts...`)
+    this.reload().then(() => this.setDirty(), (e) => {console.warn(e)})
   }
 }

@@ -2,6 +2,7 @@ import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
 import { EtaConfig } from "eta/dist/types/config";
 import { normalizePath, TAbstractFile, TFile } from "obsidian";
+import { normalize } from "path";
 import { EBAR, VAR_NAME } from "src/types/const";
 import SkribosPlugin from "../main";
 import { scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
@@ -36,23 +37,40 @@ export class EtaHandler {
   init() {
     this.initLoad().then(() => {
       this.plugin.registerEvent(this.plugin.app.vault.on('modify', e => {
-        console.log(e)
         if (this.isInScripts(e)) this.bus.scriptLoader.fileUpdated(e)
         if (this.isInTemplates(e)) this.loader.fileUpdated(e)
       }))
   
       this.plugin.registerEvent(this.plugin.app.vault.on('delete', e => {
-        console.log(e)
         if (this.isInScripts(e)) this.bus.scriptLoader.fileDeleted(e)
         if (this.isInTemplates(e)) this.loader.fileDeleted(e)
       }))
   
       this.plugin.registerEvent(this.plugin.app.vault.on('create', e => {
-        console.log(e)
         if (this.isInScripts(e)) this.bus.scriptLoader.fileAdded(e)
         if (this.isInTemplates(e)) this.loader.fileAdded(e)
       }))
 
+      this.plugin.registerEvent(this.plugin.app.vault.on('rename', (file, oldPath) => {
+        for (let obj of [this.bus.scriptLoader, this.loader]) {
+          let ourDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath(obj.directory))
+          let oldDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath((/.+\//g).exec(oldPath)[0]))
+          console.log(oldDir, ourDir)
+          if (file.parent == ourDir) {
+            // New location of file is in our directory
+            if (file.parent == oldDir) {
+              // File did not move but was renamed
+              obj.fileRenamed(file, (/([a-zA-Z0-9-_.]+\..*)/g).exec(oldPath)[0])
+            } else {
+              // File was moved from elsewhere into the template directory
+              obj.fileAdded(file)
+            }
+          } else if (oldDir == ourDir) {
+            // File used to be in templates directory and is no longer
+            obj.fileDeleted(file)
+          }
+        }
+      }))
     }).catch((err) => {
       console.error(`Skribi: EtaHandler failed to initialize!`, EBAR, err)
     })
