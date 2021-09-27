@@ -45,7 +45,7 @@ export function toArray(args: any | any[]): any[] {
 }
 
 export function isInFolder(e: TAbstractFile, dir: string) {
-	let boo = (e.parent == window.app.vault.getAbstractFileByPath(normalizePath(dir)))
+	let boo = (normalizePath((/.+\//g).exec(e.path)[0]) == normalizePath(dir))
 
 	return boo
 }

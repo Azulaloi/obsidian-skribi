@@ -2,7 +2,9 @@
 
 Any `.js` files inside of the configured [Script Directory](/obsidian-skribi/settings/#script-folder) are automatically loaded by Skribi, and their exported properties made available in the `js` object. Any file modifications, additions, or deletions are detected and the modules reloaded automatically.  
 
-**Caveat:** if a `.js` file is moved or renamed *externally*, (such as through your OS file explorer or an external IDE), the scriptloader will not fully understand the change. If the file was moved into the folder, it will detect it as an addition, but moved out of the folder or renamed, it will then think it's a new file and the old module will persist until reload. Moving or renaming the files using Obsidian will work properly, and for this reason I recommend a plugin such as [CodeView](https://github.com/zsviczian/obsidian-codeeditor) to allow Obsidian to show JS files in the file explorer. Editing a script with an external editor will still trigger updates on save (personally I use VSCode to edit my scriptloader scripts). To update the scriptloader manually, reload Obsidian or use the **Skribi: Reload Scripts** command.
+**Note:** Obsidian by default does not show unrecognized file extensions in the file explorer, so `.js` files will not be visible. You may use a plugin such as [CodeView](https://github.com/zsviczian/obsidian-codeeditor) to allow Obsidian to show JS files in the file explorer (as well as edit them within Obsidian). Personally, I use VSCode to edit my scriptloader scripts, by adding my script folder to my VSCode workspace. 
+
+If for whatever reason you find the need to update the scriptloader manually (though this should never be necessary), you may either reload Obsidian or use the **Skribi: Reload Scripts** command.
 
 ## Exporting
 

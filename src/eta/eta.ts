@@ -42,6 +42,7 @@ export class EtaHandler {
       }))
   
       this.plugin.registerEvent(this.plugin.app.vault.on('delete', e => {
+        // console.log(e)
         if (this.isInScripts(e)) this.bus.scriptLoader.fileDeleted(e)
         if (this.isInTemplates(e)) this.loader.fileDeleted(e)
       }))
@@ -55,7 +56,7 @@ export class EtaHandler {
         for (let obj of [this.bus.scriptLoader, this.loader]) {
           let ourDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath(obj.directory))
           let oldDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath((/.+\//g).exec(oldPath)[0]))
-          console.log(oldDir, ourDir)
+          // console.log(oldDir, ourDir)
           if (file.parent == ourDir) {
             // New location of file is in our directory
             if (file.parent == oldDir) {
