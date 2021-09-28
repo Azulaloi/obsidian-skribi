@@ -1,5 +1,5 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
-import { type } from "os";
+import { confirmationModal } from "./modal/confirmationModal";
 import { Stringdex, Stringdexed } from "./types/types";
 
 declare global {
@@ -76,10 +76,15 @@ export function dLog(...args: any[]) {
 	}
 }
 
+/* Takes an array of strings and returns a record of key/value pairs for each, where the key and value are the same */
 export function toDupeRecord(arr: string[]): Record<string, string> {
   return arr.reduce((a, i) => ({...a, [i]: i}), {} as Record<string, string>)
 }
 
+/** 
+ * @param input An object to clone
+ * @param keys The keys of properties to omit from the clone
+ * @returns A clone of 'input' without the omitted properties */
 export function withoutKey<T extends { [K in keyof T]: string | number | symbol }>(input: {[index: string]: any}, key: string | string[]) {
   const clone = { ...input };
   if (Array.isArray(key)) {
@@ -92,14 +97,18 @@ export function withoutKey<T extends { [K in keyof T]: string | number | symbol 
 
 export const asyncFunc = Object.getPrototypeOf(async function(){}).constructor
 export const promiseImpl: PromiseConstructor = new Function('return this')().Promise
+export const getAsyncConstructor = (): FunctionConstructor => new Function('return (async function(){}).constructor')()
 
 
-
-/* Will get active view, or first preview view with same file as active view */
-export function getPreviewView(app: App, flip?: boolean): MarkdownView {
+/**
+ * @param App
+ * @param flip If true, target is editor mode. Otherwise, target is preview mode.
+ * @returns First markdown view of target mode with same file as active view, or active view if none was found. Null if no active view exists. */
+export function getPreviewView(app: App, flip?: boolean): MarkdownView | null {
 	let t1 = flip ? "preview" : "source"
 	let t2 = flip ? "source" : "preview"
 
+	try {
 	var view = app.workspace.getActiveViewOfType(MarkdownView);
 	if (view.getMode() == t1) {
 		app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
@@ -111,8 +120,11 @@ export function getPreviewView(app: App, flip?: boolean): MarkdownView {
 			}
 		})
 	}
+	} catch (e) {
 
-	return view;
+	}
+
+	return view || null;
 }
 
 
@@ -141,4 +153,39 @@ function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
   }
 }
 
-export const getAsyncConstructor = (): FunctionConstructor => new Function('return (async function(){}).constructor')()
+export function average(...numbers: number[]) {
+  return numbers.reduce((val, cur) => val+cur)/numbers.length
+}
+
+/* Get link to documentation page. */
+export function linkToDocumentation(page: string) {
+	// return `https://azulaloi.net/obsidian-skribi/${page}`
+	return `https://azulaloi.github.io/obsidian-skribi/${page}`
+}
+
+/* Prefixes string with plugin name. Makes reusing code across plugins easier. */
+export function kls(cls: string) {return `skribi-${cls}`}
+
+export function makeExternalLink(linkIn: HTMLAnchorElement | string): HTMLAnchorElement {
+	const link = String.isString(linkIn) ? createEl('a', {attr: {href: linkIn}}) : linkIn
+
+  link.addEventListener('click', (ev) => {
+    ev.preventDefault()
+
+    let p = new confirmationModal(window.app, {
+      title: `Open External Link?`,
+      desc: `Will open the following address with default program:`,
+      labelPos: `Open Link`,
+      elements: [createDiv({cls: kls('confirmation-modal-link'), text: link.getAttr('href')})]
+    });
+
+    new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => p.openAndGetValue(resolve, reject))
+    .then(res =>  {
+      if (res === "true") {
+        window.open(link.getAttr('href'))
+      }
+    })
+  })
+
+	return link
+}

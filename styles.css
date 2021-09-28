@@ -99,3 +99,48 @@ code.skribi-regent.depth-limit::after {
 .skribi-modal-field-append {
   font-style: italic;
 }
+
+.skribi-modal-desc {
+  width: 100%;
+  text-align: center;
+}
+
+.skribi-test-modal .skribi-autofill-notification {
+  font-style: italic;
+}
+.skribi-test-modal .skribi-button-eval .setting-item-control {
+  width: 100%;
+}
+.skribi-test-modal .skribi-button-eval .setting-item-control button {
+  margin: auto;
+  font-weight: bold;
+}
+
+.skribi-confirmation-modal .skribi-confirmation-modal-description {
+  width: 100%;
+  text-align: center;
+}
+.skribi-confirmation-modal .skribi-confirmation-modal-link {
+  width: 100%;
+  text-align: center;
+  font-style: italic;
+  text-decoration: underline;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+.skribi-confirmation-modal .skribi-confirm-modal-buttons {
+  margin-top: 1em;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.skribi-confirmation-modal .skribi-confirm-modal-buttons button {
+  font-weight: bold;
+  flex: 0.5;
+  max-width: 40%;
+  background-color: var(--interactive-normal);
+}
+.skribi-confirmation-modal .skribi-confirm-modal-buttons button:hover {
+  background-color: var(--interactive-hover);
+}

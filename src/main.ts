@@ -1,14 +1,16 @@
-import { debounce, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownPreviewView, MarkdownRenderChild, MarkdownRenderer, MarkdownSectionInformation, MarkdownView, Plugin, TAbstractFile, TFile } from 'obsidian';
+import { debounce, Editor, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownPreviewView, MarkdownRenderChild, MarkdownRenderer, MarkdownSectionInformation, MarkdownSourceView, MarkdownView, Plugin, TAbstractFile, TFile } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { dLog, getPreviewView, isExtant, isFile, roundTo, vLog } from './util';
 import { embedMedia } from './render/embed';
 import { Modes, Flags, EBAR } from './types/const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types/types';
-import { InsertionModal, SuggestionModal } from './modal';
 import { SkribiChild } from './render/child';
 import { preparseSkribi, parseSkribi } from './render/parse';
 import { renderError, renderRegent, renderState, renderWait } from './render/regent';
+import { SuggestionModal } from './modal/suggestionModal';
+import { InsertionModal } from './modal/insertionModal';
+import { TestModal } from './modal/testModal';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -58,64 +60,22 @@ export default class SkribosPlugin extends Plugin {
 				}, (r) => {});
 			}})
 
-		this.addCommand({id: "skribi-reload-scripts", name: "Reload Scripts",
+		this.addCommand({id: "reload-scripts", name: "Reload Scripts",
 			callback: () => {
 				this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
 			}})
 
-		/* Run bulk skribi rendering to test processing times */
-		if (false) this.addCommand({id: "skribi-test", name: 'Skribi Test', editorCallback: async (editor, view) => {
-			let container = createDiv()
-			let el = createDiv()
-
-			let d = createDiv()
-
-			let primes: HTMLElement[] = []
-			for (let i = 0; i < 100; i++) {
-				// let d = createDiv()
-				d.createEl('code', {text: editor.getSelection()})
-				// primes.push(d)
-			}
-			primes.push(d)
-			let tx = window.performance.now()
-
-			// console.log(primes)
-			const proms = primes.map(async (div) => {
-				let t1 = window.performance.now()
-
-				let p = await this.processor({srcType: Modes.general}, div, {
-					remainingNestLevel: 4,
-					docId: '55555555',
-					frontmatter: null,
-					sourcePath: view.file.path,
-					addChild: (child: any) => {},
-					getSectionInfo: () => {return null as MarkdownSectionInformation},
-					containerEl: container,
-					el: el
-				}, 4, false, null).catch(() => {})
-
-				return [p, window.performance.now(), t1]
-			})
-
-			let vals = await Promise.allSettled(proms)
-
-			console.log('tests settled in:', window.performance.now()-tx)
-
-			let en = vals.map((v) => {if (v.status == 'fulfilled') return v.value})
-
-			let times = []
-			for (let res of en) {
-				let timeDiff = res[1] as number - (res[2] as number)
-				times.push(timeDiff)
-			}
-
-			let l = times.length
-			let a = times.reduce((v, c) => {return v+c})
-
-			console.log(`avg time of ${l}: ${a/l}`)
+		this.addCommand({id: "test-performance", name: 'Test Performance', callback: async () => {
+			let sel = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor?.getSelection()
+			let clip = await window.navigator.clipboard.readText();
+			let fill = (sel || clip) ? {
+				type: sel ? 'Selection' : 'Clipboard',
+				value: sel ? sel : clip
+			} : null
+			
+			new TestModal(this, fill).open()
 		}})
 
-		
 		// registerMirror(this);
 	}
 	

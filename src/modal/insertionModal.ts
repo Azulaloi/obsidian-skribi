@@ -1,7 +1,7 @@
-import { AbstractTextComponent, App, Editor, EditorRangeOrCaret, EditorSelection, FuzzySuggestModal, KeymapEventHandler, Modal, Setting, TextComponent, ValueComponent } from "obsidian";
-import SkribosPlugin from "./main";
-import { fieldPrompt, promptTypes, Stringdex } from "./types/types";
-import { isExtant, toDupeRecord } from "./util";
+import { AbstractTextComponent, Editor, EditorRangeOrCaret,KeymapEventHandler, Modal, Setting } from "obsidian";
+import SkribosPlugin from "../main";
+import { fieldPrompt, promptTypes } from "../types/types";
+import { isExtant, toDupeRecord } from "../util";
 
 export class InsertionModal extends Modal {
   private plugin: SkribosPlugin;
@@ -29,7 +29,6 @@ export class InsertionModal extends Modal {
   }
 
   create() {
-
     let s = new Setting(this.contentEl)
     s.addDropdown((drop) => { drop
       .addOptions(toDupeRecord(this.plugin.eta.getCacheKeys()))
@@ -142,31 +141,3 @@ export class InsertionModal extends Modal {
     this.close();
   }
 }
-
-export class SuggestionModal extends FuzzySuggestModal<string> {
-  private resolve: (value: string) => void;
-  private reject: (reason?: any) => void;
-
-  private plugin: SkribosPlugin
-  constructor(plugin: SkribosPlugin) {
-    super(plugin.app)
-    this.plugin = plugin
-  }
-
-  getItems() {
-    return this.plugin.eta.getCacheKeys()
-  }
-
-  getItemText(item: string): string {return item}
-
-  onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
-    this.resolve(item)
-  }
-
-  async openAndGetValue(resolve: (value: string) => void, reject: () => void): Promise<void> {
-    this.resolve = resolve
-    this.reject = reject
-    this.open()
-  }
-}
-
