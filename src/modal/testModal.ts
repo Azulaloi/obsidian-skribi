@@ -87,16 +87,16 @@ export class TestModal extends Modal {
     let el = createDiv()
 
     let blocksToProcess: HTMLElement[] = []
-    let toIter = Math.min(this.iterations, )
+    let toIter = Math.min(this.iterations, maximumIterations)
     if (this.multiBlock) {
-      for (let i = 0; i < this.iterations; i++) {
+      for (let i = 0; i < toIter; i++) {
         let d = createDiv()
         d.createEl('code', {text: this.textFieldToEval.getValue()})
         blocksToProcess.push(d)
       }
     } else {
       let singleDiv = createDiv()
-      for (let i = 0; i < this.iterations; i++) {
+      for (let i = 0; i < toIter; i++) {
         singleDiv.createEl('code', {text: this.textFieldToEval.getValue()})
       }
       blocksToProcess.push(singleDiv)
@@ -111,7 +111,7 @@ export class TestModal extends Modal {
         remainingNestLevel: 4,
         docId: '55555555',
         frontmatter: null,
-        sourcePath: this.plugin.app.workspace.getActiveFile().path,
+        sourcePath: this.plugin.app.workspace.getActiveFile()?.path || "",
         addChild: (child: any) => {},
         getSectionInfo: () => {return null as MarkdownSectionInformation},
         containerEl: container,

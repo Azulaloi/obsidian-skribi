@@ -118,7 +118,7 @@ export class EtaHandler {
   * @param file File in which the skribi is being rendered  
   * @returns [rendered string, returned packet (currently unused)] */
   async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
-    if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file}`);
+    // if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file}`);
 
     let z: Stringdex = {};
     function p() {
@@ -131,7 +131,7 @@ export class EtaHandler {
 
     /* the 'this' object of the sk context*/
     let binder = {
-      file: file,
+      file: file || null,
       plugin: this.plugin,
       app: this.plugin.app
     }

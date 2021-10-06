@@ -11,7 +11,7 @@ The string content of a skribi is parsed by Eta into a function, which returns t
             <th><code>this</code></th>
             <td> The template function's bound `this` object. Contains direct references to various objects, for those familiar with Obsidian's API.<ul>
             <li><code>plugin</code>: A reference to the Skribi plugin.</li>
-            <li><code>file</code>: The `TFile` inside of which the skribi is being rendered. See: <a href='https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts#L2872'>TFile Definition</a></li>
+            <li><code>file</code>: The <a href='https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts#L2872'>TFile</a> inside of which the skribi is being rendered, or null if not being rendered inside of a file. </li>
             <li><code>app</code>: The Obsidian app.</li></ul></td>
         </tr>
         <tr><th><code>scope</code> </th><td> Internal object used to provide objects to the local scope. You may inspect this object to view the provided objects.</td></tr>

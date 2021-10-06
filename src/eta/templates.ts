@@ -57,7 +57,7 @@ export class TemplateLoader {
 
       try {
         let compiledString = Eta.compileToString(read, Eta.getConfig({varName: VAR_NAME, name: file.basename}))
-        var compiled = compileWith(compiledString, [VAR_NAME, 'E', 'cb', ...scopeKeys])
+        var compiled = compileWith(compiledString, [VAR_NAME, 'E', 'cb', ...scopeKeys], (read.contains('await')))
       } catch(err) {
         this.templateFailures.set(file.basename, err || `Template failed to compile: Unknown Error`)
         console.warn(`Skribi: template '${file.basename}' failed to compile`, EBAR, err, EBAR, read)
