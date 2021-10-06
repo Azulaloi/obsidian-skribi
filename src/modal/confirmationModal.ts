@@ -53,3 +53,27 @@ export class confirmationModal extends Modal {
       this.open();
   }
 }
+
+export function makeExternalLink(linkIn: HTMLAnchorElement | string): HTMLAnchorElement {
+	const link = String.isString(linkIn) ? createEl('a', {attr: {href: linkIn}}) : linkIn
+
+  link.addEventListener('click', (ev) => {
+    ev.preventDefault()
+
+    let p = new confirmationModal(window.app, {
+      title: `Open External Link?`,
+      desc: `Will open the following address with default program:`,
+      labelPos: `Open Link`,
+      elements: [createDiv({cls: kls('confirmation-modal-link'), text: link.getAttr('href')})]
+    });
+
+    new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => p.openAndGetValue(resolve, reject))
+    .then(res =>  {
+      if (res === "true") {
+        window.open(link.getAttr('href'))
+      }
+    })
+  })
+
+	return link
+}

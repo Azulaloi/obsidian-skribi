@@ -2,14 +2,14 @@ import * as Eta from "eta";
 import { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import { checkFileExt, getFiles, isExtant, isFile, roundTo, vLog, withoutKey } from "src/util";
+import { checkFileExt, getFiles, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
-import { TemplateFunctionScoped } from "src/types/types";
+import { FileMinder, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
 
 /* Responsible for the caching and management of templates. */
-export class TemplateLoader {
+export class TemplateLoader implements FileMinder {
   private handler: EtaHandler
   private plugin: SkribosPlugin
 
@@ -17,7 +17,6 @@ export class TemplateLoader {
   templateFailures: Map<string, string> = new Map();
   templateFrontmatters: Map<string, FrontMatterCache> = new Map();
 
-  get directory(): string { return this.plugin.settings.templateFolder }
 
   constructor(handler: EtaHandler) {
     this.handler = handler
@@ -101,7 +100,9 @@ export class TemplateLoader {
     return this.definePartials(...getFiles(this.plugin.app, this.directory))
   }
 
-  /* These functions are registered to the appropriate events by handler */
+  /* FileMinder Functions */
+  
+  get directory(): string { return this.plugin.settings.templateFolder }
 
   fileUpdated(file: TAbstractFile): void {
     if (!isFile(file)) return;
@@ -132,5 +133,9 @@ export class TemplateLoader {
   directoryChanged(): void {
     vLog(`Template directory changed, reloading templates...`)
     this.reload()
+  }
+
+  isInDomain(file: TAbstractFile): boolean {
+    return isInFolder(file, this.directory)
   }
 }

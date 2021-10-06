@@ -1,12 +1,10 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
-import { Stringdex, Stringdexed } from "src/types/types";
-import { dLog, filterFileExt, getFiles, isExtant, isFile, vLog, withoutKey } from "src/util";
+import { FileMinder, Stringdex } from "src/types/types";
+import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
 
-export class ProviderScriptloader extends Provider {
+export class ProviderScriptloader extends Provider implements FileMinder {
   loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
-
-  get directory(): string { return this.bus.plugin.settings.scriptFolder }
 
   async init() {
     return this.initLoad().then(() => super.init())
@@ -92,7 +90,10 @@ export class ProviderScriptloader extends Provider {
     return super.reload()
   }
 
-  // Event listeners for file events registered by EtaHander
+  /* FileMinder Functions */
+
+  get directory(): string { return this.bus.plugin.settings.scriptFolder }
+
   fileUpdated(file: TAbstractFile): void {
     if (!isFile(file)) return;
     vLog(`File '${file.name}' in script directory modified, updating...`)
@@ -126,5 +127,9 @@ export class ProviderScriptloader extends Provider {
   directoryChanged(): void {
     vLog(`Script directory changed, reloading scripts...`)
     this.reload().then(() => this.setDirty(), (e) => {console.warn(e)})
+  }
+
+  isInDomain(file: TAbstractFile): boolean {
+    return isInFolder(file, this.directory)
   }
 }

@@ -1,7 +1,8 @@
 import { AbstractTextComponent, KeymapEventHandler, MarkdownSectionInformation, Modal, Setting } from "obsidian";
 import { Modes } from "src/types/const";
 import SkribosPlugin from "../main";
-import { average,  linkToDocumentation, makeExternalLink, roundTo, vLog } from "../util";
+import { average,  linkToDocumentation, roundTo, vLog } from "../util";
+import { makeExternalLink } from "./confirmationModal";
 
 const maximumIterations = 10000
 

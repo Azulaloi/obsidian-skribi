@@ -1,15 +1,18 @@
+import { dir } from "console";
 import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
 import { EtaConfig } from "eta/dist/types/config";
-import { normalizePath, TAbstractFile, TFile } from "obsidian";
-import { normalize } from "path";
+import { normalizePath, TFile } from "obsidian";
 import { EBAR, VAR_NAME } from "src/types/const";
 import SkribosPlugin from "../main";
-import { scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
-import { isExtant, isFile, isInFolder } from "../util";
+import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
+import { isExtant } from "../util";
 import { renderEtaAsync, renderEta, compileWith } from "./comp";
 import { ProviderBus } from "./provider_bus";
 import { TemplateLoader } from "./templates";
+
+const EXTRACT_FILENAME = /([a-zA-Z0-9-_.]+\..*)/g
+const EXTRACT_DIRPATH = (/.+\//g)
 
 export class EtaHandler {
   plugin: SkribosPlugin;
@@ -36,49 +39,48 @@ export class EtaHandler {
 
   init() {
     this.initLoad().then(() => {
-      this.plugin.registerEvent(this.plugin.app.vault.on('modify', e => {
-        if (this.isInScripts(e)) this.bus.scriptLoader.fileUpdated(e)
-        if (this.isInTemplates(e)) this.loader.fileUpdated(e)
-      }))
-  
-      this.plugin.registerEvent(this.plugin.app.vault.on('delete', e => {
-        // console.log(e)
-        if (this.isInScripts(e)) this.bus.scriptLoader.fileDeleted(e)
-        if (this.isInTemplates(e)) this.loader.fileDeleted(e)
-      }))
-  
-      this.plugin.registerEvent(this.plugin.app.vault.on('create', e => {
-        if (this.isInScripts(e)) this.bus.scriptLoader.fileAdded(e)
-        if (this.isInTemplates(e)) this.loader.fileAdded(e)
-      }))
-
-      this.plugin.registerEvent(this.plugin.app.vault.on('rename', (file, oldPath) => {
-        for (let obj of [this.bus.scriptLoader, this.loader]) {
-          let ourDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath(obj.directory))
-          let oldDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath((/.+\//g).exec(oldPath)[0]))
-          // console.log(oldDir, ourDir)
-          if (file.parent == ourDir) {
-            // New location of file is in our directory
-            if (file.parent == oldDir) {
-              // File did not move but was renamed
-              obj.fileRenamed(file, (/([a-zA-Z0-9-_.]+\..*)/g).exec(oldPath)[0])
-            } else {
-              // File was moved from elsewhere into the template directory
-              obj.fileAdded(file)
-            }
-          } else if (oldDir == ourDir) {
-            // File used to be in templates directory and is no longer
-            obj.fileDeleted(file)
-          }
-        }
-      }))
+      this.registerFileEvents()
     }).catch((err) => {
       console.error(`Skribi: EtaHandler failed to initialize!`, EBAR, err)
     })
   }
 
-  isInTemplates = (e: TAbstractFile) => isInFolder(e, this.plugin.settings.templateFolder)
-	isInScripts = (e: TAbstractFile) => isInFolder(e, this.plugin.settings.scriptFolder)
+  registerFileEvents() {
+    /* Because the FileMinder index does not change, we don't need the event refs */
+
+    const minders: FileMinder[] = [this.bus.scriptLoader, this.loader]
+    for (let minder of minders) {
+      this.plugin.registerEvent(this.plugin.app.vault.on('modify', file => {
+        if (minder.isInDomain(file)) minder.fileUpdated(file)
+      }))
+
+      this.plugin.registerEvent(this.plugin.app.vault.on('delete', file => {
+        if (minder.isInDomain(file)) minder.fileDeleted(file)
+      }))
+
+      this.plugin.registerEvent(this.plugin.app.vault.on('create', file => {
+        if (minder.isInDomain(file)) minder.fileAdded(file)
+      }))
+
+      this.plugin.registerEvent(this.plugin.app.vault.on('rename', (file, oldPath) => {
+          let ourDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath(minder.directory))
+          let oldDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath((/.+\//g).exec(oldPath)[0]))
+          if (file.parent == ourDir) {
+            // New location of file is in our directory
+            if (file.parent == oldDir) {
+              // File did not move but was renamed
+              minder.fileRenamed(file, (/([a-zA-Z0-9-_.]+\..*)/g).exec(oldPath)[0])
+            } else {
+              // File was moved from elsewhere into the template directory
+              minder.fileAdded(file)
+            }
+          } else if (oldDir == ourDir) {
+            // File used to be in templates directory and is no longer
+            minder.fileDeleted(file)
+          }
+      }))
+    }
+  }
 
   async initLoad() {
     let {a: a, b: b} = await this.bus.preInit().then(() => {
