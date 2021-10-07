@@ -20,11 +20,7 @@ export interface Template {
 	file: TFile
 }
 
-export interface Stringdex {
-	[index: string]: any
-}
-
-export declare type Stringdexed<T> = {[index: string]: T}
+export declare type Stringdex<T = any> = {[index: string]: T}
 
 export interface ArgSet {[index: string]: string | string[]};
 

@@ -1,7 +1,7 @@
 import { App, MarkdownRenderer } from "obsidian";
 import SkribosPlugin from "src/main";
 import { VAR_NAME } from "src/types/const";
-import { DynamicState, Stringdex, Stringdexed } from "src/types/types";
+import { DynamicState, Stringdex } from "src/types/types";
 import { isFunc } from "src/util";
 import { EtaHandler } from "./eta";
 import { ProviderSK } from "./providers/base";

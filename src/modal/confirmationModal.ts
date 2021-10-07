@@ -1,4 +1,5 @@
 import { App, Modal } from "obsidian"
+import { l } from "src/lang/babel";
 import { kls } from "src/util";
 
 interface confirmationModalValues {
@@ -15,9 +16,9 @@ export class confirmationModal extends Modal {
   private reject: (reason?: any) => void;
 
   private fields: confirmationModalValues = {
-    title: "Please Confirm",
-    labelPos: "Confirm",
-    labelNeg: "Cancel",
+    title: l["modal.confirm.title"],
+    labelPos: l["modal.confirm.confirm"],
+    labelNeg: l["modal.confirm.cancel"],
   }
 
   constructor(app: App, fieldsIn?: Partial<confirmationModalValues>) {
@@ -61,9 +62,9 @@ export function makeExternalLink(linkIn: HTMLAnchorElement | string): HTMLAnchor
     ev.preventDefault()
 
     let p = new confirmationModal(window.app, {
-      title: `Open External Link?`,
-      desc: `Will open the following address with default program:`,
-      labelPos: `Open Link`,
+      title: l["modal.external.title"],
+      desc: l["modal.external.desc"],
+      labelPos: l["modal.external.label"],
       elements: [createDiv({cls: kls('confirmation-modal-link'), text: link.getAttr('href')})]
     });
 

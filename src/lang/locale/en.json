@@ -1,0 +1,49 @@
+{
+  "test": "test",
+  "documentation": "Documentation",
+
+  "command.insert": "Insert Skribi",
+  "command.reloadScripts": "Reload Scripts",
+  "command.perfTest": "Test Performance",
+
+  "regent.loading.hover": "Evaluating...",
+  "regent.stasis.hover": "Recursion limit reached!",
+  "regent.self.hover": "Self Render Prohibited",
+
+  "setting.title": "Skribi Settings",
+  "setting.templateDirectory.name": "Template Directory",
+  "setting.templateDirectory.desc": "Skribi will look for templates in this folder.",
+  "setting.scriptDirectory.name": "Skript Directory",
+  "setting.scriptDirectory.desc": "Skribi will look for JS files in this folder.",
+  "setting.errorLog.name": "Error Logging",
+  "setting.errorLog.desc": "Enable to dump any errored renders to the console. If false, will still add the error as tooltip on the errored element. \n Will spam your console if typing into a skribi with a preview window open.",
+  "setting.verbose.name": "Verbose Logging",
+  "setting.verbose.desc": "Enable to get more detailed logs in the console.",
+
+  "modal.insert.title": "Insert Skribi Template",
+  "modal.insert.append": "Append",
+  "modal.insert.insert": "Insert",
+
+  "modal.confirm.title": "Please Confirm",
+  "modal.confirm.confirm": "Confirm",
+  "modal.confirm.cancel": "Cancel",
+
+  "modal.external.title": "Open External Link?",
+  "modal.external.desc": "Will open the following address with default program:",
+  "modal.external.label": "Open Link",
+
+  "modal.perf.title": "Skribi Performance Test",
+  "modal.perf.textToEvaluate.name": "Text To Evaluate",
+  "modal.perf.textToEvaluate.desc": "Text is evaluated as the contents of a code span.",
+  "modal.perf.textToEvaluate.placeholder": "{~ console.log('Hello World'); }",
+  "modal.perf.evalIterations.name": "Evaluation Iterations",
+  "modal.perf.evalIterations.desc": "How many times should the text be evaluated?",
+  "modal.perf.evalBlocks": "Eval As Individual Blocks?",
+  "modal.perf.evaluate": "Evaluate",
+  "modal.perf.evaluating": "Evaluating...",
+  "modal.perf.results": "Average fulfillment time",
+  "modal.perf.resultsBlockCount.single": "%0 block",
+  "modal.perf.resultsBlockCount.plural": "%0 blocks",
+  "modal.perf.autofill.selection": "Selection",
+  "modal.perf.autofill.clipboard": "Clipboard"
+}

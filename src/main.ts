@@ -1,7 +1,7 @@
-import { debounce, Editor, EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownPreviewView, MarkdownRenderChild, MarkdownRenderer, MarkdownSectionInformation, MarkdownSourceView, MarkdownView, Plugin, TAbstractFile, TFile } from 'obsidian';
+import { EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer, MarkdownView, Plugin } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
-import { dLog, getPreviewView, isExtant, isFile, roundTo, vLog } from './util';
+import { dLog, getPreviewView, isExtant, roundTo, vLog } from './util';
 import { embedMedia } from './render/embed';
 import { Modes, Flags, EBAR } from './types/const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types/types';
@@ -11,6 +11,7 @@ import { renderError, renderRegent, renderState, renderWait } from './render/reg
 import { SuggestionModal } from './modal/suggestionModal';
 import { InsertionModal } from './modal/insertionModal';
 import { TestModal } from './modal/testModal';
+import { l } from './lang/babel';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -20,6 +21,8 @@ export default class SkribosPlugin extends Plugin {
 	loadEvents = new Events();
 	private initLoadRef: EventRef
 	initLoaded: boolean = false;
+
+	l = l
 
 	async onload() {
 		console.log('Skribi: Loading...');
@@ -47,7 +50,7 @@ export default class SkribosPlugin extends Plugin {
 
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
 
-		this.addCommand({id: "insert-skribi", name: "Insert Skribi", 
+		this.addCommand({id: "insert-skribi", name: l['command.insert'], 
 			editorCallback: (editor, view) => {
 				if (!this.initLoaded) return;
 				let x = new SuggestionModal(this);
@@ -60,16 +63,16 @@ export default class SkribosPlugin extends Plugin {
 				}, (r) => {});
 			}})
 
-		this.addCommand({id: "reload-scripts", name: "Reload Scripts",
+		this.addCommand({id: "reload-scripts", name: l['command.reloadScripts'],
 			callback: () => {
 				this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
 			}})
 
-		this.addCommand({id: "test-performance", name: 'Test Performance', callback: async () => {
+		this.addCommand({id: "test-performance", name: l['command.perfTest'], callback: async () => {
 			let sel = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor?.getSelection()
 			let clip = await window.navigator.clipboard.readText();
 			let fill = (sel || clip) ? {
-				type: sel ? 'Selection' : 'Clipboard',
+				type: l[sel ? 'modal.perf.autofill.selection' : 'modal.perf.autofill.clipboard'],
 				value: sel ? sel : clip
 			} : null
 			
@@ -157,7 +160,7 @@ export default class SkribosPlugin extends Plugin {
 
 				try {
 					if (src != null) {
-						let nel = renderRegent(el, {class: 'sk-loading', hover: 'Evaluating...'})
+						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
 						
 						if (src.flag == 1) {
 							proms.push(this.predicate({el: nel, src: src.text, mdCtx: ctx, skCtx: {time: window.performance.now(), depth: d, flag: src.flag}}));
@@ -206,7 +209,7 @@ export default class SkribosPlugin extends Plugin {
 
 			elCodes.forEach(async (el) => {
 				preparseSkribi(el).then(async (src) => {
-					if (src != null) renderState(el, {hover: "Recursion limit reached!", class: 'stasis'})
+					if (src != null) renderState(el, {hover: l['regent.stasis.hover'], class: 'stasis'})
 				})
 			})
 			dLog("processor hit limit"); 
@@ -239,7 +242,7 @@ export default class SkribosPlugin extends Plugin {
 		catch (e) { renderError(el, e); return null }
 		
 		if (this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
-			renderRegent(el, {class: 'self', hover: 'Self Render Prohibited'}); return null; }
+			renderRegent(el, {class: 'self', hover: l['regent.stasis.hover']}); return null; }
 		let template = this.eta.getPartial(parsed.id)
 		if (!isExtant(template)) {
 			if (this.eta.failedTemplates.has(parsed.id)) { renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }

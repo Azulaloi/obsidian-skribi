@@ -1,6 +1,5 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
-import { confirmationModal } from "./modal/confirmationModal";
-import { Stringdex, Stringdexed } from "./types/types";
+import { Stringdex } from "./types/types";
 
 declare global {
 	interface Element {
@@ -69,6 +68,12 @@ export function vLog(...args: any[]) {
 	}
 }
 
+export function vWarn(...args: any[]) {
+	if (getVerbosity()) {
+		console.warn("Skribi:", ...args)
+	}
+}
+
 export function dLog(...args: any[]) {
 	//@ts-ignore
 	if (window?.app.plugins.plugins["obsidian-skribi"]?.settings?.devLogging || false) {
@@ -99,7 +104,6 @@ export const asyncFunc = Object.getPrototypeOf(async function(){}).constructor
 export const promiseImpl: PromiseConstructor = new Function('return this')().Promise
 export const getAsyncConstructor = (): FunctionConstructor => new Function('return (async function(){}).constructor')()
 
-
 /**
  * @param App
  * @param flip If true, target is editor mode. Otherwise, target is preview mode.
@@ -127,11 +131,10 @@ export function getPreviewView(app: App, flip?: boolean): MarkdownView | null {
 	return view || null;
 }
 
-
 export const isFunc = (func: any): func is Function => (func instanceof Function)
 export const isFile = (item: any): item is TFile => (item) instanceof TFile; 
 
-function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdexed<T>) {
+function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdex<T>) {
   let rets: Stringdex = {};
   for (let o of Object.entries(objects)) {
     if ((o != null) && (isFunc(o[func]))) {
@@ -158,7 +161,7 @@ export function average(...numbers: number[]) {
 }
 
 /* Get link to documentation page. */
-export function linkToDocumentation(page: string) {
+export function linkDocs(page: string) {
 	// return `https://azulaloi.net/obsidian-skribi/${page}`
 	return `https://azulaloi.github.io/obsidian-skribi/${page}`
 }

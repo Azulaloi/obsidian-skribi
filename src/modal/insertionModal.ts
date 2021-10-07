@@ -1,4 +1,5 @@
 import { AbstractTextComponent, Editor, EditorRangeOrCaret,KeymapEventHandler, Modal, Setting } from "obsidian";
+import { l } from "src/lang/babel";
 import SkribosPlugin from "../main";
 import { fieldPrompt, promptTypes } from "../types/types";
 import { isExtant, toDupeRecord } from "../util";
@@ -21,7 +22,7 @@ export class InsertionModal extends Modal {
     this.currentID = id.toString()
 
     this.containerEl.addClass("skribi-insertion-modal")
-    this.titleEl.setText("Insert Skribi Template")
+    this.titleEl.setText(l["modal.insert.title"])
   }
 
   onOpen() {
@@ -44,7 +45,7 @@ export class InsertionModal extends Modal {
 
     let t = new Setting(this.contentEl)
     t.addText((te) => {this.textInput = te; return te;})
-    t.setName("Append")
+    t.setName(l["modal.insert.append"])
     t.settingEl.addClass("skribi-modal-field-append")
 
     let f = this.generateFields(fieldsDiv, this.currentID);
@@ -52,7 +53,7 @@ export class InsertionModal extends Modal {
 
     let confirm = new Setting(this.contentEl)
     let cb = confirm.addButton((button) => button
-      .setButtonText("Insert")
+      .setButtonText(l["modal.insert.insert"])
       .onClick(() => this.doInsert()))
 
     this.keypressRef = this.scope.register([], "Enter", this.doInsert.bind(this))

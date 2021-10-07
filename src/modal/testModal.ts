@@ -1,7 +1,8 @@
 import { AbstractTextComponent, KeymapEventHandler, MarkdownSectionInformation, Modal, Setting } from "obsidian";
+import { l } from "src/lang/babel";
 import { Modes } from "src/types/const";
 import SkribosPlugin from "../main";
-import { average,  linkToDocumentation, roundTo, vLog } from "../util";
+import { average,  linkDocs, roundTo, vLog } from "../util";
 import { makeExternalLink } from "./confirmationModal";
 
 const maximumIterations = 10000
@@ -30,10 +31,10 @@ export class TestModal extends Modal {
     this.autofill = autofill
     
     this.containerEl.addClass("skribi-test-modal")
-    this.titleEl.setText("Skribi Performance Test")
+    this.titleEl.setText(l['modal.perf.title'])
 
     let desc = createDiv({cls: 'skribi-modal-desc'})
-    makeExternalLink(desc.createEl('a', {text: 'Documentation', attr: {'href': linkToDocumentation('commands/performance')}}))
+    makeExternalLink(desc.createEl('a', {text: l['documentation'], attr: {'href': linkDocs('commands/performance')}}))
 
     desc.insertAfter(this.titleEl)
   }
@@ -45,9 +46,9 @@ export class TestModal extends Modal {
   create() {
     let fieldTextToEval = new Setting(this.contentEl)
     fieldTextToEval.addTextArea((text) => {this.textFieldToEval = text; return text})
-    fieldTextToEval.setName('Text To Evaluate')
-    fieldTextToEval.setDesc('Text is evaluated as the contents of a code span.')
-    this.textFieldToEval.setPlaceholder(`{~ console.log('Hello World'); }`)
+    fieldTextToEval.setName(l["modal.perf.textToEvaluate.name"])
+    fieldTextToEval.setDesc(l["modal.perf.textToEvaluate.desc"])
+    this.textFieldToEval.setPlaceholder(l["modal.perf.textToEvaluate.placeholder"])
     if (this.autofill) {
       fieldTextToEval.infoEl.append(createDiv({text: `Autofilled from ${this.autofill.type}`, cls: 'setting-item-description skribi-autofill-notification'}))
       this.textFieldToEval.setValue(this.autofill.value)
@@ -57,8 +58,8 @@ export class TestModal extends Modal {
     let iters: HTMLInputElement = fieldIterations.controlEl.createEl('input', {attr: {type: 'number'}})
     iters.defaultValue = this.iterations.toString()
     iters.onchange = (ev) => {this.iterations = iters.valueAsNumber}
-    fieldIterations.setName('Evaluation Iterations')
-    fieldIterations.setDesc('How many times should the text be evaluated?')
+    fieldIterations.setName(l["modal.perf.evalIterations.name"])
+    fieldIterations.setDesc(l["modal.perf.textToEvaluate.desc"])
 
     let blockSetting = new Setting(this.contentEl)
     blockSetting.addToggle((tog) => {
@@ -66,11 +67,11 @@ export class TestModal extends Modal {
       tog.onChange((v) => this.multiBlock = v)
       return tog
     })
-    blockSetting.setName('Eval As Individual Blocks?')
+    blockSetting.setName(l["modal.perf.evalBlocks"])
 
     let confirm = new Setting(this.contentEl).setClass('skribi-button-eval')
     confirm.addButton((button) => button
-      .setButtonText("Evaluate")
+      .setButtonText(l["modal.perf.evaluate"])
       .onClick(() => this.doEval()))
     this.keypressRef = this.scope.register([], "Enter", this.doEval.bind(this))
 
@@ -122,7 +123,7 @@ export class TestModal extends Modal {
       return [promise, window.performance.now(), promiseStartTime] as any
     })
 
-    this.resultsField.setText('Evaluating...')
+    this.resultsField.setText(l["modal.perf.evaluating"])
 
     let settledValues = await Promise.allSettled(proms)
 
@@ -131,7 +132,7 @@ export class TestModal extends Modal {
     let fullfilled: [[], number, number][] = settledValues.map((v) => {if (v.status == 'fulfilled') return v.value})
     let times = fullfilled.map((result) => (result[1] as number - (result[2] as number)))
     let avg = average(...times)
-    this.resultsField.setText(`Average fulfillment time (${times.length} block${times.length > 1 ? 's' : ''}): ${roundTo(avg, 3)}ms`)
+    this.resultsField.setText(`${l["modal.perf.results"]} (${ l._((times.length > 1 ? "modal.perf.resultsBlockCount.plural" : "modal.perf.resultsBlockCount.single"), times.length.toString())}): ${roundTo(avg, 3)}ms`)
   
     el.detach()
   }

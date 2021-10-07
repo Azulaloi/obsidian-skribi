@@ -1,6 +1,7 @@
 import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, debounce } from "obsidian";
+import { l } from "./lang/babel";
 import SkribosPlugin from "./main";
-import { isExtant, isFile, isFunc } from "./util";
+import { isExtant, isFunc } from "./util";
 
 export class SkribosSettingTab extends PluginSettingTab {
 	plugin: SkribosPlugin;
@@ -15,11 +16,11 @@ export class SkribosSettingTab extends PluginSettingTab {
  
 		containerEl.addClass("skribi-settings");
 		containerEl.empty();
-		containerEl.createEl('h2', {text: 'Skribi Settings'});
+		containerEl.createEl('h2', {text: l["setting.title"]});
 
 		new Setting(containerEl)
-			.setName('Template Directory')
-			.setDesc('Skribi will look for templates in this folder.')
+			.setName(l["setting.templateDirectory.name"])
+			.setDesc(l["setting.templateDirectory.desc"])
 			.addTextArea((text: TextAreaComponent) => {text
 				.setValue(this.plugin.settings.templateFolder)
 				.onChange(async (value) => {
@@ -28,8 +29,8 @@ export class SkribosSettingTab extends PluginSettingTab {
 				}); text.inputEl.cols = 30; return text});
 
 		new Setting(containerEl)
-			.setName('Skript Directory')
-			.setDesc('Skribi will look for JS files in this folder.')
+			.setName(l["setting.scriptDirectory.name"])
+			.setDesc(l["setting.scriptDirectory.desc"])
 			.addTextArea((text: TextAreaComponent) => {text
 				.setValue(this.plugin.settings.scriptFolder)
 				.onChange(async (value) => {
@@ -37,10 +38,8 @@ export class SkribosSettingTab extends PluginSettingTab {
 				}); text.inputEl.cols = 30; return text});
 
 		new Setting(containerEl)
-			.setName('Error Logging')
-			.setDesc('Enable to dump any errored renders to the console.' 
-			+ 'If false, will still add the error as tooltip on the errored element. \n' 
-			+ 'Will spam your console if typing into a skribi with a preview window open.')
+			.setName(l["setting.errorLog.name"])
+			.setDesc(l["setting.errorLog.desc"])
 			.addToggle((toggle: ToggleComponent) => { toggle
 				.setValue(this.plugin.settings.errorLogging)
 				.onChange(async (value) => {
@@ -49,8 +48,8 @@ export class SkribosSettingTab extends PluginSettingTab {
 				})});
 
 		new Setting(containerEl)
-			.setName('Verbose Logging')
-			.setDesc('Enable to get more detailed logs in the console.')
+			.setName(l["setting.verbose.name"])
+			.setDesc(l["setting.verbose.desc"])
 			.addToggle((toggle: ToggleComponent) => { toggle
 				.setValue(this.plugin.settings.verboseLogging)
 				.onChange(async (value) => {

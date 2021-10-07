@@ -1,6 +1,5 @@
 import { MarkdownRenderer } from "obsidian";
 import { Provider } from "src/eta/provider_abs";
-import { ProviderBus } from "src/eta/provider_bus";
 import { Stringdex } from "src/types/types";
 
 export class ProviderSK extends Provider {
