@@ -42,10 +42,6 @@ When multiple properties are exported, the module key is determined by:
 
 **Tip:** To inspect the `js` object, call `console.log(js)` in an evaluation tag. This will display the object in the dev console. If verbose logging is enabled, the loader will log whenever it loads a JS file.
 
-### Additional Notes
-
-Note that your do not need to export all of the functions in your module, as exported functions can still utilize non-exported functions. See also: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures">Javascript Closures</a> and <a href="https://nodejs.org/api/modules.html#modules_modules_commonjs_modules">CommonJS Modules</a>.
-
 <hr>
 
 Additionally, a potentially confusing quirk of CJS module exports is the difference between `module.exports` and `exports`: the former is the actual object, while the latter is a shorthand proxy. You may assign to the properties of both objects and all will export successfully, but if you assign to either of them, this functionality will break. 
@@ -53,3 +49,17 @@ Additionally, a potentially confusing quirk of CJS module exports is the differe
 For example, `exports = {foo}` or `module.exports = {foo}` will cause `exports` to no longer contribute to the exported module - in this case, only `module.exports` will be exported. However, `exports.foo = foo; module.exports.fum = fum;` will load both `foo` and `fum`. 
 
 For more information about this behavior, see <a href="https://nodejs.org/api/modules.html#modules_exports_shortcut">Module Exports Shortcut</a>. For information about exports in general, see <a href="https://nodejs.org/api/modules.html#modules_module_exports">Module Exports</a>.
+
+## About Script Context
+
+The skribi context is just a teensy bit convoluted, especially if you're not familiar with this part of JS, so here's some extra info.
+
+Firstly, script functions are by default evaluated in their module closure, with no knowledge of the skribi context. Because of this, you do not need to export all of the definitions in your module - only the ones you want to access from skribi (See <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures">Javascript Closures</a> and <a href="https://nodejs.org/api/modules.html#modules_modules_commonjs_modules">CommonJS Modules</a>).
+
+But what if we want to call skribi functions from the script? To easily give a script function access to the skribi context, you can pass the return of `sk.getEnv()` as an argument. In the script, that argument variable will now contain everything you normally have access to: `js`, `int`, etc. For example: `js.func(sk.getEnv())` with the script `function func(obj){console.log(obj.sk.ctx.file.basename)}; module.exports = {func};` will print the filename.
+
+Restricting access is generally good practice, but can be a hassle if you don't care. You can bind a function with `Function.prototype.bind`, like so: `js.func.bind(sk.getEnv())()`. This is similar to passing a variable, but now the function's `this` refers to the skribi env rather than the module. 
+
+If you want to define variables to be available to a script without explicitly passing them, you can store them in the skribi's `this` - which is the same object as `sk.this`, so that it can be accessed from a bound function. For example: `this.x = "foo"; js.func.bind(sk.getEnv())();` with the script `function func(){console.log(this.sk.this.x)}; module.exports = {func};`, will print `"foo"`. If you find the additional `this` annoying, and want it to work just like in a skribi, you can wrap the function's code in a `with(this) {}` block.
+
+It's really up to you how how to design your scripts. When sharing them, you'll want to provide a reference implementation to help others understand how to use them.

@@ -280,19 +280,19 @@ export default class SkribosPlugin extends Plugin {
 		let file = this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
 
 		let e = createDiv({cls: "skribi-render-virtual"});
-		let c = new SkribiChild(e)
-		Object.assign(c, { rerender: (() => {
+		let child = new SkribiChild(e)
+		Object.assign(child, { rerender: (() => {
 				console.log("e"); 
-				c.clear(); 
+				child.clear(); 
 				this.renderSkribi(e, con, id, mdCtx, skCtx)}).bind(this)
 			}) 
 			
-		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: c.provideContext()})
+		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file).catch((err) => {
 			if (this.settings.errorLogging) console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err);
 			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"})
-			c.unload()
+			child.unload()
 			return Promise.resolve(null)
 		})
 		
@@ -309,10 +309,12 @@ export default class SkribosPlugin extends Plugin {
 				return Promise.resolve(e);
 			});
 
-			c.setPacket(packet)
-			mdCtx.addChild(c);
+			child.setPacket(packet)
+			mdCtx.addChild(child);			
 			
 			r.then((e): Promise<any> => {
+				child.onPost()
+
 				// TODO: only restrict depth for transclusions
 				if (isExtant(mdCtx.remainingNestLevel) && (mdCtx.remainingNestLevel > 0) || !isExtant(mdCtx.remainingNestLevel)) {
 					return embedMedia(e, mdCtx.sourcePath, this, skCtx.depth) 
@@ -328,7 +330,7 @@ export default class SkribosPlugin extends Plugin {
 
 			return r;
 		} else {
-			c.clear();
+			child.clear();
 			return Promise.reject("Render Error");
 		}
 	}

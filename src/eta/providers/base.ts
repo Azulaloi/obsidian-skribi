@@ -12,7 +12,7 @@ export class ProviderSK extends Provider {
       render: function(str: string) {
         let e = createDiv({cls: "skribi-render-virtual"});
         console.log(this)
-        MarkdownRenderer.renderMarkdown(str, e, this.this.file.path, null);
+        MarkdownRenderer.renderMarkdown(str, e, this.ctx.file.path, null);
         return e.innerHTML
       },
       has: function(v: string) {

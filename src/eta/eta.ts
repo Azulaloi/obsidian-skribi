@@ -21,8 +21,6 @@ export class EtaHandler {
 
   templatesDirty: boolean = false;
 
-  baseContext: {[index: string]: any} = {}
-
   get templates() {return this.loader.templateCache}
   get failedTemplates() {return this.loader.templateFailures}
   get templateFrontmatters() {return this.loader.templateFrontmatters}
@@ -132,17 +130,21 @@ export class EtaHandler {
     let cfg = Eta.getConfig({varName: VAR_NAME})
 
     /* the 'this' object of the sk context*/
-    let binder = {
-      file: file || null,
-      plugin: this.plugin,
-      app: this.plugin.app
-    }
+    let binder = {}
 
     /* The 'sk' object */
     let sk = Object.assign({},
-      this.baseContext,
       ctxIn || {}, 
-      {up: p(), this: binder},
+      {
+        this: binder, 
+        getEnv: getEnv, 
+        up: p(), 
+        ctx: {
+          file: file || null,
+          plugin: this.plugin,
+          app: this.plugin.app
+        }
+      },
       this.bus.getScopeSK()
     )
 
@@ -152,6 +154,10 @@ export class EtaHandler {
       'E': cfg,
       'cb': null,
       ...this.bus.getScope(),
+    }
+
+    function getEnv() {
+      return scope
     }
 
     let ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
@@ -168,7 +174,7 @@ export class EtaHandler {
   /* this is somehow 1.3x slower than renderAsync */
   async renderAsyncNaive(content: string | Function, ctxIn?: any, varName?: any) {
     console.log('Skribos: renderAsyncNaive invoked', content, ctxIn)
-    let context = Object.assign({}, this.baseContext, ctxIn || {})
+    let context = Object.assign({}, ctxIn || {})
     let ren = Eta.renderAsync(content as (string | TemplateFunction), context, {varName: varName ?? VAR_NAME})
 
     if (ren instanceof Promise) {

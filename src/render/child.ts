@@ -7,7 +7,8 @@ export class SkribiChild extends MarkdownRenderChild {
 	intervals: number[] = [];
 
 	cbOnUnload: [Function, any][] = []
-	
+	cbOnPost: [Function, any][] = []
+
 	constructor(el: HTMLElement) {
 		super(el)
 	}
@@ -18,6 +19,7 @@ export class SkribiChild extends MarkdownRenderChild {
       registerInterval: this.skRegisterInterval.bind(this),
       registerUnload: this.skRegisterUnload.bind(this),
       registerEvent: this.skRegisterEvent.bind(this),
+			registerPost: this.skRegisterPost.bind(this),
       reload: this.rerender, // Bound on assignment
       c: this
     }
@@ -42,6 +44,9 @@ export class SkribiChild extends MarkdownRenderChild {
 		this.clear()
 	}
 
+	onPost() {
+		for (let cb of this.cbOnPost) cb[0](cb[1]);
+	}
 
   /* Provider Functions */
   
@@ -60,6 +65,10 @@ export class SkribiChild extends MarkdownRenderChild {
 
 	skRegisterUnload(cb: Function, ...args: any[]) {
 		this.cbOnUnload.push([(...x: any) => cb(...x), args])
+	}
+
+	skRegisterPost(cb: Function, ...args: any[]) {
+		this.cbOnPost.push([(...x: any) => cb(...x), args])
 	}
 
   // Assigned in renderSkribi()
