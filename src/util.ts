@@ -1,4 +1,6 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { SkribiChild } from "./render/child";
+import { EBAR } from "./types/const";
 import { Stringdex } from "./types/types";
 
 declare global {
@@ -13,6 +15,10 @@ Element.prototype.addClazz = function (str: string | string[]) {
 		this.addClass(...str)
 	} else this.addClass(str)
 };
+
+export function ensureArray<T>(obj: T | T[]): Array<T> {
+	return Array.isArray(obj) ? obj : [obj]
+}
 
 export function getFiles(app: App, dir: string): TFile[] {
 	let dirPath = normalizePath(dir)
@@ -144,8 +150,15 @@ function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdex<T>) {
   return rets
 }
 
-function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
-  for (let o of objects) {
+type ArgumentTypes<F extends Function> = F extends (...args: infer A) => any ? A : never;
+
+export type NonUndefined<A> = A extends undefined ? never : A;
+export type FunctionKeys<T extends object> = {
+  [K in keyof T]-?: NonUndefined<T[K]> extends Function ? K : never;
+}[keyof T];
+
+export function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
+	for (let o of objects) {
     if ((o != null) && (isFunc(o[func]))) {
       try {
         (o[func] as unknown as Function)()
@@ -154,6 +167,16 @@ function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
       }
     }
   }
+}
+
+export function invokeMethodWith<T extends object>(objects: T | T[], key: FunctionKeys<T>, ...args: any[]) {
+	for (let o of ensureArray(objects)) {
+		try {
+			(o[key] as unknown as Function)(...args)
+		} catch(err) {
+			console.warn(`invokeMethodWith: caught error! \n Key: '${key}' called on:`, o, EBAR, err)
+		}
+	}
 }
 
 export function average(...numbers: number[]) {

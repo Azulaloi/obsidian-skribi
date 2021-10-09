@@ -19,6 +19,8 @@
   "setting.errorLog.desc": "Enable to dump any errored renders to the console. If false, will still add the error as tooltip on the errored element. \n Will spam your console if typing into a skribi with a preview window open.",
   "setting.verbose.name": "Verbose Logging",
   "setting.verbose.desc": "Enable to get more detailed logs in the console.",
+  "setting.autoReload.name": "Auto Reload",
+  "setting.autoReload.desc": "Enable to automatically reload rendered skribis when scripts or relevant templates are updated.",
 
   "modal.insert.title": "Insert Skribi Template",
   "modal.insert.append": "Append",

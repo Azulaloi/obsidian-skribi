@@ -2,13 +2,15 @@ import * as Eta from "eta";
 import { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import { checkFileExt, getFiles, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
+import { checkFileExt, getFiles, invokeMethodOf, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
 import { FileMinder, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
+import { SkribiChild } from "src/render/child";
 
 /* Responsible for the caching and management of templates. */
+// TODO: add system to auto-reload skribis when relevant template cache changes 
 export class TemplateLoader implements FileMinder {
   private handler: EtaHandler
   private plugin: SkribosPlugin
@@ -16,7 +18,6 @@ export class TemplateLoader implements FileMinder {
   templateCache: Cacher<TemplateFunctionScoped> = new Cacher<TemplateFunctionScoped>({})
   templateFailures: Map<string, string> = new Map();
   templateFrontmatters: Map<string, FrontMatterCache> = new Map();
-
 
   constructor(handler: EtaHandler) {
     this.handler = handler
@@ -81,6 +82,10 @@ export class TemplateLoader implements FileMinder {
       if (failureCount) str += `\n Of ${files.length} total templates, ${failureCount} failed to compile.`
       console.log(`Skribi: Loaded ` + str)
     } else if (this.plugin.initLoaded) {
+      this.plugin.children.forEach((child) => {
+        console.log(child, files[0].basename); 
+        child.templatesUpdated(files[0].basename)
+      })
       vLog(`Updated template '${files[0].basename}' in ${roundTo(window.performance.now() - startTime, 4)}ms`)
     }
 

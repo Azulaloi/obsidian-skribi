@@ -57,10 +57,10 @@ declare module 'obsidian' {
 	}
 
   interface MarkdownPreviewView {
+    loaded: boolean;
 		getFile(): TFile; 							// returns file
     renderer: MarkdownPreviewRenderer;
-    clear(): void
-
+    clear(): void;
   }
 
   interface MarkdownPreviewRenderer {
@@ -71,4 +71,8 @@ declare module 'obsidian' {
 		sizerEl: HTMLElement;
 		text: string;
 	}
+
+  interface MarkdownSubView {
+    type: "preview" | "source"
+  }
 }

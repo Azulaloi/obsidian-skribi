@@ -1,8 +1,10 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
+import { SkribiChild } from "src/render/child";
 import { FileMinder, Stringdex } from "src/types/types";
-import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util";
+import { dLog, filterFileExt, getFiles, invokeMethodOf, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
 
+// TODO: add system to auto-reload skribis when module cache changes 
 export class ProviderScriptloader extends Provider implements FileMinder {
   loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
 
@@ -32,6 +34,8 @@ export class ProviderScriptloader extends Provider implements FileMinder {
         )
       }
     })
+
+    if (this.bus.plugin.settings.autoReload) invokeMethodOf<SkribiChild>("scriptsUpdated", ...this.bus.plugin.children)
   }
 
   createObject(): Stringdex {

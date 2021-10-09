@@ -1,4 +1,5 @@
 site_name: Skribi
+site_url: https://azulaloi.github.io/obsidian-skribi/
 theme:
   name: material
   custom_dir: overrides
@@ -27,3 +28,22 @@ markdown_extensions:
   - admonition
 repo_url: https://github.com/azulaloi/obsidian-skribi
 repo_name: azulaloi/obsidian-skribi
+nav:
+  - 'Outline': index.md
+  - General Use:
+    - 'Eta Syntax': syntax/eta.md
+    - 'Skribi Syntax': syntax/skribi.md
+    - 'Templates': syntax/templates.md
+    - 'Template Metadata': syntax/template_metadata.md
+  - Scripting:
+    - 'Context': scripting/context.md
+    - Modules: 
+      - 'Skribi': scripting/modules/skribi.md
+      - 'Scriptloader': scripting/modules/scriptloader.md
+      - 'Integrations': scripting/modules/integrations.md
+    - 'Examples': scripting/examples.md
+    - 'Misc': scripting/errors.md
+  - Miscellaneous:
+    - 'Settings': settings.md
+    - 'Commands': commands.md
+    - 'Indicators': states.md

@@ -37,25 +37,21 @@ export class SkribosSettingTab extends PluginSettingTab {
 					this.saveSetting('scriptFolder', value, () => this.plugin.eta.bus.scriptLoader.directoryChanged())
 				}); text.inputEl.cols = 30; return text});
 
-		new Setting(containerEl)
-			.setName(l["setting.errorLog.name"])
-			.setDesc(l["setting.errorLog.desc"])
-			.addToggle((toggle: ToggleComponent) => { toggle
-				.setValue(this.plugin.settings.errorLogging)
-				.onChange(async (value) => {
-					this.plugin.settings.errorLogging = value;
-					await this.plugin.saveSettings();
-				})});
+		this.makeToggle(containerEl, "autoReload", l["setting.autoReload.name"], l["setting.autoReload.desc"])
+		this.makeToggle(containerEl, "errorLogging", l["setting.errorLog.name"], l["setting.errorLog.desc"])
+		this.makeToggle(containerEl, "verboseLogging", l["setting.verbose.name"], l["setting.verbose.desc"])
+	}
 
-		new Setting(containerEl)
-			.setName(l["setting.verbose.name"])
-			.setDesc(l["setting.verbose.desc"])
-			.addToggle((toggle: ToggleComponent) => { toggle
-				.setValue(this.plugin.settings.verboseLogging)
-				.onChange(async (value) => {
-					this.plugin.settings.verboseLogging = value;
-					await this.plugin.saveSettings();
-				})});
+	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string) {
+		return new Setting(el)
+		.setName(name)
+		.setDesc(desc)
+		.addToggle((toggle: ToggleComponent) => { toggle
+			.setValue(!!this.plugin.settings[setting])
+			.onChange(async (value) => {
+				this.plugin.settings[setting] = value;
+				await this.plugin.saveSettings();
+			})});
 	}
 
 	saveSetting = debounce(async (setting: string, value: string | number | boolean, cb?: Function, ...args: any[]) => {
@@ -73,6 +69,7 @@ export interface SkribosSettings {
 	verboseLogging: boolean;
 	devLogging: boolean;
 	errorLogging: boolean;
+	autoReload: boolean;
 }
 
 export const DEFAULT_SETTINGS: SkribosSettings = {
@@ -81,4 +78,5 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	verboseLogging: false,
 	devLogging: false,
 	errorLogging: false,
+	autoReload: true
 }

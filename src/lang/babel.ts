@@ -7,7 +7,11 @@ import en_gb from './locale/en_gb.json'
 
 type locale = Partial<typeof en> & Stringdex<string>
 
-type l = {'_': (key: keyof typeof en, ...args: string[]) => string} & typeof en & Stringdex<string>
+type l = {
+  '_': (key: keyof typeof en, ...args: string[]) => string
+} & typeof en 
+/* NOTE: this is just cause VSC sometimes refuses to update the json definitions without having to restart and open all my terminals again */
+& Stringdex<string>
 
 const locales: Stringdex<locale> & {en: Stringdex<string> & typeof en} = {
   en: en,
@@ -39,6 +43,9 @@ function locale(): locale {return locales?.[window.moment.locale()]}
 export const l: l = make()
 
 /**
+ * You can pull strings from this.
+ * Pro: safely handles undefined keys
+ * Contra: you won't get the property definition tooltips in VSC, which was the whole point of this design
  * @param key Lang file string key to return local version of
  * @param args Strings to insert into insertion tags (eg '%0')
  * @returns Localized string */

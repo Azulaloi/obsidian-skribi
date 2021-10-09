@@ -1,3 +1,5 @@
+/* This is reimplemented from Eta */
+
 export class Cacher<T> {
   constructor(private cache: Record<string, T>) {}
   define(key: string, val: T): void {this.cache[key] = val}

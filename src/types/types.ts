@@ -5,10 +5,11 @@ import { SkribiChild } from "src/render/child";
 import { Modes, Flags } from "./const";
 
 export interface SkContext {
-	time: number,
+	time: number, // Time of initial render promise dispatch
 	flag: number,
-	depth: number,
-	ctx?: any
+	depth: number, 
+	source: string, // Original text content
+	ctx?: any	// Stores passed template values, null on non-templates
 }
 
 export interface ProcessorMode {

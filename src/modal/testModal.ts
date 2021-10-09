@@ -1,8 +1,9 @@
 import { AbstractTextComponent, KeymapEventHandler, MarkdownSectionInformation, Modal, Setting } from "obsidian";
 import { l } from "src/lang/babel";
+import { SkribiChild } from "src/render/child";
 import { Modes } from "src/types/const";
 import SkribosPlugin from "../main";
-import { average,  linkDocs, roundTo, vLog } from "../util";
+import { average,  invokeMethodOf,  linkDocs, roundTo, vLog } from "../util";
 import { makeExternalLink } from "./confirmationModal";
 
 const maximumIterations = 10000
@@ -127,14 +128,22 @@ export class TestModal extends Modal {
 
     let settledValues = await Promise.allSettled(proms)
 
+    
     vLog(`Performance test settled in: ${roundTo(window.performance.now()-timeStart, 3)}ms`)
 
-    let fullfilled: [[], number, number][] = settledValues.map((v) => {if (v.status == 'fulfilled') return v.value})
+    let fullfilled: [any[], number, number][] = settledValues.map((v) => {if (v.status == 'fulfilled') return v.value})
     let times = fullfilled.map((result) => (result[1] as number - (result[2] as number)))
     let avg = average(...times)
-    this.resultsField.setText(`${l["modal.perf.results"]} (${ l._((times.length > 1 ? "modal.perf.resultsBlockCount.plural" : "modal.perf.resultsBlockCount.single"), times.length.toString())}): ${roundTo(avg, 3)}ms`)
+    
+    let p: any[] = []
+    fullfilled.map(res => res[0].map((a) => p.push(a)))
+    let children = (await Promise.allSettled(p)).map((rez) => {if (rez.status == "fulfilled") return rez.value[1]})
+    
+    this.resultsField.setText(`${l["modal.perf.results"]} (${children.length} children in ${ l._((times.length > 1 ? "modal.perf.resultsBlockCount.plural" : "modal.perf.resultsBlockCount.single"), times.length.toString())}): ${roundTo(avg, 3)}ms`)
   
-    el.detach()
+    invokeMethodOf<SkribiChild>("clear", ...children) // Unload doesn't seem to be invoked consistently so let's just make sure everything is cleared
+    blocksToProcess.map(block => block.remove()) // Children are easier to collect when they lack shelter
+    container.remove(); el.remove(); // One day, the last person who remembers you will die, and you will be forgotten forever
   }
 }
 

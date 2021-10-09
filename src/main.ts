@@ -1,7 +1,7 @@
 import { EventRef, Events, MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer, MarkdownView, Plugin } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
-import { dLog, getPreviewView, isExtant, roundTo, vLog } from './util';
+import { dLog, getPreviewView, invokeMethodOf, invokeMethodWith, isExtant, roundTo, vLog } from './util';
 import { embedMedia } from './render/embed';
 import { Modes, Flags, EBAR } from './types/const';
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from './types/types';
@@ -24,6 +24,9 @@ export default class SkribosPlugin extends Plugin {
 
 	l = l
 
+	children: SkribiChild[] = [] // this leaks memory like a thing with holes that leaks a lot
+	childProto: any = SkribiChild // for dev memory querying 
+
 	async onload() {
 		console.log('Skribi: Loading...');
 
@@ -44,12 +47,23 @@ export default class SkribosPlugin extends Plugin {
 			this.registerMarkdownCodeBlockProcessor(`sk${v[1]}`, processBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
 		})
 
-		this.registerEvent(this.app.metadataCache.on('changed', e => {
-			// if (e?.parent.path.contains(this.settings.templateFolder)) { bUpdate(e); }
-		}))
-
 		this.initLoadRef = this.loadEvents.on('init-load-complete', () => {this.initLoaded = true; dLog("init-load-complete")})
 
+		this.defineCommands()
+
+		// registerMirror(this);
+
+		/* Rerender any preview views */
+		this.app.workspace.onLayoutReady(() => {
+			this.app.workspace.getLeavesOfType("markdown").forEach((leaf) => {
+				if ((leaf.view as MarkdownView).currentMode.type == "preview") {
+					(leaf.view as MarkdownView).previewMode.rerender(true)
+				}
+			})
+		})
+	}
+
+	defineCommands() {
 		this.addCommand({id: "insert-skribi", name: l['command.insert'], 
 			editorCallback: (editor, view) => {
 				if (!this.initLoaded) return;
@@ -63,10 +77,14 @@ export default class SkribosPlugin extends Plugin {
 				}, (r) => {});
 			}})
 
-		this.addCommand({id: "reload-scripts", name: l['command.reloadScripts'],
-			callback: () => {
-				this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
-			}})
+		this.addCommand({id: "reload-scripts", name: l['command.reloadScripts'], callback: () => {
+			this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
+		}})
+		
+		this.addCommand({id: "reload-skribis", name: "Reload Skribis", callback: () => {
+			// invokeMethodWith<SkribiChild>(this.children, "rerender")
+			this.children.forEach(child => child.rerender(child?.templateKey))
+		}})
 
 		this.addCommand({id: "test-performance", name: l['command.perfTest'], callback: async () => {
 			let sel = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor?.getSelection()
@@ -78,14 +96,17 @@ export default class SkribosPlugin extends Plugin {
 			
 			new TestModal(this, fill).open()
 		}})
-
-		// registerMirror(this);
 	}
 	
 	onunload() {
 		this.eta.unload()
 		this.loadEvents.offref(this.initLoadRef)
-		console.log('Skribi: Unloading...');
+		this.children.forEach((child) => {
+			let pre = createEl('code', {text: child.source})
+			child.containerEl.replaceWith(pre)
+		})
+		console.log('Skribi: Unloading...', this.children);  
+		invokeMethodOf<SkribiChild>("unload", ...this.children)
 	}
 
 	async loadSettings() {
@@ -146,7 +167,7 @@ export default class SkribosPlugin extends Plugin {
 					pe.empty()
 				
 					let shell = pe.createDiv({cls: 'skribi-template-preview', attr: {'depth': d}})
-					this.renderSkribi(shell.createDiv(), view.getViewData(), "literal", ctx, {time: window.performance.now(), depth: d, flag: 4})
+					// this.renderSkribi(shell.createDiv(), view.getViewData(), "literal", ctx, {time: window.performance.now(), depth: d, flag: 4})
 				}
 			}
 
@@ -160,13 +181,13 @@ export default class SkribosPlugin extends Plugin {
 
 				try {
 					if (src != null) {
+						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: el.textContent}
 						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
-						
 						if (src.flag == 1) {
-							proms.push(this.predicate({el: nel, src: src.text, mdCtx: ctx, skCtx: {time: window.performance.now(), depth: d, flag: src.flag}}));
+							proms.push(this.predicate({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx}));
 							temps++;
 						} else {
-							proms.push(this.processSkribi(nel, src.text, ctx, {time: window.performance.now(), depth: d, flag: src.flag}))
+							proms.push(this.processSkribi(nel, src.text, ctx, skCtx))
 						}
 					} 
 				} catch(e) {
@@ -241,8 +262,10 @@ export default class SkribosPlugin extends Plugin {
 		try { parsed = await parseSkribi(src) }
 		catch (e) { renderError(el, e); return null }
 		
+		// Abort if being rendered in its own definition
 		if (this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
 			renderRegent(el, {class: 'self', hover: l['regent.stasis.hover']}); return null; }
+
 		let template = this.eta.getPartial(parsed.id)
 		if (!isExtant(template)) {
 			if (this.eta.failedTemplates.has(parsed.id)) { renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }
@@ -280,12 +303,22 @@ export default class SkribosPlugin extends Plugin {
 		let file = this.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
 
 		let e = createDiv({cls: "skribi-render-virtual"});
-		let child = new SkribiChild(e)
-		Object.assign(child, { rerender: (() => {
-				console.log("e"); 
-				child.clear(); 
-				this.renderSkribi(e, con, id, mdCtx, skCtx)}).bind(this)
-			}) 
+		let child = new SkribiChild(this, e)
+		Object.assign(child, { 
+			rerender: ((templateToRetrieve?: string) => {
+				let nskCtx = Object.assign({}, skCtx, {time: window.performance.now()})
+				if (skCtx.flag == 1 && isExtant(templateToRetrieve)) {
+					let template = this.eta.getPartial(templateToRetrieve)
+					child.unload();
+					this.renderSkribi(e, template, templateToRetrieve, mdCtx, nskCtx)
+				} else {
+					child.unload(); 
+					this.renderSkribi(e, con, id, mdCtx, nskCtx)
+				}
+			}).bind(this),
+			templateKey: (skCtx.flag == 1) ? id : null,
+			source: skCtx.source || null
+		}) 
 			
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
 
@@ -299,7 +332,7 @@ export default class SkribosPlugin extends Plugin {
 		dLog("renderSkrib:", el, mdCtx, skCtx, id)
 		if (isExtant(rendered)) {
 			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
-			let r = MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
+			let render = MarkdownRenderer.renderMarkdown(rendered, e, mdCtx.sourcePath, null).then(() => {
 				e.setAttribute("skribi", id); //e.setAttribute("depth", d.toString());
 				e.removeClass("skribi-render-virtual")
 				el.replaceWith(e); dLog("finish: ", skCtx.time, window.performance.now())
@@ -310,9 +343,10 @@ export default class SkribosPlugin extends Plugin {
 			});
 
 			child.setPacket(packet)
-			mdCtx.addChild(child);			
+			mdCtx.addChild(child)
+			this.children.push(child)
 			
-			r.then((e): Promise<any> => {
+			render.then((e): Promise<any> => {
 				child.onPost()
 
 				// TODO: only restrict depth for transclusions
@@ -328,7 +362,7 @@ export default class SkribosPlugin extends Plugin {
 				this.processor({srcType: Modes.general}, e, mdCtx, skCtx.depth-1, true) /* Recurse the processor to parse skreeblings */
 			})
 
-			return r;
+			return [render, child];
 		} else {
 			child.clear();
 			return Promise.reject("Render Error");
