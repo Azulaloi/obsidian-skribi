@@ -19,7 +19,7 @@ export async function renderError(el: HTMLElement, e: RegentData) {
 }
 
 export function renderWait(el: HTMLElement) {
-	const pre = createEl("code", {cls: "skribi-wait", text: "sk"})
+	const pre = createEl("code", {cls: "skribi-regent wait", text: "sk"})
 	el.replaceWith(pre)
 	return pre
 }

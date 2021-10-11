@@ -1,5 +1,4 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
-import { SkribiChild } from "./render/child";
 import { EBAR } from "./types/const";
 import { Stringdex } from "./types/types";
 
@@ -24,7 +23,6 @@ export function getFiles(app: App, dir: string): TFile[] {
 	let dirPath = normalizePath(dir)
 	let fo = app.vault.getAbstractFileByPath(dirPath);
 
-	// console.log(dirPath), console.log(fo);
 	if (!fo || !(fo instanceof TFolder)) throw `Skribi: Could not find folder '${dirPath}'`;
 
 	let files: TFile[] = [];
@@ -149,8 +147,6 @@ function invokeMethodOfAndReturn<T>(func: keyof T, objects: Stringdex<T>) {
   }
   return rets
 }
-
-type ArgumentTypes<F extends Function> = F extends (...args: infer A) => any ? A : never;
 
 export type NonUndefined<A> = A extends undefined ? never : A;
 export type FunctionKeys<T extends object> = {

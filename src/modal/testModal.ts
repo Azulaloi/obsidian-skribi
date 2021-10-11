@@ -86,6 +86,11 @@ export class TestModal extends Modal {
   }
 
   async doEval() {
+    if (!this.plugin.initLoaded) {
+      this.resultsField.setText("Template cache not ready!")
+      return; 
+    }
+
     let container = createDiv()
     let el = createDiv()
 
@@ -110,7 +115,7 @@ export class TestModal extends Modal {
     const proms: Promise<[[], number, number]>[] = blocksToProcess.map(async (div) => {
       let promiseStartTime = window.performance.now()
 
-      let promise = await this.plugin.processor({srcType: Modes.general}, div, {
+      let promise = await this.plugin.processor.processEntry({srcType: Modes.general}, div, {
         remainingNestLevel: 4,
         docId: '55555555',
         frontmatter: null,

@@ -2,12 +2,11 @@ import * as Eta from "eta";
 import { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import { checkFileExt, getFiles, invokeMethodOf, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
+import { checkFileExt, getFiles, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
 import { FileMinder, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
-import { SkribiChild } from "src/render/child";
 
 /* Responsible for the caching and management of templates. */
 // TODO: add system to auto-reload skribis when relevant template cache changes 
@@ -30,8 +29,7 @@ export class TemplateLoader implements FileMinder {
 
   async initLoad() {
     await this.definePartials(...getFiles(this.plugin.app, this.directory)) 
-    this.plugin.loadEvents.trigger('init-load-complete') //TODO: use native events?
-
+    this.plugin.app.workspace.trigger('skribi:template-init-complete')
     return Promise.resolve()
   }
 
