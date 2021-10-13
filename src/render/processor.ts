@@ -167,7 +167,6 @@ export default class SkribiProcessor {
   /* Called by template load event. */
   templatesReady() {
     let proms = this.queuedTemplates.map((func) => func())
-    console.log(proms)
     Promise.allSettled(proms).then(() => {this.queuedTemplates = []})
   }
 
@@ -216,15 +215,12 @@ export default class SkribiProcessor {
 
   /** Main skribi rendering function */
 	async renderSkribi(
-		elementIn: HTMLElement, 
+		el: HTMLElement, 
 		con: string | TemplateFunctionScoped, 
 		id: string, 
 		mdCtx: MarkdownPostProcessorContext, 
 		skCtx: SkContext
 	): Promise<SkribiResult> {
-		let el = createDiv()
-		elementIn.replaceWith(el)
-
 		let file = this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
 
 		let newElement = createDiv({cls: "skribi-render-virtual"});
@@ -262,16 +258,38 @@ export default class SkribiProcessor {
 			if (style[1]) {rendered = style[0]}
 
 			let render = MarkdownRenderer.renderMarkdown(rendered, newElement, mdCtx.sourcePath, null).then(() => {
-				newElement.setAttribute("skribi", id); //e.setAttribute("depth", d.toString());
+				if (el?.parentElement?.nodeName == "P") { // true when (mode == Mode.block)
+					el.parentElement.replaceWith(el) // strip the superfluous P element
+				}
+				newElement.setAttribute("skribi", (skCtx.flag == 1) ? 'template' : id)
+				if (skCtx.flag == 1) {newElement.setAttribute("skribi-template", id)}
 				newElement.removeClass("skribi-render-virtual")
-				// newElement.setAttr('class', 'skribi')
+				if (!newElement.getAttr("class")) {newElement.removeAttribute("class")}
 
-				el.replaceWith(newElement); 
+				let shade;
+				if (this.plugin.settings.shadowMode) {
+					/* it seems that non-codeblock skribis do not survive this process */
+					let nel = createDiv()
+					el?.parentElement.prepend(nel)
+					nel.setAttr('skribi-host', '')
+					console.log(el) 
+					shade = nel.attachShadow({mode: 'open'})
+					shade.append(newElement)
+					el.remove()
+				} else {
+					el.replaceWith(newElement);
+				}
+
 				dLog("finish: ", skCtx.time, window.performance.now());
 
 				if (style[1]) {
-					newElement.prepend(style[1]); 
-					scopeStyle(child, newElement, style[1]);
+					if (this.plugin.settings.shadowMode) {
+						(shade as ShadowRoot).append(style[1])
+						// newElement.prepend(style[1])
+					} else {
+						newElement.prepend(style[1]); 
+						scopeStyle(child, newElement, style[1]);
+					}
 				}
 
 				if (skCtx.flag == 1) {
@@ -333,8 +351,7 @@ export function scopeStyle(child: SkribiChild, el: HTMLElement, s: HTMLStyleElem
 		}
 	}
 
-	/* It changing the rule properties doesn't change the text, so we do it manually so make the resolved behavior visible for users in element panel */
-	/* what's obnoxious is that changing the text does change the properties*/
+	/* Changing the rule properties doesn't change the text of the style element, so we do it manually so make the resolved behavior visible for users in element panel */
 	if ((window.app.plugins.plugins['obsidian-skribi'] as SkribosPlugin).settings.reflectStyleTagText) {
 		let rules = []
 		for (let i = 0; i < s.sheet.cssRules.length; i++) {
@@ -353,7 +370,6 @@ export function scopeStyle(child: SkribiChild, el: HTMLElement, s: HTMLStyleElem
 function scopeRule(rule: CSSRule, target: [string, number]): void {
 	if (!(rule instanceof CSSStyleRule)) return; // media and import rules ignored
 
-	let a = rule.selectorText
 	let b = prefixSelectors(rule.selectorText, `[${target[0]}='${target[1]}']`)
 	rule.selectorText = b
 }

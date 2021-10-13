@@ -81,7 +81,6 @@ export class TemplateLoader implements FileMinder {
       console.log(`Skribi: Loaded ` + str)
     } else if (this.plugin.initLoaded) {
       this.plugin.children.forEach((child) => {
-        console.log(child, files[0].basename); 
         child.templatesUpdated(files[0].basename)
       })
       vLog(`Updated template '${files[0].basename}' in ${roundTo(window.performance.now() - startTime, 4)}ms`)

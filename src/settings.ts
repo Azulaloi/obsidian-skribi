@@ -1,7 +1,8 @@
 import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, debounce } from "obsidian";
 import { l } from "./lang/babel";
 import SkribosPlugin from "./main";
-import { isExtant, isFunc } from "./util";
+import { SkribiChild } from "./render/child";
+import { invokeMethodOf, isExtant, isFunc } from "./util";
 
 export class SkribosSettingTab extends PluginSettingTab {
 	plugin: SkribosPlugin;
@@ -40,9 +41,11 @@ export class SkribosSettingTab extends PluginSettingTab {
 		this.makeToggle(containerEl, "autoReload", l["setting.autoReload.name"], l["setting.autoReload.desc"])
 		this.makeToggle(containerEl, "errorLogging", l["setting.errorLog.name"], l["setting.errorLog.desc"])
 		this.makeToggle(containerEl, "verboseLogging", l["setting.verbose.name"], l["setting.verbose.desc"])
+		
+		// this.makeToggle(containerEl, "shadowMode", "Shadow Mode", "Embed skribis in a shadow root", () => invokeMethodOf<SkribiChild>("rerender", ...this.plugin.children)) // hidden for now (this kills the skribichild)
 	}
 
-	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string) {
+	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string, cb?: (value: any) => void) {
 		return new Setting(el)
 		.setName(name)
 		.setDesc(desc)
@@ -51,7 +54,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 			.onChange(async (value) => {
 				this.plugin.settings[setting] = value;
 				await this.plugin.saveSettings();
-			})});
+				if (cb) cb(value);
+			})
+		})
 	}
 
 	saveSetting = debounce(async (setting: string, value: string | number | boolean, cb?: Function, ...args: any[]) => {
@@ -73,6 +78,7 @@ export interface SkribosSettings {
 
 	/* unlisted */
 	reflectStyleTagText: boolean;
+	shadowMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: SkribosSettings = {
@@ -84,4 +90,5 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	autoReload: true,
 	
 	reflectStyleTagText: true,
+	shadowMode: false,
 }

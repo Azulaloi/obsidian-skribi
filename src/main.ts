@@ -8,13 +8,11 @@ import { InsertionModal } from './modal/insertionModal';
 import { TestModal } from './modal/testModal';
 import { l } from './lang/babel';
 import SkribiProcessor from './render/processor';
-import { StyleManager } from './style';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
 	eta: EtaHandler;
 	processor: SkribiProcessor
-	styler: StyleManager
 
 	varName: string = "sk";
 	initLoaded: boolean = false;
@@ -32,7 +30,6 @@ export default class SkribosPlugin extends Plugin {
 
 		this.eta = new EtaHandler(this)
 		this.processor = new SkribiProcessor(this)
-		this.styler = new StyleManager(this)
 
 		this.processor.registerProcessors()
 		this.registerEvent(this.app.workspace.on('skribi:template-init-complete', () => {
@@ -98,7 +95,6 @@ export default class SkribosPlugin extends Plugin {
 		})
 		console.log('Skribi: Unloading...', this.children);  
 		invokeMethodOf<SkribiChild>("unload", ...this.children)
-		this.styler.unload()
 	}
 
 	async loadSettings() {

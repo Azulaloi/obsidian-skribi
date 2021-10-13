@@ -12,4 +12,4 @@ In the input, text will be output as text. Text inside of Eta tags is evaluated 
 
 - `<%~ %>` is the **raw interpolation** tag - equivalent to interpolation, but the contents are *not* XML-escaped.
 
-After interpretation is complete, `tR` is rendered as Obsidian Markdown, which is then appended to the skribi element.
+After interpretation is complete, `tR` is rendered as Obsidian Markdown, which is then appended to the skribi element, which is then attached to the document.
