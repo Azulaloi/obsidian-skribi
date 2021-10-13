@@ -31,7 +31,7 @@ declare module 'obsidian' {
 		on(name: 'az-weather:api-unload', callback: () => any, ctx?: any): EventRef;
 		on(name: 'az-weather:api-tick', callback: () => any, ctx?: any): EventRef;
 
-    on(name: 'skribi:template-init-complete', callback: () => any, ctx?: any): EventRef;
+    on(name: 'skribi:template-init-complete', callback: () => any, ctx?: string): EventRef;
 	}
 
   interface MetadataCache {

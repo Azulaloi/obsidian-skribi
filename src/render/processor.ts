@@ -4,11 +4,12 @@ import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
 import { Modes, Flags, EBAR } from "src/types/const";
 import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from "src/types/types";
-import { isExtant, dLog, vLog, roundTo } from "src/util";
+import { isExtant, dLog, vLog, roundTo, hash } from "src/util";
 import { SkribiChild } from "./child";
 import { embedMedia } from "./embed";
 import { parseSkribi, preparseSkribi } from "./parse";
 import { renderRegent, renderError, renderState } from "./regent";
+import { prefixSelectors } from "./styleScope";
 
 type SkribiResult = SkribiResultRendered | SkribiResultQueued
 
@@ -88,9 +89,11 @@ export default class SkribiProcessor {
 				let src = (isExtant(mode.flag) && mode.flag != Flags.none) ?
 					{text: srcIn || doc.textContent, flag: mode.flag} : await preparseSkribi(el);
 
+				let originalText = (mode.srcType == Modes.block) ? srcIn : el.textContent
+
 				try {
 					if (src != null) {
-						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: el.textContent}
+						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: originalText}
 						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
 							proms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx}));
@@ -213,12 +216,15 @@ export default class SkribiProcessor {
 
   /** Main skribi rendering function */
 	async renderSkribi(
-		el: HTMLElement, 
+		elementIn: HTMLElement, 
 		con: string | TemplateFunctionScoped, 
 		id: string, 
 		mdCtx: MarkdownPostProcessorContext, 
 		skCtx: SkContext
 	): Promise<SkribiResult> {
+		let el = createDiv()
+		elementIn.replaceWith(el)
+
 		let file = this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
 
 		let newElement = createDiv({cls: "skribi-render-virtual"});
@@ -236,7 +242,7 @@ export default class SkribiProcessor {
 				}
 			}).bind(this),
 			templateKey: (skCtx.flag == 1) ? id : null,
-			source: skCtx.source || null
+			source: skCtx.source
 		}) 
 			
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
@@ -251,10 +257,23 @@ export default class SkribiProcessor {
 		dLog("renderSkribi:", el, mdCtx, skCtx, id)
 		if (isExtant(rendered)) {
 			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
+						
+			let style = stripStyleFromString(rendered) // renderMarkdown ignores style nodes so we'll just yoink em 
+			if (style[1]) {rendered = style[0]}
+
 			let render = MarkdownRenderer.renderMarkdown(rendered, newElement, mdCtx.sourcePath, null).then(() => {
 				newElement.setAttribute("skribi", id); //e.setAttribute("depth", d.toString());
 				newElement.removeClass("skribi-render-virtual")
-				el.replaceWith(newElement); dLog("finish: ", skCtx.time, window.performance.now())
+				// newElement.setAttr('class', 'skribi')
+
+				el.replaceWith(newElement); 
+				dLog("finish: ", skCtx.time, window.performance.now());
+
+				if (style[1]) {
+					newElement.prepend(style[1]); 
+					scopeStyle(child, newElement, style[1]);
+				}
+
 				if (skCtx.flag == 1) {
 					vLog(`Rendered template "${id}" (${roundTo(window.performance.now()-skCtx.time, 4)} ms)`, newElement)
 				} else vLog(`Rendered literal (f: ${skCtx.flag}) (${roundTo(window.performance.now()-skCtx.time, 4)} ms)`, newElement)
@@ -284,4 +303,57 @@ export default class SkribiProcessor {
 			return Promise.reject("Render Error");
 		}
 	}
+}
+
+/* End of processor chain */
+
+/* STYLE FUNCTIONS */
+
+export function stripStyleFromString(str: string): [string, HTMLStyleElement | null] {
+	let x = createDiv()
+	x.innerHTML = str
+	// console.log('prestrip', x)
+	let style = x.querySelector('style')
+	if (style) x.removeChild(style)
+
+	return [x.innerHTML, style ?? null]
+}
+
+/* s must be attached to document or s.sheet will be null */
+export function scopeStyle(child: SkribiChild, el: HTMLElement, s: HTMLStyleElement): HTMLStyleElement {
+	child.hash = child.hash ?? hash(child.source)
+	child.containerEl.setAttr('sk-hash', child.hash)
+	if (!s.sheet) {console.warn("Could not scope style because it was not attached to the document!\n", el, s); return}
+	const l = s.sheet.cssRules.length
+	for (let i = 0; i < l; ++i) {
+		const rule = s.sheet.cssRules[i]
+
+		if (!(rule instanceof CSSImportRule)) {
+			scopeRule(rule, ['sk-hash', child.hash])
+		}
+	}
+
+	/* It changing the rule properties doesn't change the text, so we do it manually so make the resolved behavior visible for users in element panel */
+	/* what's obnoxious is that changing the text does change the properties*/
+	if ((window.app.plugins.plugins['obsidian-skribi'] as SkribosPlugin).settings.reflectStyleTagText) {
+		let rules = []
+		for (let i = 0; i < s.sheet.cssRules.length; i++) {
+			rules.push(s.sheet.cssRules.item(i))
+		}
+		let str = rules.reduce<string>((a: string, b: CSSRule) => {return a + `${b.cssText}` + '\n'}, "")
+		s.textContent = str
+	}
+
+	return s
+}
+
+/** Mutates a CSSRule's selectors to select elements with attribute 'sk-hash' equal to hash 
+/* @param rule CSSRule to scope 
+/* @param hash [attrKey, attrVal] to target */
+function scopeRule(rule: CSSRule, target: [string, number]): void {
+	if (!(rule instanceof CSSStyleRule)) return; // media and import rules ignored
+
+	let a = rule.selectorText
+	let b = prefixSelectors(rule.selectorText, `[${target[0]}='${target[1]}']`)
+	rule.selectorText = b
 }

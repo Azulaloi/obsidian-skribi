@@ -70,6 +70,9 @@ export interface SkribosSettings {
 	devLogging: boolean;
 	errorLogging: boolean;
 	autoReload: boolean;
+
+	/* unlisted */
+	reflectStyleTagText: boolean;
 }
 
 export const DEFAULT_SETTINGS: SkribosSettings = {
@@ -78,5 +81,7 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	verboseLogging: false,
 	devLogging: false,
 	errorLogging: false,
-	autoReload: true
+	autoReload: true,
+	
+	reflectStyleTagText: true,
 }

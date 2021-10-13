@@ -1,4 +1,5 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { SkribiChild } from "./render/child";
 import { EBAR } from "./types/const";
 import { Stringdex } from "./types/types";
 
@@ -153,6 +154,9 @@ export type FunctionKeys<T extends object> = {
   [K in keyof T]-?: NonUndefined<T[K]> extends Function ? K : never;
 }[keyof T];
 
+type ParametersOf<T extends (...args: any) => any> = {
+	[P in keyof Parameters<T>]-?: Parameters<T>}[keyof T];
+
 export function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
 	for (let o of objects) {
     if ((o != null) && (isFunc(o[func]))) {
@@ -165,7 +169,7 @@ export function invokeMethodOf<T>(func: keyof T, ...objects: T[]) {
   }
 }
 
-export function invokeMethodWith<T extends object>(objects: T | T[], key: FunctionKeys<T>, ...args: any[]) {
+export function invokeMethodWith<T extends object>(objects: T | T[], key: FunctionKeys<T>, ...args: /* ParametersOf<T[key]> */ any[]): void {
 	for (let o of ensureArray(objects)) {
 		try {
 			(o[key] as unknown as Function)(...args)
@@ -187,3 +191,13 @@ export function linkDocs(page: string) {
 
 /* Prefixes string with plugin name. Makes reusing code across plugins easier. */
 export function kls(cls: string) {return `skribi-${cls}`}
+
+/* */
+export function hash(str: string) {
+	let hash = 5381;
+	let i = str.length;
+	while (i) {
+		hash = (hash * 33) ^ str.charCodeAt(--i);
+	}
+	return hash >>> 0;
+}

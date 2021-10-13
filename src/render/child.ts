@@ -1,7 +1,9 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
 import { Stringdex } from "src/types/types";
-import { dLog } from "src/util";
+import { dLog, hash, isExtant, promiseImpl, roundTo } from "src/util";
+import { promisify } from "util";
+import { scopeStyle, stripStyleFromString } from "./processor";
 
 interface SkChild {
 	scriptsUpdated: () => any
@@ -15,8 +17,18 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private cbOnUnload: [Function, any][] = []
 	private cbOnPost: [Function, any][] = []
 
+	isPost: boolean = false;
+
 	templateKey?: string
-	source?: string
+	source: string
+
+	styleTime: number
+
+	// get hash(): number {
+	// 	Object.defineProperty(this, "hash", {value: hashCode(this.source), writable: false, configurable: true})
+	// 	return this.hash
+	// }
+	hash: number
 
 	constructor(plugin: SkribosPlugin, el: HTMLElement) {
 		super(el)
@@ -30,6 +42,8 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
       registerUnload: this.skRegisterUnload.bind(this),
       registerEvent: this.skRegisterEvent.bind(this),
 			registerPost: this.skRegisterPost.bind(this),
+			style: this.skStyle.bind(this),
+			addStyle: this.skAddStyle.bind(this),
       reload: this.rerender, // Bound on assignment
       c: this
     }
@@ -56,7 +70,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 
 	/* NOT called by child.unload() (except sometimes it is) */
 	onunload() {
-		dLog("skreeb unload"); console.log("skreeb unload");
+		dLog("skreeb unload"); console.log("skreeb unload", this.containerEl);
 		this.clear()
 	}
 
@@ -66,19 +80,80 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		for (let i of this.intervals) window.clearInterval(i); // there might be cases where this doesn't get called properly (?)
 		for (let cb of this.cbOnUnload) cb[0](cb[1]);
 
-		// No idea how to do memory management properly so let's just burn all the bridges we can find
 		console.log("dying")
 		// this.containerEl.parentNode.removeChild(this.containerEl)
 		this.plugin.children.remove(this)
+		
+		/* When being replaced by a new skribi, unload is called after the new skribi is invoked, so we must check if we've been */
+		if ((isExtant(this.styleTime)) && !(this.plugin.styler.ruleVars[this.hash]?.time ?? 0 > this.styleTime)) {
+			this.plugin.styler.deleteRule(this.hash)
+		}
 	}
 
 	/* Called after render fulfillment */
 	onPost() {
+		this.isPost = true
 		for (let cb of this.cbOnPost) cb[0](cb[1]);
 	}
 
   /*-- Provider Functions --*/
-  
+
+	skStyle(str: string) {
+		this.hash = hash(this.source)
+		this.containerEl.setAttr('sk-hash', this.hash)
+		this.styleTime = roundTo(window.performance.now(), 2)
+
+		this.plugin.styler.setRule(this.hash, {style: str, time: this.styleTime})
+
+
+		// let sheet = new CSSStyleSheet()
+
+		/*
+		let x = createEl('style')
+		x.innerText = str
+		document.getElementsByTagName("head")[0].appendChild(x) // the sheet doesn't exist until it's connected to the doc, and we are not
+		
+		const l = x.sheet.cssRules.length
+		for (let i = 0; i < l; ++i) {
+			const rule = x.sheet.cssRules[i]
+
+			if (!(rule instanceof CSSImportRule)) {
+				scopeRule(rule, this.hash)
+			}
+		}
+
+		console.log(x)
+
+		
+
+    document.getElementsByTagName("head")[0].removeChild(x) */
+
+
+		// let x = createEl('style'/*, {type: "text/css"}*/)
+		// x.innerHTML = `div[sk-hash="${hash}"] { ${str} }`
+
+		// this.containerEl.prepend(x)
+		// this.plugin.styler.setRule(this.hash, str)
+	}
+
+	// Asynchronously adds a scoped style element to the container, from string str
+	// Will not resolve until post (when element is attached to document, which is required for scopeStyle())
+	// Returns reference to the created element
+	// TODO: if aborted before post, will promise persist in memory?
+	skAddStyle(str: string): Promise<HTMLStyleElement> {
+		let s = createEl('style')
+		s.innerHTML = str
+		this.containerEl.prepend(s)
+
+		let p = () => {
+			return new Promise((resolve, reject) => {
+				this.skRegisterPost(() => {resolve(scopeStyle(this, this.containerEl, s))})
+			})
+		}
+
+		return p() as Promise<HTMLStyleElement>
+	}
+
 	skRegisterInterval(cb: Function, time: number, ...args: any[]) {
 		//@ts-ignore
 		let x = window.setInterval((...a: any) => { if (this._loaded == false) {window.clearInterval(x)}
@@ -97,9 +172,20 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	}
 
 	skRegisterPost(cb: Function, ...args: any[]) {
-		this.cbOnPost.push([(...x: any) => cb(...x), args])
+		if (!this.isPost) {
+			this.cbOnPost.push([(...x: any) => cb(...x), args])
+		} else {
+			((...x: any) => cb(...x))(args)
+		}
 	}
 
   // Assigned in renderSkribi()
   rerender(...args: any[]) {}
+}
+
+
+function scopeRule(rule: CSSRule, hash: number) {
+	if (!(rule instanceof CSSStyleRule)) return
+
+	rule.selectorText = `[sk-hash=${hash}]:and(${rule.selectorText})`
 }
