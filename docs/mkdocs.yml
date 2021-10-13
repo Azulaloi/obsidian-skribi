@@ -47,3 +47,4 @@ nav:
     - 'Settings': settings.md
     - 'Commands': commands.md
     - 'Indicators': states.md
+    - 'Localization': misc/localization.md

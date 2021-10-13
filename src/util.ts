@@ -1,5 +1,4 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
-import { SkribiChild } from "./render/child";
 import { EBAR } from "./types/const";
 import { Stringdex } from "./types/types";
 
@@ -192,7 +191,6 @@ export function linkDocs(page: string) {
 /* Prefixes string with plugin name. Makes reusing code across plugins easier. */
 export function kls(cls: string) {return `skribi-${cls}`}
 
-/* */
 export function hash(str: string) {
 	let hash = 5381;
 	let i = str.length;

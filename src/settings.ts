@@ -1,8 +1,9 @@
 import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, debounce } from "obsidian";
 import { l } from "./lang/babel";
 import SkribosPlugin from "./main";
+import { makeExternalLink } from "./modal/confirmationModal";
 import { SkribiChild } from "./render/child";
-import { invokeMethodOf, isExtant, isFunc } from "./util";
+import { invokeMethodOf, isExtant, isFunc, linkDocs } from "./util";
 
 export class SkribosSettingTab extends PluginSettingTab {
 	plugin: SkribosPlugin;
@@ -18,6 +19,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 		containerEl.addClass("skribi-settings");
 		containerEl.empty();
 		containerEl.createEl('h2', {text: l["setting.title"]});
+		
+    let desc = containerEl.createDiv({cls: 'skribi-modal-desc', attr: {style: "margin-bottom: 1em;"}})
+    makeExternalLink(desc.createEl('a', {text: l['documentation'], attr: {'href': linkDocs('settings')}}))
 
 		new Setting(containerEl)
 			.setName(l["setting.templateDirectory.name"])

@@ -10,4 +10,4 @@ Skribi recognizes inline code elements with curly brackets `{}` and codeblocks o
 
 Skribi has two primary modes: template and non-template. Templates are loaded from files in the configured template folder, and invoked with a colon. They may then be followed by pipe-separated values. Note that any pipes in the values must be escaped.
 
-See: [Skribi Syntax](/obsidian-skribi/syntax/skribi) and [Template Invocation](/obsidian-skribi/syntax/templates)
+See: [Skribi Syntax](./syntax/skribi) and [Template Invocation](./syntax/templates)

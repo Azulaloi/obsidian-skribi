@@ -89,3 +89,13 @@ code {
   padding: .9375em 1.25em;
   vertical-align: top;
 }
+
+.md-grid {
+  transition: max-width 1s ease;
+  /* max-width: 70rem; */
+}
+
+table code {
+  word-break: keep-all !important;
+}
+

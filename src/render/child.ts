@@ -37,7 +37,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 			registerPost: this.skRegisterPost.bind(this),
 			addStyle: this.skAddStyle.bind(this),
       reload: this.rerender, // Bound on assignment
-      c: this
+      _c: this
     }
   }
 
