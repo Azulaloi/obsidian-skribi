@@ -2,8 +2,7 @@ import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, deb
 import { l } from "./lang/babel";
 import SkribosPlugin from "./main";
 import { makeExternalLink } from "./modal/confirmationModal";
-import { SkribiChild } from "./render/child";
-import { invokeMethodOf, isExtant, isFunc, linkDocs } from "./util";
+import { isExtant, isFunc, linkDocs } from "./util";
 
 export class SkribosSettingTab extends PluginSettingTab {
 	plugin: SkribosPlugin;

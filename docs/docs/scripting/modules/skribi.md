@@ -50,6 +50,16 @@
         <li><code>label: string</code> - The text shown in the block (default: 'sk')</li>
       </ul></td>
     </tr>
+    <tr>
+      <th><code>sk.getStyle(styleName: string)</code></th>
+      <td>async => <code>Promise&lt;string&gt;</code></td>
+      <td>Returns a promise for the text content of the file <code>styleName.css</code> in the template directory, if it exists. Resolves on completion of initial template load (instant if already complete).</td>
+    </tr>
+    <tr>
+      <th><code>sk.includeStyle(styleName: string)</code></th>
+      <td>async => <code>Promise&lt;<a href='https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement'>CSSStyleElement</a>&gt;</code></td>
+      <td>Equivalent to <code>sk.child.addStyle(await sk.getStyle(styleName))</code>. </td>
+    </tr>
   </tbody>
 </table>
 
@@ -91,7 +101,7 @@
     </tr>
     <tr>
       <th><code>addStyle(text: string)</code></th>
-      <td>=> <code>Promise&lt;<a href='https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement'>CSSStyleElement</a>&gt;</code></td>
+      <td>async => <code>Promise&lt;<a href='https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement'>CSSStyleElement</a>&gt;</code></td>
       <td>Creates and attaches style element composed from the CSS-parsable string <code>text</code>. Returns a promise that resolves <strong>after</strong> the skribi function resolves and is attached to the document. Awaiting this value directly will thus cause the skribi function to hang.</td>
     </tr>
     <tr>

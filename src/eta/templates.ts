@@ -8,6 +8,12 @@ import { Cacher } from "./cacher";
 import { FileMinder, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
 
+interface TemplateEta {
+  source: string,
+  function: TemplateFunctionScoped,
+  frontmatter?: FrontMatterCache
+}
+
 /* Responsible for the caching and management of templates. */
 // TODO: add system to auto-reload skribis when relevant template cache changes 
 export class TemplateLoader implements FileMinder {
@@ -17,32 +23,47 @@ export class TemplateLoader implements FileMinder {
   templateCache: Cacher<TemplateFunctionScoped> = new Cacher<TemplateFunctionScoped>({})
   templateFailures: Map<string, string> = new Map();
   templateFrontmatters: Map<string, FrontMatterCache> = new Map();
+  templateSource: Cacher<string> = new Cacher<string>({})
+
+  styleCache: Cacher<string> = new Cacher<string>({})
 
   constructor(handler: EtaHandler) {
     this.handler = handler
     this.plugin = handler.plugin
   }
 
-  async init(): Promise<any> {
+  public async init(): Promise<any> {
     return this.initLoad()
   }
 
-  async initLoad() {
+  private async initLoad() {
     await this.definePartials(...getFiles(this.plugin.app, this.directory)) 
     this.plugin.app.workspace.trigger('skribi:template-init-complete')
     return Promise.resolve()
   }
 
-  /* Load and compile files into the template cache */
-  async definePartials(...files: TFile[]): Promise<void> {
+  /** 
+   * Reads passed files and attempts to cache them.
+   * Handles templates and styles. Templates are compiled to functions. */
+  private async definePartials(...files: TFile[]): Promise<void> {
     const startTime = window.performance.now()
     var failureCount = 0
     var successCount = 0
 
     const scopeKeys = this.handler.bus.getScopeKeys()
 
-    const readPromises = files.map(async file => {
-      if (!checkFileExt(file, ["md", "eta", "txt"])) return Promise.reject();
+    let styleFiles: TFile[] = []
+    let templateFiles = files.map(file => {
+      switch(file.extension) {
+        case "md": return file
+        case "eta": return file
+        case "css": styleFiles.push(file)
+        default: return null
+      }
+    })
+
+    const readTemplates = templateFiles.map(async file => {
+      // if (!checkFileExt(file, ["md", "eta", "txt"])) return Promise.reject();
 
       let read = await this.plugin.app.vault.cachedRead(file)
 
@@ -52,7 +73,7 @@ export class TemplateLoader implements FileMinder {
         let fmText = fmSearch?.groups?.frontmatter ?? null
         if (isExtant(fmText)) { read = read.substr(fmText.length)}      
       }
-
+  
       try {
         let compiledString = Eta.compileToString(read, Eta.getConfig({varName: VAR_NAME, name: file.basename}))
         var compiled = compileWith(compiledString, [VAR_NAME, 'E', 'cb', ...scopeKeys], (read.contains('await')))
@@ -64,26 +85,40 @@ export class TemplateLoader implements FileMinder {
         failureCount++
         return Promise.reject()
       }
-
+  
       this.templateFailures.delete(file.basename)
       this.templateCache.define(file.basename, compiled)
+      this.templateSource.define(file.basename, read)
       if (fileFrontmatter) this.templateFrontmatters.set(file.basename, withoutKey(fileFrontmatter, 'position') as FrontMatterCache)
       successCount++
 
       return Promise.resolve()
     })
 
-    await Promise.allSettled(readPromises)
+    const readStyles = styleFiles.map(async file => {
+      let read = await this.plugin.app.vault.cachedRead(file)
+      this.styleCache.define(file.basename, read)
+    })
+
+    await Promise.allSettled(readTemplates.concat(readStyles))
 
     if ((!this.plugin.initLoaded) && files.length) {
       let str = `${successCount} template${(successCount == 1) ? '' : 's'}`
-      if (failureCount) str += `\n Of ${files.length} total templates, ${failureCount} failed to compile.`
+      if (failureCount) str += `\n Of ${templateFiles.length} total templates, ${failureCount} failed to compile.`
       console.log(`Skribi: Loaded ` + str)
     } else if (this.plugin.initLoaded) {
-      this.plugin.children.forEach((child) => {
-        child.templatesUpdated(files[0].basename)
-      })
-      vLog(`Updated template '${files[0].basename}' in ${roundTo(window.performance.now() - startTime, 4)}ms`)
+      /* Other than in init, definePartials is called on single files at a time.  */
+
+      if (templateFiles.length > 0) {
+        this.plugin.children.forEach((child) => {
+          child.templatesUpdated(templateFiles[0].basename)
+        })
+        vLog(`Updated template '${templateFiles[0].basename}' in ${roundTo(window.performance.now() - startTime, 4)}ms`)
+      }
+
+      if (styleFiles.length > 0) {
+
+      }
     }
 
     return Promise.resolve()
@@ -97,7 +132,20 @@ export class TemplateLoader implements FileMinder {
     }
   }
 
-  async reload(): Promise<void> {
+  deletePartialByName(...items: Array<string>) {
+    for (let item of items) {
+      let split = (/(?<name>[^]+)\.(?<extension>[^]+)$/g).exec(item)
+      if (!(Object.keys(split?.groups)?.length ?? 0 > 0)) {
+        console.warn('Skribi: TemplateLoader.deletePartialByName() could not parse name \n', item)
+        continue
+      }
+
+      ((split.groups['extension'] == "css") ? this.styleCache : this.templateCache)
+      .remove(split.groups['name'])
+    }
+  }
+
+  public async reload(): Promise<void> {
     this.templateCache.reset()
     return this.definePartials(...getFiles(this.plugin.app, this.directory))
   }
@@ -112,11 +160,17 @@ export class TemplateLoader implements FileMinder {
     this.definePartials(file)
   }
 
-  fileDeleted(file: TAbstractFile | string): void {
-    let isf = isFile(file)
-    if ((!isf && !(String.isString(file) && this.templateCache.get(file)))) return;
-    vLog(`File '${isf ? (file as TFile).name : file}' removed from template directory, unloading...`)
-    this.deletePartial(file as (TFile | string))
+  // fileDeleted(file: TAbstractFile | string): void { // never actually called as string I just wrote it to handle it for some reason
+  //   let isf = isFile(file)
+  //   if ((!isf && !(String.isString(file) && this.templateCache.get(file)))) return;
+  //   vLog(`File '${isf ? (file as TFile).name : file}' removed from template directory, unloading...`)
+  //   this.deletePartial(file as (TFile | string))
+  // }
+
+  fileDeleted(file: TAbstractFile): void {
+    if (!isFile(file)) return;
+    vLog(`File '${file.name}' removed from template directory, unloading...`)
+    this.deletePartialByName(file.name)
   }
 
   fileAdded(file: TAbstractFile): void {
@@ -128,7 +182,8 @@ export class TemplateLoader implements FileMinder {
   fileRenamed(file: TAbstractFile, oldName: string): void {
     if (!isFile(file)) return;
     vLog(`Template file '${oldName}' renamed to '${file.name}', updating...`)
-    this.deletePartial(oldName)
+
+    this.deletePartialByName(oldName)
     this.definePartials(file)
   }
 

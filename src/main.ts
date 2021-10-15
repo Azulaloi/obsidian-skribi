@@ -38,7 +38,7 @@ export default class SkribosPlugin extends Plugin {
 		}))
 
 		this.defineCommands()
-
+		this.registerExtensions(['eta'], 'markdown')
 		// registerMirror(this);
 
 		/* Rerender preview views */

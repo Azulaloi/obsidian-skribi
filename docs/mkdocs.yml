@@ -35,6 +35,7 @@ nav:
     - 'Skribi Syntax': syntax/skribi.md
     - 'Templates': syntax/templates.md
     - 'Template Metadata': syntax/template_metadata.md
+    - 'Styling': syntax/style.md
   - Scripting:
     - 'Context': scripting/context.md
     - Modules: 

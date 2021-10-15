@@ -164,7 +164,6 @@ export class EtaHandler {
       ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
       : renderEta(this, content, {}, cfg, null, scope, binder)
 
-    // console.log("psuedo post:", sk)
     if (ren instanceof Promise) {
       return await ren.then((r) => {return Promise.resolve([r, z])}, (r) => {return Promise.reject(r)})
     } else if (String.isString(ren)) { return Promise.resolve([ren as string, z]) }

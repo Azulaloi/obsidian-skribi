@@ -4,7 +4,7 @@ The string content of a skribi is parsed by Eta into a function, which returns t
 
 ## Local Scope Variables
 
-The following properties are defined in the local scope. 
+The following properties are defined in the local scope. This makes them restricted keys (don't assign to them or something might break).
 
 <table>
     <thead><th>Object</th><th>Description</th></thead>
