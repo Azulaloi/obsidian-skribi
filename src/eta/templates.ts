@@ -109,17 +109,17 @@ export class TemplateLoader implements FileMinder {
       /* Other than during init, definePartials is called on single files at a time.  */
 
       if (templateFiles.length > 0) {
-        console.log(templateFiles)
-        this.plugin.children.forEach((child) => {
+        Array.from(this.plugin.children).forEach((child) => {
           child.templatesUpdated(templateFiles[0].basename)
         })
         vLog(`Updated template '${templateFiles[0].basename}' in ${roundTo(window.performance.now() - startTime, 4)}ms`)
       }
 
       if (styleFiles.length > 0) {
-        this.plugin.children.forEach((child) => {
+        Array.from(this.plugin.children).forEach((child) => {
           child.stylesUpdated(styleFiles[0].basename)
         })
+        vLog(`Update style '${styleFiles[0].basename}'`)
       }
     }
 

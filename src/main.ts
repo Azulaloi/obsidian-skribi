@@ -1,7 +1,6 @@
 import { MarkdownView, Plugin } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
-import { invokeMethodOf } from './util';
 import { SkribiChild } from './render/child';
 import { SuggestionModal } from './modal/suggestionModal';
 import { InsertionModal } from './modal/insertionModal';
@@ -71,8 +70,7 @@ export default class SkribosPlugin extends Plugin {
 		}})
 		
 		this.addCommand({id: "reload-skribis", name: "Reload Skribis", callback: () => {
-			// invokeMethodWith<SkribiChild>(this.children, "rerender")
-			this.children.forEach(child => child.rerender(child?.templateKey))
+			Array.from(this.children).forEach(child => child.rerender(child?.templateKey))
 		}})
 
 		this.addCommand({id: "test-performance", name: l['command.perfTest'], callback: async () => {
@@ -89,12 +87,12 @@ export default class SkribosPlugin extends Plugin {
 	
 	onunload() {
 		this.eta.unload()
-		this.children.forEach((child) => {
+		console.log('Skribi: Unloading...', this.children);  
+		Array.from(this.children).forEach((child) => {
 			let pre = createEl('code', {text: child.source})
 			child.containerEl.replaceWith(pre)
+			child.unload()
 		})
-		console.log('Skribi: Unloading...', this.children);  
-		invokeMethodOf<SkribiChild>("unload", ...this.children)
 	}
 
 	async loadSettings() {

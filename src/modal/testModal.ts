@@ -146,7 +146,8 @@ export class TestModal extends Modal {
     
     this.resultsField.setText(`${l["modal.perf.results"]} (${children.length} children in ${ l._((times.length > 1 ? "modal.perf.resultsBlockCount.plural" : "modal.perf.resultsBlockCount.single"), times.length.toString())}): ${roundTo(avg, 3)}ms`)
   
-    invokeMethodOf<SkribiChild>("clear", ...children) // Unload doesn't seem to be invoked consistently so let's just make sure everything is cleared
+    // invokeMethodOf<SkribiChild>("clear", ...children) // Unload doesn't seem to be invoked consistently so let's just make sure everything is cleared
+    Array.from(children).forEach((child: SkribiChild) => child.clear())
     blocksToProcess.map(block => block.remove()) // Children are easier to collect when they lack shelter
     container.remove(); el.remove(); // One day, the last person who remembers you will die, and you will be forgotten forever
   }
