@@ -16,12 +16,15 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private cbOnUnload: [Function, any][] = []
 	private cbOnPost: [Function, any][] = []
 
-	isPost: boolean = false;
+	isPost: boolean = false // True when container has attached to document 
 
-	templateKey?: string
-	source: string
-
-	hash: number
+	templateKey?: string // The source template
+	source: string // The uncompiled source string of the skribi invocation
+	hash: number // Assigned when needed
+	sources: {templates: string[], styles: string[]} = {
+		templates: [],
+		styles: []
+	}
 
 	constructor(plugin: SkribosPlugin, el: HTMLElement) {
 		super(el)
@@ -45,11 +48,23 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		this.rerender()
 	}
 
-	public templatesUpdated(id: string, newId?: string) {
-		if (this?.templateKey == id) {
-			dLog("Child received matching template update signal", id, this)
-			this.rerender(id)
+	public templatesUpdated(id: string, newId?: string) {	
+		if ((this?.templateKey == id) || this.sources.templates.contains(id)) {
+			dLog("Child received template update notification that matched one of its sources", id, this)
+			this.rerender((id == this?.templateKey) ? id : null)
 		}
+	}
+
+	public stylesUpdated(id: string) {
+		if ((this.sources.styles).contains(id)) {
+			dLog("Child received style update notification that matched one of its sources", id, this)
+			this.rerender()
+		}
+	}
+
+	listenFor(type: "style" | "template", id: string) {
+		let l = (type == "style" ? this.sources.styles : type == "template" ? this.sources.templates : null)
+		if (l) l.push(id) 
 	}
 
 	setPacket(packet: Stringdex) {
@@ -95,7 +110,8 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 
 		let p = () => {
 			return new Promise((resolve, reject) => {
-				this.skRegisterPost(() => {resolve(scopeStyle(this, this.containerEl, s))})
+				this.skRegisterPost(() => {
+					resolve(scopeStyle(this, this.containerEl, s))})
 			})
 		}
 

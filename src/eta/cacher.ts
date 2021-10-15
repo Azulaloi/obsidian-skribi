@@ -1,4 +1,4 @@
-/* This is reimplemented from Eta */
+/* This is slightly modified from Eta */
 
 export class Cacher<T> {
   constructor(private cache: Record<string, T>) {}
@@ -7,6 +7,9 @@ export class Cacher<T> {
   remove(key: string): void {delete this.cache[key]}
   reset(): void {this.cache = {}}
   load(cacheObj: Record<string, T>): void {copyProps(this.cache, cacheObj)}
+  has(key: string): boolean {
+    return !((this.cache[key] === null ) || (this.cache[key] === undefined))
+  }
 }
 
 export function copyProps<T>(toObj: T, fromObj: T): T {

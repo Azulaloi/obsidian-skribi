@@ -2,7 +2,7 @@ import * as Eta from "eta";
 import { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import { checkFileExt, getFiles, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
+import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
 import { FileMinder, TemplateFunctionScoped } from "src/types/types";
@@ -53,18 +53,17 @@ export class TemplateLoader implements FileMinder {
     const scopeKeys = this.handler.bus.getScopeKeys()
 
     let styleFiles: TFile[] = []
-    let templateFiles = files.map(file => {
+    let templateFiles: TFile[] = [] 
+    files.forEach(file => {
       switch(file.extension) {
-        case "md": return file
-        case "eta": return file
-        case "css": styleFiles.push(file)
-        default: return null
+        case "md": templateFiles.push(file); break;
+        case "eta": templateFiles.push(file); break;
+        case "css": styleFiles.push(file); break;
+        default: break;
       }
     })
 
     const readTemplates = templateFiles.map(async file => {
-      // if (!checkFileExt(file, ["md", "eta", "txt"])) return Promise.reject();
-
       let read = await this.plugin.app.vault.cachedRead(file)
 
       let fileFrontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter
@@ -107,9 +106,10 @@ export class TemplateLoader implements FileMinder {
       if (failureCount) str += `\n Of ${templateFiles.length} total templates, ${failureCount} failed to compile.`
       console.log(`Skribi: Loaded ` + str)
     } else if (this.plugin.initLoaded) {
-      /* Other than in init, definePartials is called on single files at a time.  */
+      /* Other than during init, definePartials is called on single files at a time.  */
 
       if (templateFiles.length > 0) {
+        console.log(templateFiles)
         this.plugin.children.forEach((child) => {
           child.templatesUpdated(templateFiles[0].basename)
         })
@@ -117,7 +117,9 @@ export class TemplateLoader implements FileMinder {
       }
 
       if (styleFiles.length > 0) {
-
+        this.plugin.children.forEach((child) => {
+          child.stylesUpdated(styleFiles[0].basename)
+        })
       }
     }
 

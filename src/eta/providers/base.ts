@@ -54,7 +54,10 @@ export class ProviderSK extends Provider {
           })})()
       },
       includeStyle: async function(s: string) {
-        return this.child.addStyle(await this.getStyle(s))
+        if (this.ctx.plugin.eta.loader.styleCache.has(s)) {
+          this.child._c.listenFor("style", s)
+          return this.child.addStyle(await this.getStyle(s))
+        }
       }
     }
   }
