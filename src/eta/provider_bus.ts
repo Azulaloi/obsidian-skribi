@@ -2,7 +2,7 @@ import { App, MarkdownRenderer } from "obsidian";
 import SkribosPlugin from "src/main";
 import { VAR_NAME } from "src/types/const";
 import { DynamicState, Stringdex } from "src/types/types";
-import { isFunc } from "src/util";
+import { ensureArray, isFunc } from "src/util";
 import { EtaHandler } from "./eta";
 import { ProviderSK } from "./providers/base";
 import { ProviderDataview } from "./providers/integration/dv";
@@ -84,12 +84,19 @@ export class ProviderBus {
   }
 
   /* Invoked by providers to indicate their provision must be regenerated */
-  providerNotificationDirty(provider: Provider, isDirty: boolean) {
-    if (isDirty) this.refreshProvider(provider)
+  providerNotificationDirty(provider: Provider, isDirty: boolean, ...data: any[]) {
+    if (isDirty) this.refreshProvider(provider, ...data)
+  }
+
+  /* Regenerate the provision of a single provider, and pass data to its post function */
+  refreshProvider(provider: Provider, ...data: any[]) {
+    provider.setDirty(false)
+    Object.assign(this.scopeStatic, {[provider.id]: provider.createObject()})
+    provider.postDirty(...data)
   }
 
   /* Clean dirty providers by regenerating their provision */
-  refreshProvider(...providers: Provider[]) {
+  refreshProviders(...providers: Provider[]) {
     let proxy: any = {};
 
     for (let provider of providers) {
@@ -98,6 +105,8 @@ export class ProviderBus {
     }
 
     Object.assign(this.scopeStatic, proxy)
+
+    providers.forEach(provider => provider.postDirty())
   }
 
   /* Reloads all providers */
@@ -114,7 +123,7 @@ export class ProviderBus {
   /* Retrieves providers object */
   public getScope(ctx?: DynamicState, refresh?: boolean) {
     let dirties = Object.values(this.providers).filter((p: Provider) => {return p.isDirty})
-    if (dirties) this.refreshProvider(...dirties)
+    if (dirties) this.refreshProviders(...dirties)
 
     if (this.isStaticScopeDirty) this.createStaticScope()
 

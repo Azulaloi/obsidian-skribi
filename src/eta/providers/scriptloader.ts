@@ -33,10 +33,6 @@ export class ProviderScriptloader extends Provider implements FileMinder {
         )
       }
     })
-
-    if (this.bus.plugin.settings.autoReload) {
-      Array.from(this.bus.plugin.children).forEach(child => child.scriptsUpdated())
-    }
   }
 
   createObject(): Stringdex {
@@ -93,6 +89,12 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     this.loadedModules.clear()
     await this.initLoad()
     return super.reload()
+  }
+
+  postDirty() {
+    if (this.bus.plugin.settings.autoReload) {
+      Array.from(this.bus.plugin.children).forEach(child => child.scriptsUpdated())
+    }
   }
 
   /* FileMinder Functions */

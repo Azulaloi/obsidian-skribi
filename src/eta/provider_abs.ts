@@ -13,6 +13,7 @@ export interface IProvider {
   reload(): Promise<any>;                 // May be called multiple times
 
   setDirty(): void;
+  postDirty?(): void;
 }
 
 export abstract class Provider implements IProvider {
@@ -49,6 +50,9 @@ export abstract class Provider implements IProvider {
     this.isDirty = isExtant(dirty) ? dirty : true
     this.bus.providerNotificationDirty(this, this.isDirty)
   }
+
+  /* May be called without data. */
+  postDirty(...args: any[]): void {}
 }
 
 /** 
