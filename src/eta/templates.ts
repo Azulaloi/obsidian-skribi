@@ -1,8 +1,8 @@
 import * as Eta from "eta";
-import { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
+import { FrontMatterCache, parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, withoutKey } from "src/util";
+import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
 import { FileMinder, TemplateFunctionScoped } from "src/types/types";
@@ -66,13 +66,28 @@ export class TemplateLoader implements FileMinder {
     const readTemplates = templateFiles.map(async file => {
       let read = await this.plugin.app.vault.cachedRead(file)
 
-      let fileFrontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter
-      if (fileFrontmatter) {
-        let fmSearch = (/(?<frontmatter>^---.*?(?=\n---)\n---)/s).exec(read);
-        let fmText = fmSearch?.groups?.frontmatter ?? null
-        if (isExtant(fmText)) { read = read.substr(fmText.length)}      
+      let fileFrontmatter = null
+      if (file.extension == "eta") {
+        let fmSearch = (/^---\n*(?<frontmatter>.*?)\n*---/s).exec(read);
+        if (fmSearch.groups.frontmatter) {
+          try {
+            let yaml = parseYaml(fmSearch.groups.frontmatter.trim())
+            fileFrontmatter = yaml
+            read = read.substr(fmSearch[0].length)
+          } catch (e) {
+            vWarn(`Error parsing frontmatter of ${file.name}, please report.`, EBAR, e)
+          }
+        }
+      } else {
+        /* Markdown files can check for cached frontmatter which is maybe faster */
+        fileFrontmatter = this.plugin.app.metadataCache.getFileCache(file)?.frontmatter
+        if (fileFrontmatter) {
+          let fmSearch = (/(?<frontmatter>^---.*?(?=\n---)\n---)/s).exec(read);
+          let fmText = fmSearch?.groups?.frontmatter ?? null
+          if (isExtant(fmText)) { read = read.substr(fmText.length)}      
+        }
       }
-  
+      
       try {
         let compiledString = Eta.compileToString(read, Eta.getConfig({varName: VAR_NAME, name: file.basename}))
         var compiled = compileWith(compiledString, [VAR_NAME, 'E', 'cb', ...scopeKeys], (read.contains('await')))

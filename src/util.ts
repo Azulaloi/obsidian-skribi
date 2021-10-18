@@ -30,7 +30,7 @@ export function getFiles(app: App, dir: string): TFile[] {
 		if (fi instanceof TFile) files.push(fi)
 	})
 
-	console.log(files)
+	// console.log(files)
 	return files;
 }
 

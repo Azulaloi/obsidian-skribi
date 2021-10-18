@@ -267,7 +267,7 @@ export default class SkribiProcessor {
 				mdCtx.addChild(child)
 				this.plugin.children.push(child)
 			})
-			return Promise.resolve(null)
+			return Promise.resolve([null, null])
 		})
 		
 		dLog("renderSkribi:", el, mdCtx, skCtx, id)
