@@ -243,10 +243,30 @@ export default class SkribiProcessor {
 			
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
 
-		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file).catch((err) => {
+		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
+		.catch((err) => {
+			/* If the template function throws an error, it should bubble up to here. */
 			if (this.plugin.settings.errorLogging) console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err);
-			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"})
-			child.unload()
+			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"}).then(errEl => {
+				/* Alter the child so that it may yet live (and listen for source updates) */
+				Object.assign(child, {
+					containerEl: errEl,
+					state: "error",
+					rerender: ((templateToRetrieve?: string) => {
+						let nskCtx = Object.assign({}, skCtx, {time: window.performance.now()})
+						if (skCtx.flag == 1 && isExtant(templateToRetrieve)) {
+							let template = this.eta.getPartial(templateToRetrieve)
+							child.unload();
+							this.renderSkribi(errEl, template, templateToRetrieve, mdCtx, nskCtx)
+						} else {
+							child.unload(); 
+							this.renderSkribi(errEl, con, id, mdCtx, nskCtx)
+						}
+					}).bind(this),
+				}) 
+				mdCtx.addChild(child)
+				this.plugin.children.push(child)
+			})
 			return Promise.resolve(null)
 		})
 		

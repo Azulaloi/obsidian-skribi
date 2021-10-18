@@ -8,13 +8,13 @@ export interface RegentData {
 
 export async function renderError(el: HTMLElement, e: RegentData) {
 	if (e?.flag && e.flag == "abort") {
-		renderRegent(el, Object.assign({}, {
+		return renderRegent(el, Object.assign({}, {
 			class: 'abort',
 			label: 'sk',
 			hover: 'Render Aborted'
 		}, e))
 	} else {
-		renderRegent(el, {class: 'error', label: 'sk', hover: e?.msg || "Unknown Error", clear: true})
+		return renderRegent(el, {class: 'error', label: 'sk', hover: e?.msg || "Unknown Error", clear: true})
 	}
 }
 

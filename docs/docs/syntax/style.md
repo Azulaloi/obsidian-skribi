@@ -2,7 +2,7 @@
 
 There are a few ways to include a style in your skribi. 
 
-**1**: If you have a `.css` file in your templates directory, you can load it in your skribi with <a href='../scripting/modules/skribi#includestyle'><code>sk.includeStyle(style)</code></a> where style is a string matching the filename of your `.css` file. Styles loaded in this way are not processed by Eta. You can also get the style snippet as text with <a href='../scripting/modules/skribi#getstyle'><code>sk.getStyle(style)</code></a>.
+**1**: If you have a `.css` file in your templates directory, you can load it in your skribi with <a href='../../scripting/modules/skribi#includestyle'><code>sk.includeStyle(style)</code></a> where style is a string matching the filename of your `.css` file. Styles loaded in this way are not processed by Eta. You can also get the style snippet as text with <a href='../../scripting/modules/skribi#getstyle'><code>sk.getStyle(style)</code></a>.
 
 Styles loaded with `sk.includeStyle()` will cause the skribi to reload whenever the `.css` file is modified, just like it would if its template file was modified.
 

@@ -8,6 +8,8 @@ interface SkChild {
 	scriptsUpdated: () => any
 }
 
+type skChildState = "pre" | "post" | "error"
+
 export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private plugin: SkribosPlugin
 
@@ -17,6 +19,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private cbOnPost: [Function, any][] = []
 
 	isPost: boolean = false // True when container has attached to document 
+	state: skChildState = "pre"
 
 	templateKey?: string // The source template
 	source: string // The uncompiled source string of the skribi invocation
@@ -94,6 +97,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	/* Called after render fulfillment */
 	onPost() {
 		this.isPost = true
+		this.state = "post"
 		for (let cb of this.cbOnPost) cb[0](cb[1]);
 	}
 
