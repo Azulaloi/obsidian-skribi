@@ -1,7 +1,8 @@
-import { MarkdownRenderer } from "obsidian";
+import { EventRef, MarkdownRenderer } from "obsidian";
 import { Provider } from "src/eta/provider_abs";
 import SkribosPlugin from "src/main";
 import { Stringdex } from "src/types/types";
+import { vWarn } from "src/util";
 
 export class ProviderSK extends Provider {
   async init() {
@@ -26,39 +27,50 @@ export class ProviderSK extends Provider {
         throw abortPacket
       },
       getTemplateSource: function(s: string): Promise<any> {
-        let plugin = this.ctx.plugin as SkribosPlugin
-
-        return plugin.initLoaded 
-        ? Promise.resolve(plugin.eta.loader.templateCache.get(s)?.source ?? null)
-        : (() => { return new Promise((resolve, reject) => {
-            let x = plugin.app.workspace.on('skribi:template-init-complete', () => {
-              plugin.app.workspace.offref(x)
-              resolve(plugin.eta.loader.templateCache.get(s)?.source ?? null)
-            })
-
-            this.registerEvent(x)
-          })})()
+        return makeInitPromise(this.child, () => {
+          let has = this.ctx.plugin.eta.loader.styleCache.has(s)
+          if (!has) {console.warn(`Skribi: getTemplateSource()\n Could not find requested template '${s}'\n`, this.child._c)}
+          let c = this.ctx.plugin.eta.loader.templateCache.get(s)
+          if (has && !c?.source) {console.warn(`Skribi: getTemplateSource()\n Template '${s}' found, but has no cached source\n`, this.child._c)}
+          return c?.source ?? null
+        })
       },
       getStyle: function(s: string): Promise<any> {
-        let plugin = this.ctx.plugin as SkribosPlugin
-        
-        return plugin.initLoaded 
-        ? Promise.resolve(plugin.eta.loader.styleCache.get(s)) 
-        : (() => { return new Promise((resolve, reject) => {
-            let x = plugin.app.workspace.on('skribi:template-init-complete', () => {
-              plugin.app.workspace.offref(x)
-              resolve(plugin.eta.loader.styleCache.get(s))
-            })
-
-            this.registerEvent(x)
-          })})()
+        return makeInitPromise(this.child, () => {
+          if (!this.ctx.plugin.eta.loader.styleCache.has(s)) {console.warn(`Skribi: getStyle()\n Could not find requested style '${s}.css'\n`, this.child._c)}
+          return this.ctx.plugin.eta.loader.styleCache.get(s)
+        })
       },
-      includeStyle: async function(s: string) {
-        if (this.ctx.plugin.eta.loader.styleCache.has(s)) {
-          this.child._c.listenFor("style", s)
-          return this.child.addStyle(await this.getStyle(s))
-        }
+      /**
+       * @param styleSnip The ID of a .css file that is expected to be present in the style cache
+       * @returns A promise for the scoped style (resolves on post) */
+      includeStyle: async function(styleSnip: string) { //TODO: fails on initload for non-templates
+        return makeInitPromise(this.child, async () => {
+          this.child._c.listenFor("style", styleSnip)
+          return this.child.addStyle(await this.getStyle(styleSnip))
+        })
       }
     }
   }
+}
+
+type eventConstructor = {on(id: string, cb: Function): EventRef, offref(event: EventRef): any}
+type eventPossessor = {registerEvent(event: EventRef): void}
+
+function makeInitPromise(child: eventPossessor, cb: Function) {
+  if (window.app.plugins.plugins['obsidian-skribi'].initLoaded) {
+    return Promise.resolve(cb())
+  } else return makeEventPromise(child, window.app.workspace, 'skribi:template-init-complete', cb)
+}
+
+function makeEventPromise(child: eventPossessor, eventConstructor: eventConstructor, eventName: string, cb: Function) {
+  return new Promise((resolve, reject) => {
+    console.log("makeEventPromise", this)
+    let x = eventConstructor.on(eventName, () => {
+      eventConstructor.offref(x)
+      resolve(cb())
+    })
+
+    child.registerEvent(x)
+  })
 }

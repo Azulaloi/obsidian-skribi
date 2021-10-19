@@ -2,6 +2,7 @@ import "obsidian";
 import { App } from "obsidian";
 import { DataviewApi } from "obsidian-dataview";
 import DataviewPlugin from "obsidian-dataview/lib/main";
+import SkribosPlugin from "src/main";
 import type WeatherAPI from "../../../obsidian-weather/src/api";
 
 declare global {
@@ -16,12 +17,13 @@ declare module 'obsidian' {
       enabledPlugins: Set<string>;
       plugins: {
         [id: string]: any,
+        "obsidian-skribi": SkribosPlugin,
         "obsidian-weather"?: {
           API: WeatherAPI
         },
         dataview?: {
           api?: DataviewApi;
-        },
+        }
       }
     }
   }

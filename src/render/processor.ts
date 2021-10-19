@@ -134,6 +134,7 @@ export default class SkribiProcessor {
 			}
 
 			await Promise.allSettled(elProms)
+			if (proms.length > 0) console.log(ctx.el, proms)
 			return proms
 		} else {
 			/* Depth too high! */
@@ -153,8 +154,8 @@ export default class SkribiProcessor {
 
   /* Ensures that the initial template load is complete before continuing to render. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
-		// let el = renderRegent(args.el, {class: 'wait', label: 'sk', hover: 'Awaiting Template Cache', clear: true})
-		let el = args.el
+		let el = renderRegent(args.el, {class: 'wait', label: 'sk', hover: 'Awaiting Template Cache', clear: true})
+		// let el = args.el
 
 		if (!this.plugin.initLoaded) {
 			dLog("not yet loaded")
@@ -226,11 +227,12 @@ export default class SkribiProcessor {
 
 		let newElement = createDiv({cls: "skribi-render-virtual"});
 		let child = new SkribiChild(this.plugin, newElement)
-		Object.assign(child, { 
+		/* Bind child properties */
+		Object.assign(child, {
 			rerender: ((templateToRetrieve?: string) => {
 				let nskCtx = Object.assign({}, skCtx, {time: window.performance.now()})
 				if (skCtx.flag == 1 && isExtant(templateToRetrieve)) {
-					let template = this.eta.getPartial(templateToRetrieve).function
+					let template = this.eta.getPartial(templateToRetrieve)?.function
 					child.unload();
 					this.renderSkribi(newElement, template, templateToRetrieve, mdCtx, nskCtx)
 				} else {
@@ -271,6 +273,7 @@ export default class SkribiProcessor {
 			return Promise.resolve([null, null])
 		})
 		
+		/* RENDERING */
 		dLog("renderSkribi:", el, mdCtx, skCtx, id)
 		if (isExtant(rendered)) {
 			let d = isExtant(mdCtx.remainingNestLevel) ? mdCtx.remainingNestLevel : (skCtx.depth)
