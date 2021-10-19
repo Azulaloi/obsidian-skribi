@@ -5,13 +5,13 @@ import { EBAR, VAR_NAME } from "src/types/const";
 import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
-import { FileMinder, TemplateFunctionScoped } from "src/types/types";
+import { FileMinder, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
 
-interface TemplateEta {
-  source: string,
+export interface TemplateCache {
+  source?: string,
   function: TemplateFunctionScoped,
-  frontmatter?: FrontMatterCache
+  frontmatter?: Stringdex
 }
 
 /* Responsible for the caching and management of templates. */
@@ -20,11 +20,8 @@ export class TemplateLoader implements FileMinder {
   private handler: EtaHandler
   private plugin: SkribosPlugin
 
-  templateCache: Cacher<TemplateFunctionScoped> = new Cacher<TemplateFunctionScoped>({})
+  templateCache: Cacher<TemplateCache> = new Cacher<TemplateCache>({})
   templateFailures: Map<string, string> = new Map();
-  templateFrontmatters: Map<string, FrontMatterCache> = new Map();
-  templateSource: Cacher<string> = new Cacher<string>({})
-
   styleCache: Cacher<string> = new Cacher<string>({})
 
   constructor(handler: EtaHandler) {
@@ -95,15 +92,16 @@ export class TemplateLoader implements FileMinder {
         this.templateFailures.set(file.basename, err || `Template failed to compile: Unknown Error`)
         console.warn(`Skribi: template '${file.basename}' failed to compile`, EBAR, err, EBAR, read)
         this.templateCache.remove(file.basename)
-        this.templateFrontmatters.delete(file.basename)
         failureCount++
         return Promise.reject()
       }
   
       this.templateFailures.delete(file.basename)
-      this.templateCache.define(file.basename, compiled)
-      this.templateSource.define(file.basename, read)
-      if (fileFrontmatter) this.templateFrontmatters.set(file.basename, withoutKey(fileFrontmatter, 'position') as FrontMatterCache)
+      this.templateCache.define(file.basename, {
+        'source': read,
+        'function': compiled,
+        'frontmatter': fileFrontmatter ? withoutKey(fileFrontmatter, 'position') : null
+      })
       successCount++
 
       return Promise.resolve()

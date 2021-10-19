@@ -184,7 +184,7 @@ export default class SkribiProcessor {
 		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
 			renderRegent(el, {class: 'self', hover: l['regent.stasis.hover']}); return Promise.reject('Within Self Definition'); }
 
-		let template = this.eta.getPartial(parsed.id)
+		let template = this.eta.getPartial(parsed.id).function
 		if (!isExtant(template)) {
 			if (this.eta.failedTemplates.has(parsed.id)) { renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }
 			else {renderError(el, {msg: `No such template "${parsed.id}"`})}
@@ -229,7 +229,7 @@ export default class SkribiProcessor {
 			rerender: ((templateToRetrieve?: string) => {
 				let nskCtx = Object.assign({}, skCtx, {time: window.performance.now()})
 				if (skCtx.flag == 1 && isExtant(templateToRetrieve)) {
-					let template = this.eta.getPartial(templateToRetrieve)
+					let template = this.eta.getPartial(templateToRetrieve).function
 					child.unload();
 					this.renderSkribi(newElement, template, templateToRetrieve, mdCtx, nskCtx)
 				} else {
@@ -255,7 +255,7 @@ export default class SkribiProcessor {
 					rerender: ((templateToRetrieve?: string) => {
 						let nskCtx = Object.assign({}, skCtx, {time: window.performance.now()})
 						if (skCtx.flag == 1 && isExtant(templateToRetrieve)) {
-							let template = this.eta.getPartial(templateToRetrieve)
+							let template = this.eta.getPartial(templateToRetrieve).function
 							child.unload();
 							this.renderSkribi(errEl, template, templateToRetrieve, mdCtx, nskCtx)
 						} else {

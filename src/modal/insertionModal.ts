@@ -68,8 +68,8 @@ export class InsertionModal extends Modal {
 
     var arr: AbstractTextComponent<any>[] = [];
 
-    if (this.plugin.eta.templateFrontmatters.has(id)) {
-      let fm = this.plugin.eta.templateFrontmatters.get(id)
+    if (this.plugin.eta.templates.get(id)?.frontmatter) {
+      let fm = this.plugin.eta.templates.get(id).frontmatter
       let pv = []
       for (let v of Object.keys(fm)) {
         if (v.charAt(0)=="_") {

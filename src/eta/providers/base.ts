@@ -25,15 +25,15 @@ export class ProviderSK extends Provider {
         : Object.assign({hasData: true, flag: 'abort'}, s)
         throw abortPacket
       },
-      getTemplateSource: function(s: string) {
+      getTemplateSource: function(s: string): Promise<any> {
         let plugin = this.ctx.plugin as SkribosPlugin
 
         return plugin.initLoaded 
-        ? plugin.eta.loader.templateSource.get(s) 
+        ? Promise.resolve(plugin.eta.loader.templateCache.get(s)?.source ?? null)
         : (() => { return new Promise((resolve, reject) => {
             let x = plugin.app.workspace.on('skribi:template-init-complete', () => {
               plugin.app.workspace.offref(x)
-              resolve(plugin.eta.loader.templateSource.get(s))
+              resolve(plugin.eta.loader.templateCache.get(s)?.source ?? null)
             })
 
             this.registerEvent(x)
@@ -41,7 +41,7 @@ export class ProviderSK extends Provider {
       },
       getStyle: function(s: string): Promise<any> {
         let plugin = this.ctx.plugin as SkribosPlugin
-        console.log(this)
+        
         return plugin.initLoaded 
         ? Promise.resolve(plugin.eta.loader.styleCache.get(s)) 
         : (() => { return new Promise((resolve, reject) => {

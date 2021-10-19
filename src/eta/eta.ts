@@ -19,7 +19,7 @@ export class EtaHandler {
 
   get templates() {return this.loader.templateCache}
   get failedTemplates() {return this.loader.templateFailures}
-  get templateFrontmatters() {return this.loader.templateFrontmatters}
+  // get templateFrontmatters() {return this.loader.templateFrontmatters}
 
   constructor(plugin: SkribosPlugin) {
     this.plugin = plugin;
@@ -194,12 +194,12 @@ export class EtaHandler {
    * @param binder Object to which the returned function will be bound */
   getCached(template: string | TemplateFunctionScoped, options: EtaConfig, scope?: Stringdex, binder?: any): TemplateFunctionScoped {
     if (options.name && this.templates.get(options.name)) {
-      return (binder) ? this.templates.get(options.name).bind(binder) : this.templates.get(options.name)
+      return (binder) ? this.templates.get(options.name).function.bind(binder) : this.templates.get(options.name)
     }
   
     const templateFunc = typeof template === 'function' ? template : compileWith(Eta.compileToString(template, options), Object.keys(scope), options.async)
   
-    if (options.name) this.templates.define(options.name, templateFunc);
+    if (options.name) this.templates.define(options.name, {source: (String.isString(template) ? template : null), function: templateFunc});
   
     return (binder) ? templateFunc.bind(binder) : templateFunc
   }
