@@ -60,6 +60,15 @@
       <td>async => <code>Promise&lt;<a href='https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement'>CSSStyleElement</a>&gt;</code></td>
       <td>Equivalent to <code>sk.child.addStyle(await sk.getStyle(styleName))</code>. </td>
     </tr>
+    <tr>
+      <th><code>sk.up(key: string, value: any)</code></th>
+      <td>=> <code>void</code></td>
+      <td>Passes data up to the render process. Valid keys: 
+        <ul>
+          <li><code>noMarkdown</code> - if truthy, markdown rendering will be skipped and the template function output treated as the innerHTML of the container element. You may still get rendered markdown with <code><%~ sk.render(markdownString) %></code>. </li>
+        </ul>
+      </td>
+    </tr>
   </tbody>
 </table>
 

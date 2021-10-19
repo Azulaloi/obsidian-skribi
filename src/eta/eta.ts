@@ -1,4 +1,3 @@
-import { dir } from "console";
 import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
 import { EtaConfig } from "eta/dist/types/config";
@@ -10,9 +9,6 @@ import { isExtant } from "../util";
 import { renderEtaAsync, renderEta, compileWith } from "./comp";
 import { ProviderBus } from "./provider_bus";
 import { TemplateLoader } from "./templates";
-
-const EXTRACT_FILENAME = /([a-zA-Z0-9-_.]+\..*)/g
-const EXTRACT_DIRPATH = (/.+\//g)
 
 export class EtaHandler {
   plugin: SkribosPlugin;
@@ -118,12 +114,11 @@ export class EtaHandler {
   * @param file File in which the skribi is being rendered  
   * @returns [rendered string, returned packet (currently unused)] */
   async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
-    // if (!isFile(file)) return Promise.reject(`Could not identify current file: ${file}`);
-
-    let z: Stringdex = {};
-    function p() {
+    /* Used to pass data up to the render process from the skribi function */
+    let packet: Stringdex = {};
+    function up() {
       return function(x: string, y: any) {
-        z[x] = y
+        packet[x] = y
       }
     }
 
@@ -138,7 +133,7 @@ export class EtaHandler {
       {
         this: binder, 
         getEnv: getEnv, 
-        up: p(), 
+        up: up(), 
         ctx: {
           file: file || null,
           plugin: this.plugin,
@@ -148,7 +143,7 @@ export class EtaHandler {
       this.bus.getScopeSK()
     )
 
-    /* scope of the tfunc env */
+    /* Scope to pass to the function. Must contain all keys that function was compiled with. */
     let scope: scopedVars = {
       'sk': sk,
       'E': cfg,
@@ -165,8 +160,8 @@ export class EtaHandler {
       : renderEta(this, content, {}, cfg, null, scope, binder)
 
     if (ren instanceof Promise) {
-      return await ren.then((r) => {return Promise.resolve([r, z])}, (r) => {return Promise.reject(r)})
-    } else if (String.isString(ren)) { return Promise.resolve([ren as string, z]) }
+      return await ren.then((r) => {return Promise.resolve([r, packet])}, (r) => {return Promise.reject(r)})
+    } else if (String.isString(ren)) { return Promise.resolve([ren as string, packet]) }
     else return Promise.reject("EtaHandler.renderAsync: Unknown Error")
   }
 

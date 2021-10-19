@@ -277,7 +277,10 @@ export default class SkribiProcessor {
 			let style = stripStyleFromString(rendered) // renderMarkdown ignores style nodes so we'll just yoink em 
 			if (style[1]) {rendered = style[0]}
 
-			let render = MarkdownRenderer.renderMarkdown(rendered, newElement, mdCtx.sourcePath, null).then(() => {
+			let render = (packet?.['noMarkdown'] 
+				? this.simpleRender(rendered, newElement) 
+				: MarkdownRenderer.renderMarkdown(rendered, newElement, mdCtx.sourcePath, null))
+			.then(() => {
 				if (el?.parentElement?.nodeName == "P") { // true when (mode == Mode.block)
 					el.parentElement.replaceWith(el) // strip the superfluous P element
 				}
@@ -341,9 +344,15 @@ export default class SkribiProcessor {
 			return Promise.reject("Render Error");
 		}
 	}
-}
 
-/* End of processor chain */
+	/* End of processor chain */
+
+	async simpleRender(content: string, el: HTMLElement) {
+		el.innerHTML = content
+		console.log(el)
+		return Promise.resolve()
+	}
+}
 
 /* STYLE FUNCTIONS */
 
