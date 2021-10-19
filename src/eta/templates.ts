@@ -155,8 +155,17 @@ export class TemplateLoader implements FileMinder {
         continue
       }
 
-      ((split.groups['extension'] == "css") ? this.styleCache : this.templateCache)
-      .remove(split.groups['name'])
+      if (split.groups['extension'] == "css") {
+        this.styleCache.remove(split.groups['name'])
+        Array.from(this.plugin.children).forEach((child) => {
+          child.stylesUpdated(split.groups['name'])
+        })
+      } else {
+        this.templateCache.remove(split.groups['name'])
+        Array.from(this.plugin.children).forEach((child) => {
+          child.templatesUpdated(split.groups['name'])
+        })
+      }
     }
   }
 

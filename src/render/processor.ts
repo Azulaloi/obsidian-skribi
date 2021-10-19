@@ -11,7 +11,7 @@ import { parseSkribi, preparseSkribi } from "./parse";
 import { renderRegent, renderError, renderState } from "./regent";
 import { prefixSelectors } from "./styleScope";
 
-type SkribiResult = SkribiResultRendered | SkribiResultQueued
+type SkribiResult = SkribiResultRendered | SkribiResultQueued | void
 
 type SkribiResultRendered = [Promise<HTMLDivElement>, SkribiChild]
 type SkribiResultQueued = {msg: string, qi: number}
@@ -77,7 +77,7 @@ export default class SkribiProcessor {
 
 
 		/* Dispatch render promises */
-		var proms: Promise<SkribiResult>[] = []
+		var proms: Promise<SkribiResult | void>[] = []
 		var temps = 0;
 		const elCodes = (mode.srcType == Modes.block) ? [doc] : doc.querySelectorAll("code")
 		if (!(d <= 0)) {
@@ -96,10 +96,12 @@ export default class SkribiProcessor {
 						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: originalText}
 						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
-							proms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx}));
+							proms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
+							.catch(e => {console.warn(`Skribi: Dispatch Errored`, EBAR, e)}));
 							temps++;
 						} else {
-							proms.push(this.processSkribi(nel, src.text, ctx, skCtx))
+							proms.push(this.processSkribi(nel, src.text, ctx, skCtx)
+							.catch(e => {console.warn(`Skribi: Dispatch Errored`, EBAR, e)}))
 						}
 					} 
 				} catch(e) {
@@ -186,11 +188,11 @@ export default class SkribiProcessor {
 		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
 			renderRegent(el, {class: 'self', hover: l['regent.stasis.hover']}); return Promise.reject('Within Self Definition'); }
 
-		let template = this.eta.getPartial(parsed.id).function
+		let template = this.eta.getPartial(parsed.id)?.function
 		if (!isExtant(template)) {
-			if (this.eta.failedTemplates.has(parsed.id)) { renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }
-			else {renderError(el, {msg: `No such template "${parsed.id}"`})}
-			return Promise.reject('Missing Template Definition')
+			if (this.eta.failedTemplates.has(parsed.id)) {el = await renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }
+			else {el = await renderError(el, {msg: `No such template '${parsed.id}'`})}
+			// return Promise.reject(`Missing Template Definition '${parsed.id}'`)
 		}
 
 		return this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
@@ -223,6 +225,7 @@ export default class SkribiProcessor {
 		mdCtx: MarkdownPostProcessorContext, 
 		skCtx: SkContext
 	): Promise<SkribiResult> {
+		let handled = false
 		let file = this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)
 
 		let newElement = createDiv({cls: "skribi-render-virtual"});
@@ -247,9 +250,17 @@ export default class SkribiProcessor {
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
-		.catch((err) => {
-			/* If the template function throws an error, it should bubble up to here. */
-			if (this.plugin.settings.errorLogging) console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err);
+		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
+
+			/* If a template skribi's template vanishes */
+			if (con === undefined && !this.eta.hasPartial(id)) {
+				con = skCtx.source
+				err = `SkribiError: Cannot read undefined template '${id}'\n`
+				let info = mdCtx.getSectionInfo(mdCtx.el)
+				if (info) err += `   at (MarkdownSectionInfo) lineStart: ${info.lineStart}, lineEnd: ${info.lineEnd} (zero-indexed)`
+			}
+
+			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}
 			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"}).then(errEl => {
 				/* Alter the child so that it may yet live (and listen for source updates) */
 				Object.assign(child, {
@@ -270,6 +281,8 @@ export default class SkribiProcessor {
 				mdCtx.addChild(child)
 				this.plugin.children.push(child)
 			})
+
+			handled = true;
 			return Promise.resolve([null, null])
 		})
 		
@@ -344,9 +357,9 @@ export default class SkribiProcessor {
 			})
 
 			return [render, child];
-		} else {
+		} else if (!handled) {
 			child.clear();
-			return Promise.reject("Render Error");
+			return Promise.reject("Unknown Render Error");
 		}
 	}
 
