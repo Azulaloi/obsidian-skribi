@@ -153,7 +153,8 @@ export default class SkribiProcessor {
 
   /* Ensures that the initial template load is complete before continuing to render. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
-		let el = renderRegent(args.el, {class: 'wait', label: 'sk', hover: 'Awaiting Template Cache', clear: true})
+		// let el = renderRegent(args.el, {class: 'wait', label: 'sk', hover: 'Awaiting Template Cache', clear: true})
+		let el = args.el
 
 		if (!this.plugin.initLoaded) {
 			dLog("not yet loaded")
@@ -281,9 +282,10 @@ export default class SkribiProcessor {
 				? this.simpleRender(rendered, newElement) 
 				: MarkdownRenderer.renderMarkdown(rendered, newElement, mdCtx.sourcePath, null))
 			.then(() => {
-				if (el?.parentElement?.nodeName == "P") { // true when (mode == Mode.block)
-					el.parentElement.replaceWith(el) // strip the superfluous P element
-				}
+				/* this bit disabled because it kills other skribis rendering in the same block */
+				// if (el?.parentElement?.nodeName == "P") { // true when (mode == Mode.block)
+					// el.parentElement.replaceWith(el) // strip the superfluous P element
+				// }
 				newElement.setAttribute("skribi", (skCtx.flag == 1) ? 'template' : id)
 				if (skCtx.flag == 1) {newElement.setAttribute("skribi-template", id)}
 				newElement.removeClass("skribi-render-virtual")
@@ -370,7 +372,10 @@ export function stripStyleFromString(str: string): [string, HTMLStyleElement | n
 export function scopeStyle(child: SkribiChild, el: HTMLElement, s: HTMLStyleElement): HTMLStyleElement {
 	child.hash = child.hash ?? hash(child.source)
 	child.containerEl.setAttr('sk-hash', child.hash)
-	if (!s.sheet) {console.warn("Could not scope style because it was not attached to the document!\n", el, s); return}
+	if (!s.sheet) {
+		console.warn("Skribi: Could not scope style because it was not attached to the document!", EBAR, "Style: ", s, EBAR, "In element: ", el, EBAR, "Of child:", child); 
+		return
+	}
 	const l = s.sheet.cssRules.length
 	for (let i = 0; i < l; ++i) {
 		const rule = s.sheet.cssRules[i]
