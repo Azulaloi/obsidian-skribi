@@ -3,7 +3,7 @@ import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
 import { Modes, Flags, EBAR } from "src/types/const";
-import { ProcessorMode, SkContext, Stringdex, TemplateFunctionScoped } from "src/types/types";
+import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { isExtant, dLog, vLog, roundTo, hash } from "src/util";
 import { SkribiChild } from "./child";
 import { embedMedia } from "./embed";
@@ -11,10 +11,7 @@ import { parseSkribi, preparseSkribi } from "./parse";
 import { renderRegent, renderError, renderState } from "./regent";
 import { prefixSelectors } from "./styleScope";
 
-type SkribiResult = SkribiResultRendered | SkribiResultQueued | void
 
-type SkribiResultRendered = [Promise<HTMLDivElement>, SkribiChild]
-type SkribiResultQueued = {msg: string, qi: number}
 
 export default class SkribiProcessor {
   plugin: SkribosPlugin
@@ -77,7 +74,7 @@ export default class SkribiProcessor {
 
 
 		/* Dispatch render promises */
-		var proms: Promise<SkribiResult | void>[] = []
+		var proms: Promise<SkribiResult>[] = []
 		var temps = 0;
 		const elCodes = (mode.srcType == Modes.block) ? [doc] : doc.querySelectorAll("code")
 		if (!(d <= 0)) {
@@ -97,7 +94,7 @@ export default class SkribiProcessor {
 						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
 							proms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
-							.catch(e => {console.warn(`Skribi: Dispatch Errored`, EBAR, e)}));
+							.catch(e => {console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)}));
 							temps++;
 						} else {
 							proms.push(this.processSkribi(nel, src.text, ctx, skCtx)
@@ -113,30 +110,13 @@ export default class SkribiProcessor {
 				return Promise.resolve()
 			})
 		
-			if (/*!self && */!doc.hasClass("skribi-render-virtual")) {
-				let aps = Promise.all(elProms)
-				aps.then(() => {
-					Promise.allSettled(proms).then(() => {
-						if (proms.length > 0) {
-							if (this.plugin.initLoaded) {
-								vLog(`Processed ${proms.length} skribis (${roundTo((window.performance.now()-tm), 4)} ms) in Element`, doc)
-							} else {
-								let str = "";
-								if (temps > 0) {
-									if (proms.length - temps > 0) {
-										str = `Processed ${proms.length-temps} and queued ${temps} skribis`;
-									} else str = `Queued ${temps} skribis`;
-								} else str = `Processed ${proms.length-temps} skribis`;
-
-								vLog(str + ` (${roundTo((window.performance.now()-tm), 4)} ms) in Element`, doc)
-							}
-						}
-					})
-				})
-			}
+			//TODO: Rewrite the logging logic for the new template queue
 
 			await Promise.allSettled(elProms)
-			if (proms.length > 0) console.log(ctx.el, proms)
+			if (proms.length > 0) {
+				// console.log(doc, proms); 
+				// Promise.allSettled(proms).then(() => console.log(proms));
+			}
 			return proms
 		} else {
 			/* Depth too high! */
@@ -148,32 +128,36 @@ export default class SkribiProcessor {
 			})
 			dLog("processor hit limit"); 
 			
-			return Promise.resolve(null); // Postprocessor calls are not caught so we can't reject neatly
+			return Promise.resolve(null); // Postprocessor calls are not caught so we can't reject neatly.
 		}
 	}
 
-  private queuedTemplates: Array<Function> = [] // TODO: maybe construct promises to resolve on event so the promise chain isn't broken?
+  private queuedTemplates: Array<queuedTemplate> = []
 
-  /* Ensures that the initial template load is complete before continuing to render. */
+  /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
 		let el = renderRegent(args.el, {class: 'wait', label: 'sk', hover: 'Awaiting Template Cache', clear: true})
-		// let el = args.el
 
-		if (!this.plugin.initLoaded) {
-			dLog("not yet loaded")
-      let func = async () => {return await this.processSkribiTemplate(el, args.src, args.mdCtx, Object.assign(args.skCtx, {time: window.performance.now()}))}
-      let q = this.queuedTemplates.push(func)
-
-      return Promise.resolve({msg: "Queued", qi: q})
-		} else return await this.processSkribiTemplate(el, args.src, args.mdCtx, args.skCtx)
+		return (this.plugin.initLoaded) 
+			? await this.processSkribiTemplate(el, args.src, args.mdCtx, args.skCtx)
+			: new Promise((resolve, reject) => {
+					let activate = (ele: HTMLElement, time: number) => { resolve(
+						this.processSkribiTemplate(ele, args.src, args.mdCtx, Object.assign(args.skCtx, {time: time}))
+					)}
+					this.queuedTemplates.push({function: activate as any, element: el})
+				})
 	}
 
-  /* Called by template load event. */
+  /** Called on template init load complete. Fires off all of the queued templates. */
   templatesReady() {
-    let proms = this.queuedTemplates.map((func) => func())
+    let proms = this.queuedTemplates.map((queued) => {
+			let el = renderRegent(queued.element, {class: 'sk-loading', hover: l['regent.loading.hover']})
+			return queued.function(el, window.performance.now())
+		})
     Promise.allSettled(proms).then(() => {this.queuedTemplates = []})
   }
 
+	/** Parse variables and prep the template */
 	async processSkribiTemplate(
 		el: HTMLElement, 
 		src: string, 
@@ -183,16 +167,17 @@ export default class SkribiProcessor {
 		let parsed: {id: string, args: any} = null;
 		try { parsed = await parseSkribi(src) }
 		catch (e) { renderError(el, e); return Promise.reject('Parsing Error') }
-		
-		// Abort if being rendered in its own definition
+
+		/* Abort if being rendered in its own definition */
 		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
 			renderRegent(el, {class: 'self', hover: l['regent.stasis.hover']}); return Promise.reject('Within Self Definition'); }
 
 		let template = this.eta.getPartial(parsed.id)?.function
 		if (!isExtant(template)) {
-			if (this.eta.failedTemplates.has(parsed.id)) {el = await renderError(el, {msg: `Template ${parsed.id} failed to compile, error: \n` + this.eta.failedTemplates.get(parsed.id)}) }
-			else {el = await renderError(el, {msg: `No such template '${parsed.id}'`})}
-			// return Promise.reject(`Missing Template Definition '${parsed.id}'`)
+			if (this.eta.failedTemplates.has(parsed.id)) {el = await renderError(el, {msg: `Template ${parsed.id} exists but failed to compile, with error:` + EBAR + this.eta.failedTemplates.get(parsed.id)}) }
+			else {el = await renderError(el, {msg: `SkribiError: Cannot read undefined template '${parsed.id}' (no such template exists)`})}
+			/* We intentionally attempt to render the template even though we know it doesn't exist,
+			because it will be caught and converted into a ghost listener. */
 		}
 
 		return this.renderSkribi(el, template, parsed.id, mdCtx, Object.assign({}, skCtx, {ctx: parsed.args}));
@@ -230,8 +215,8 @@ export default class SkribiProcessor {
 
 		let newElement = createDiv({cls: "skribi-render-virtual"});
 		let child = new SkribiChild(this.plugin, newElement)
-		/* Bind child properties */
 		Object.assign(child, {
+			/* We assign rerender here for the closure */
 			rerender: ((templateToRetrieve?: string) => {
 				let nskCtx = Object.assign({}, skCtx, {time: window.performance.now()})
 				if (skCtx.flag == 1 && isExtant(templateToRetrieve)) {
@@ -252,7 +237,7 @@ export default class SkribiProcessor {
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
 		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
 
-			/* If a template skribi's template vanishes */
+			/* If a template skribi's template does not exist (intentionally not caught until this point) */
 			if (con === undefined && !this.eta.hasPartial(id)) {
 				con = skCtx.source
 				err = `SkribiError: Cannot read undefined template '${id}'\n`

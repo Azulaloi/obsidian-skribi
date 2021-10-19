@@ -64,3 +64,8 @@ export interface FileMinder {
 	isInDomain(file: TAbstractFile): boolean
 	directory: string
 }
+
+export type queuedTemplate = {
+	function: Function,
+	element: HTMLElement
+}
