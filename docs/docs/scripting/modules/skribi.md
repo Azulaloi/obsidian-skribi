@@ -58,7 +58,7 @@
     <tr>
       <th><code>sk.includeStyle(styleName: string)</code></th>
       <td>async => <code>Promise&lt;<a href='https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement'>CSSStyleElement</a>&gt;</code></td>
-      <td>Equivalent to <code>sk.child.addStyle(await sk.getStyle(styleName))</code>. </td>
+      <td>Returns a promise for a style element that has been attached and scoped to the skribi, with the content of file <code>styleName.css</code> in the template directory. Resolves when both initial caching is complete and the skribi has been connected to the document (thus, awaiting this function directly will cause skribi to hang). Also causes the skribi to listen for and update on modifications to said css file.</td>
     </tr>
     <tr>
       <th><code>sk.up(key: string, value: any)</code></th>

@@ -3,7 +3,7 @@ import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
 import { Modes, Flags, EBAR } from "src/types/const";
-import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, Stringdex, TemplateFunctionScoped } from "src/types/types";
+import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, SkribiResultRendered, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { isExtant, dLog, vLog, roundTo } from "src/util";
 import { SkribiChild } from "./child";
 import { embedMedia } from "./embed";
@@ -73,6 +73,7 @@ export default class SkribiProcessor {
 
 		/* Dispatch render promises */
 		var proms: Promise<SkribiResult>[] = []
+		var tproms: Promise<SkribiResult>[] = []
 		var temps = 0;
 		const elCodes = (mode.srcType == Modes.block) ? [doc] : doc.querySelectorAll("code")
 		if (!(d <= 0)) {
@@ -91,7 +92,7 @@ export default class SkribiProcessor {
 						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: originalText}
 						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
-							proms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
+							tproms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
 							.catch(e => {console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)}));
 							temps++;
 						} else {
@@ -108,14 +109,13 @@ export default class SkribiProcessor {
 				return Promise.resolve()
 			})
 		
-			//TODO: Rewrite the logging logic for the new template queue
-
 			await Promise.allSettled(elProms)
-			if (proms.length > 0) {
-				// console.log(doc, proms); 
-				// Promise.allSettled(proms).then(() => console.log(proms));
+
+			if ((!this.plugin.initLoaded) && tproms.length > 0) {
+				vLog(`Queued ${tproms.length} templates`)
 			}
-			return proms
+
+			return proms.concat(tproms)
 		} else {
 			/* Depth too high! */
 
