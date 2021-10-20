@@ -2,7 +2,7 @@ import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
 import { Stringdex } from "src/types/types";
 import { dLog, vLog } from "src/util";
-import { scopeStyle } from "./processor";
+import { scopeStyle } from "./style/style";
 
 interface SkChild {
 	scriptsUpdated: () => any
