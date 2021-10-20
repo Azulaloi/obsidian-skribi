@@ -11,8 +11,6 @@ import { parseSkribi, preparseSkribi } from "./parse";
 import { renderRegent, renderError, renderState } from "./regent";
 import { prefixSelectors } from "./styleScope";
 
-
-
 export default class SkribiProcessor {
   plugin: SkribosPlugin
   eta: EtaHandler

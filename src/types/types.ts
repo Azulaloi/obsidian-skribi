@@ -4,6 +4,10 @@ import { TAbstractFile, TFile } from "obsidian";
 import { SkribiChild } from "src/render/child";
 import { Modes, Flags } from "./const";
 
+export type SkribiResult = SkribiResultRendered | SkribiResultQueued | void
+export type SkribiResultRendered = [Promise<HTMLDivElement>, SkribiChild]
+export type SkribiResultQueued = {msg: string, qi: number}
+
 export interface SkContext {
 	time: number, // Time of initial render promise dispatch
 	flag: number,
@@ -66,6 +70,6 @@ export interface FileMinder {
 }
 
 export type queuedTemplate = {
-	function: Function,
+	function: (el: HTMLElement, time: number) => Promise<SkribiResult>,
 	element: HTMLElement
 }
