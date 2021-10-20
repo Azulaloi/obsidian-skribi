@@ -9,6 +9,8 @@
   "regent.loading.hover": "Evaluating...",
   "regent.stasis.hover": "Recursion limit reached!",
   "regent.self.hover": "Self Render Prohibited",
+  "regent.wait.hover": "Awaiting Template Cache",
+  "regent.depth.hover": "It goes on forever...",
 
   "setting.title": "Skribi Settings",
   "setting.templateDirectory.name": "Template Directory",
@@ -23,6 +25,8 @@
   "setting.autoReload.desc": "Enable to automatically reload rendered skribis when scripts or relevant templates are updated.",
   "setting.templateSuggest.name": "Template Suggestions",
   "setting.templateSuggest.desc": "Displays a suggestion popover when invoking a template that prompts with template names and value keys.",
+  "setting.cssAnimations.name": "CSS Animations",
+  "setting.cssAnimations.desc": "Toggles CSS animations, such as the spinning loading symbol.",
 
   "modal.insert.title": "Insert Skribi Template",
   "modal.insert.append": "Append",

@@ -1,7 +1,8 @@
-import { MarkdownPostProcessorContext, normalizePath, parseFrontMatterStringArray, MarkdownRenderer, setIcon, MarkdownPreviewView } from "obsidian"
+import { normalizePath, parseFrontMatterStringArray, MarkdownRenderer, setIcon } from "obsidian"
 import SkribosPlugin from "src/main"
-import { createRegent } from "./regent"
+import { createRegent, REGENT_CLS } from "./regent"
 import { dLog, isExtant } from "../util"
+import { l } from "src/lang/babel"
 
 const extImg = ["bmp", "png", "jpg", "jpeg", "gif", "svg"]
 const extAud = ["mp3", "wav", "m4a", "3gp", "flac", "ogg", "oga"]
@@ -99,8 +100,8 @@ export async function embedMedia (
         }
 
         if (d <= 0)  {
-          let [l] = createRegent({class: "depth-limit", hover: "It goes on forever..."})
-          fish.replaceWith(l)
+          let [regent] = createRegent({class: REGENT_CLS.depth, hover: l["regent.depth.hover"]})
+          fish.replaceWith(regent)
 
           dLog("embedder hit limit")
         } else {

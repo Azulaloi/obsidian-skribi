@@ -1,0 +1,265 @@
+div[skribi] {
+    &, p {
+        display: inline;
+    }
+}
+
+:root {
+  --skribi-error-col: red;
+  --skribi-wait-col: rgb(111, 126, 214);
+  --skribi-stasis-col:lightblue;
+  --skribi-loading-col:greenyellow;
+  --skribi-self-col: orange;
+  --skribi-depth-col: rgb(111, 126, 214);
+  --skribi-abort-col: orangered;
+}
+
+code.skribi-regent {
+  font-family: 'Consolas';
+  font-size: 1.1em;
+    
+  font-variant: small-caps;
+  text-transform: lowercase;
+  // font-weight: bold;
+}
+
+code.skribi-regent.skr-error {
+  color: var(--skribi-error-col);
+  padding-right: 0px;
+  padding-top: 0px;
+  padding-left: 0.3em;
+  &::after {
+    content: "";
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2216%22%20height%3D%2216%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%2019H5V5h14m0-2H5a2%202%200%200%200-2%202v14a2%202%200%200%200%202%202h14a2%202%200%200%200%202-2V5a2%202%200%200%200-2-2m-8%2012h2v2h-2v-2m0-8h2v6h-2V7%22%20fill%3D%22red%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 22px;
+    height: 18px;
+    vertical-align: -.3em;
+    margin-left: 0.2em;
+  }
+}
+
+code.skribi-regent.skr-abort {
+  color: var(--skribi-abort-col);
+  padding-right: 0px;
+  padding-top: 0px;
+  padding-left: 0.3em;
+  &::after {
+    content: "";
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%221em%22%20height%3D%221em%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M11.001%2010h2v5h-2zM11%2016h2v2h-2z%22%20fill%3D%22orangered%22%2F%3E%3Cpath%20d%3D%22M13.768%204.2C13.42%203.545%2012.742%203.138%2012%203.138s-1.42.407-1.768%201.063L2.894%2018.064a1.986%201.986%200%200%200%20.054%201.968A1.984%201.984%200%200%200%204.661%2021h14.678c.708%200%201.349-.362%201.714-.968a1.989%201.989%200%200%200%20.054-1.968L13.768%204.2zM4.661%2019L12%205.137L19.344%2019H4.661z%22%20fill%3D%22orangered%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 22px;
+    height: 18px;
+    vertical-align: -.3em;
+    margin-left: 0.2em;
+  }
+}
+
+code.skribi-regent.skr-stasis {
+  color: var(--skribi-stasis-col);
+  padding-right: 0px;
+  padding-top: 0px;
+  padding-left: 0.3em;
+  &::after {
+    content: "";
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%221em%22%20height%3D%221em%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%2012c0%201.84-1.5%203.34-3.34%203.34c-.89%200-1.72-.34-2.35-.98l-.6-.6l1.06-1.05c.27.29.6.59.6.59c.34.35.81.54%201.3.54c1.01%200%201.83-.84%201.83-1.84s-.82-1.84-1.83-1.84c-.49%200-.96.2-1.3.54l-3.67%203.66c-.63.64-1.47.98-2.36.98C6.5%2015.34%205%2013.84%205%2012s1.5-3.34%203.34-3.34c.89%200%201.73.34%202.36.98l.59.6l-1.06%201.06l-.59-.6c-.35-.34-.81-.54-1.3-.54c-1.02%200-1.84.84-1.84%201.84s.82%201.84%201.84%201.84c.49%200%20.95-.19%201.3-.54l3.67-3.66c.63-.64%201.46-.98%202.35-.98C17.5%208.66%2019%2010.16%2019%2012m2-7v14c0%201.11-.89%202-2%202H5a2%202%200%200%201-2-2V5c0-1.11.89-2%202-2h14a2%202%200%200%201%202%202m-2%200H5v14h14V5z%22%20fill%3D%22lightblue%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 22px;
+    height: 18px;
+    vertical-align: -.3em;
+    margin-left: 0.2em;
+  }
+}
+
+code.skribi-regent.skr-self {
+  color: var(--skribi-self-col);
+}
+
+@keyframes skribiWiggle {
+  0% { transform: rotate(10deg) translateX(0px);}
+  100% {transform: rotate(-10deg) translateX(0px);}
+}
+
+// maybe my next project should be css keyframe tools because all the ones I could find were not great
+@keyframes skribiWiggleAlt {
+	100% { transform: rotate(14deg) translateX(0px);} 
+	93% { transform: rotate(-15deg) translateX(8px) translateY(-6px);} 
+  88% { transform: rotate(-28deg) translateX(11px) translateY(-6px);} 
+	85% { transform: rotate(-28deg) translateX(8px) translateY(0px);} 
+	82% { transform: rotate(-28deg) translateX(11px) translateY(-6px);} 
+	79% { transform: rotate(-28deg) translateX(8px) translateY(0px);} 
+	75% { transform: rotate(-23deg) translateX(8px) translateY(-6px);} 
+  71% { transform: rotate(-27deg) translateX(8.2px) translateY(-4px);} 
+	68% { transform: rotate(-27deg) translateX(7.7px) translateY(-2px);}
+  64% { transform: rotate(-27deg) translateX(7.7px) translateY(1px);}  
+	58% { transform: rotate(14deg) translateX(6.5px) translateY(0.3px);} 
+	52% { transform: rotate(-12deg) translateX(6px);} 
+	47% { transform: rotate(8deg) translateX(5.5px);} 
+	42% { transform: rotate(-11deg) translateX(5px);} 
+  37% { transform: rotate(12deg) translateX(4.5px);} 
+	33% { transform: rotate(-14deg) translateX(4px);} 
+	28% { transform: rotate(14deg) translateX(3.5px);} 
+	23% { transform: rotate(-14deg) translateX(3px);} 
+	19% { transform: rotate(9deg) translateX(2.5px);} 
+	14% { transform: rotate(-8deg) translateX(2px);} 
+	10% { transform: rotate(10deg) translateX(1.5px);} 
+	5% { transform: rotate(-12deg) translateX(1px); } 
+	0% { transform: rotate(14deg) translateX(0px); } 
+}
+
+code.skribi-regent.skr-evaluating {
+  color: var(--skribi-loading-col);
+  padding-right: 0.05em;
+  padding-top: 0px;
+  padding-left: 0.3em;
+  &::after {
+    content: "";
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%221em%22%20height%3D%221em%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%202s-7.64-.37-13.66%207.88C3.72%2016.21%202%2022%202%2022l1.94-1c1.44-2.5%202.19-3.53%203.6-5c2.53.74%205.17.65%207.46-2c-2-.56-3.6-.43-5.96-.19C11.69%2012%2013.5%2011.6%2016%2012l1-2c-1.8-.34-3-.37-4.78.04C14.19%208.65%2015.56%207.87%2018%208l1.21-1.93c-1.56-.11-2.5.06-4.29.5c1.61-1.46%203.08-2.12%205.22-2.25c0%200%201.05-1.89%201.86-2.32z%22%20fill%3D%22%23adff2e%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 22px;
+    height: 18px;
+    vertical-align: -.28em;
+    margin-left: 0.3em;
+    transform-origin: 23% 44%;
+  }
+}
+body.skribi-anims code.skribi-regent.skr-evaluating {
+  &::after {
+    margin-left: 0.05em;
+    //animation: 0.35s ease-in-out 0s infinite alternate skribiWiggle;
+    animation: 3.8s linear 0s infinite skribiWiggleAlt;
+  }
+}
+
+@keyframes skribiRotation {
+	0% { transform: rotate(0deg) ;}
+	100% { transform: rotate(360deg) ;}
+}
+
+code.skribi-regent.skr-waiting {
+  color: var(--skribi-wait-col);
+  padding-right: 0px;
+
+  padding-top: 0px;
+  padding-left: 0.3em;
+ 
+  &::after {
+    content: "";
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2216%22%20height%3D%2216%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%2012a9%209%200%200%200%209%209c2.39%200%204.68-.94%206.4-2.6l-1.5-1.5A6.706%206.706%200%200%201%2011%2019c-6.24%200-9.36-7.54-4.95-11.95C10.46%202.64%2018%205.77%2018%2012h-3l4%204h.1l3.9-4h-3a9%209%200%200%200-18%200z%22%20fill%3D%22%23a9f%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 22px;
+    height: 18px;
+    vertical-align: -.35em;
+    margin-left: 0.3em;
+    transform-origin: 33% 44%;
+  }
+}
+body.skribi-anims code.skribi-regent.skr-waiting {
+  &::after {
+    animation: skribiRotation 1s linear 0s infinite;
+  }
+}
+
+code.skribi-regent.skr-depth {
+  color: var(--skribi-depth-col);
+  padding-right: 0px;
+
+  padding-top: 0px;
+  padding-left: 0.3em;
+
+  &::after {
+    content: "";
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20width%3D%2216%22%20height%3D%2216%22%20preserveAspectRatio%3D%22xMidYMid%20meet%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2011.8c1-.4.7-1.8%200-2.4c-1.1-.9-2.7-.4-3.4.8c-1.5%202.4.9%205%203.4%204.9c2.7-.2%204.3-2.9%203.7-5.4c-.7-3-3.9-4.5-6.7-3.6c-2.6.8-4.2%203.5-4%206.2c.3%203%202.6%205.4%205.5%205.9c2.8.5%205.7-.8%207.2-3.2c.7-1.1%201.2-2.4%201.2-3.8c0-.5.5-1%201.1-.9c.8%200%201%20.8.9%201.4c-.4%204.7-4.5%208.6-9.3%208.6c-5.9%200-10.5-6.2-8-11.8C6.1%203.1%2013.9%202%2016.9%207.3c1.5%202.5%201.2%205.8-.9%207.9c-2%202-5.3%202.4-7.7.7c-2.2-1.6-2.9-4.9-1.1-7.2c1.7-2.3%205.5-2.4%207%20.2c1.1%201.9%200%205.2-2.5%204.9c-1.6%200-3-1.7-2.1-3.2c.6-.9%201.9-.6%202.3.1c.2.8.1%201.1.1%201.1z%22%20fill%3D%22%2388f%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 22px;
+    height: 18px;
+    vertical-align: -.3em;
+    margin-left: 0.3em;
+    transform-origin: 33% 44%;
+  }
+}
+body.skribi-anims code.skribi-regent.skr-depth {
+  &::after {
+    animation: skribiRotation 1s linear 0s infinite;
+  }
+}
+
+/*--------------------------------------------------------------------------------------------
+/  Modals
+/-------------------------------------------------------------------------------------------*/
+
+.skribi-modal-field-append {
+  font-style: italic;
+}
+
+.skribi-modal-desc {
+ width: 100%;
+ text-align: center;
+}
+
+.skribi-test-modal {
+  .skribi-autofill-notification {
+    font-style: italic;
+  }
+
+  .skribi-button-eval {
+    .setting-item-control {
+      width: 100%;
+      button {
+        margin: auto;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.skribi-confirmation-modal {
+  .skribi-confirmation-modal-description {
+    width: 100%;
+    text-align: center;
+  }
+
+  .skribi-confirmation-modal-link {
+    width: 100%;
+    text-align: center;
+    font-style: italic;
+    text-decoration: underline;
+    color: var(--text-muted);
+    font-size: 0.9em;
+  }
+
+  .skribi-confirm-modal-buttons {
+    margin-top: 1em;
+    display: flex;
+    width: 100%;
+
+    align-items: center;
+    justify-content: space-evenly;
+
+    button {
+      font-weight: bold;
+      flex: 0.5;
+
+      max-width: 40%;
+
+      background-color: var(--interactive-normal);
+      &:hover {
+        background-color: var(--interactive-hover);
+      }
+    }
+  }
+}
+
+/*--------------------------------------------------------------------------------------------
+/  Miscellaneous
+/-------------------------------------------------------------------------------------------*/
+
+div.suggestion-container .suggestion .suggestion-item.skribi-suggestion {
+  padding-left: 5px;
+}

@@ -1,8 +1,7 @@
 import { EventRef, MarkdownRenderer } from "obsidian";
 import { Provider } from "src/eta/provider_abs";
-import SkribosPlugin from "src/main";
+import { CLS } from "src/types/const";
 import { Stringdex } from "src/types/types";
-import { vWarn } from "src/util";
 
 export class ProviderSK extends Provider {
   async init() {
@@ -12,7 +11,7 @@ export class ProviderSK extends Provider {
   createObject() {
     return {
       render: function(str: string) {
-        let e = createDiv({cls: "skribi-render-virtual"});
+        let e = createDiv({cls: CLS.virtual});
         console.log(this)
         MarkdownRenderer.renderMarkdown(str, e, this.ctx.file.path, null);
         return e.innerHTML

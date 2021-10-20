@@ -2,7 +2,7 @@ import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
-//import scss from 'rollup-plugin-scss';
+import scss from 'rollup-plugin-scss';
 
 const isProd = (process.env.BUILD === 'production');
 
@@ -29,7 +29,11 @@ export default {
     nodeResolve({browser: true}),
     commonjs(),
     json(),
-    //scss({ output: 'styles.css', sass: require('sass'), watch: './src'})
+    scss({
+      output: 'styles.css', 
+      sass: require('sass'), 
+      watch: './src'
+    })
   ]
 };
 

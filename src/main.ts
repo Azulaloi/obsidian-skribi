@@ -1,3 +1,4 @@
+import './style.scss'
 import { MarkdownView, Plugin } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
@@ -8,6 +9,7 @@ import { TestModal } from './modal/testModal';
 import { l } from './lang/babel';
 import SkribiProcessor from './render/processor';
 import TemplateSuggest from './suggest';
+import { CLS } from './types/const';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -43,6 +45,7 @@ export default class SkribosPlugin extends Plugin {
 		this.suggest = new TemplateSuggest(this)
 		this.registerEditorSuggest(this.suggest)
 		// registerMirror(this);
+		document.body.toggleClass(CLS.anim, this.settings.cssAnimations)
 
 		/* Rerender preview views */
 		this.app.workspace.onLayoutReady(() => {
@@ -97,6 +100,7 @@ export default class SkribosPlugin extends Plugin {
 			child.containerEl.replaceWith(pre)
 			child.unload()
 		})
+		document.body.removeClass(CLS.anim)
 	}
 
 	async loadSettings() {

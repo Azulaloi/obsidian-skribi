@@ -2,13 +2,13 @@ import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer }
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
-import { Modes, Flags, EBAR } from "src/types/const";
-import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, SkribiResultRendered, Stringdex, TemplateFunctionScoped } from "src/types/types";
+import { Modes, Flags, EBAR, CLS } from "src/types/const";
+import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { isExtant, dLog, vLog, roundTo } from "src/util";
 import { SkribiChild } from "./child";
 import { embedMedia } from "./embed";
 import { parseSkribi, preparseSkribi } from "./parse";
-import { renderRegent, renderError, renderState } from "./regent";
+import { renderRegent, renderError, renderState, REGENT_CLS } from "./regent";
 import { scopeStyle, stripStyleFromString } from "./style/style";
 
 export default class SkribiProcessor {
@@ -90,7 +90,7 @@ export default class SkribiProcessor {
 				try {
 					if (src != null) {
 						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: originalText}
-						let nel = renderRegent(el, {class: 'sk-loading', hover: l['regent.loading.hover']})
+						let nel = renderRegent(el, {class: REGENT_CLS.eval, hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
 							tproms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
 							.catch(e => {console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)}));
@@ -121,7 +121,7 @@ export default class SkribiProcessor {
 
 			elCodes.forEach(async (el) => {
 				preparseSkribi(el).then(async (src) => {
-					if (src != null) renderState(el, {hover: l['regent.stasis.hover'], class: 'stasis'})
+					if (src != null) renderState(el, {class: REGENT_CLS.stasis, hover: l['regent.stasis.hover']})
 				})
 			})
 			dLog("processor hit limit"); 
@@ -134,7 +134,7 @@ export default class SkribiProcessor {
 
   /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
-		let el = renderRegent(args.el, {class: 'wait', label: 'sk', hover: 'Awaiting Template Cache', clear: true})
+		let el = renderRegent(args.el, {class: REGENT_CLS.wait, hover: l["regent.wait.hover"], clear: true})
 
 		return (this.plugin.initLoaded) 
 			? await this.processSkribiTemplate(el, args.src, args.mdCtx, args.skCtx)
@@ -149,7 +149,7 @@ export default class SkribiProcessor {
   /** Called on template init load complete. Fires off all of the queued templates. */
   templatesReady() {
     let proms = this.queuedTemplates.map((queued) => {
-			let el = renderRegent(queued.element, {class: 'sk-loading', hover: l['regent.loading.hover']})
+			let el = renderRegent(queued.element, {class: REGENT_CLS.eval, hover: l['regent.loading.hover']})
 			return queued.function(el, window.performance.now())
 		})
     Promise.allSettled(proms).then(() => {this.queuedTemplates = []})
@@ -168,7 +168,7 @@ export default class SkribiProcessor {
 
 		/* Abort if being rendered in its own definition */
 		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
-			renderRegent(el, {class: 'self', hover: l['regent.stasis.hover']}); return Promise.reject('Within Self Definition'); }
+			renderRegent(el, {class: REGENT_CLS.self, hover: l['Render Aborted: within self definition']}); return Promise.reject('Within Self Definition'); }
 
 		let template = this.eta.getPartial(parsed.id)?.function
 		if (!isExtant(template)) {
@@ -287,7 +287,7 @@ export default class SkribiProcessor {
 				// }
 				newElement.setAttribute("skribi", (skCtx.flag == 1) ? 'template' : id)
 				if (skCtx.flag == 1) {newElement.setAttribute("skribi-template", id)}
-				newElement.removeClass("skribi-render-virtual")
+				newElement.removeClass(CLS.virtual)
 				if (!newElement.getAttr("class")) {newElement.removeAttribute("class")}
 
 				let shade;

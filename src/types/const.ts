@@ -23,3 +23,8 @@ export const enum Flags {
 }
 
 export const EBAR = `\n---------------------------\n`
+
+export const CLS = {
+	virtual: "skribi-render-virtual",
+	anim: "skirib-anims",
+}
