@@ -1,8 +1,8 @@
 {
 	"id": "obsidian-skribi",
 	"name": "Skribi",
-	"version": "0.2.2",
-	"minAppVersion": "0.12.10",
+	"version": "0.2.3",
+	"minAppVersion": "0.12.17",
 	"description": "Dynamic live templating for Obsidian.",
 	"author": "Azulaloi",
 	"authorUrl": "https://github.com/Azulaloi",

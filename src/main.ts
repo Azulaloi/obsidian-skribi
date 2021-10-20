@@ -7,11 +7,13 @@ import { InsertionModal } from './modal/insertionModal';
 import { TestModal } from './modal/testModal';
 import { l } from './lang/babel';
 import SkribiProcessor from './render/processor';
+import TemplateSuggest from './suggest';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
 	eta: EtaHandler;
 	processor: SkribiProcessor
+	suggest: TemplateSuggest
 
 	varName: string = "sk";
 	initLoaded: boolean = false;
@@ -38,6 +40,8 @@ export default class SkribosPlugin extends Plugin {
 
 		this.defineCommands()
 		this.registerExtensions(['eta'], 'markdown')
+		this.suggest = new TemplateSuggest(this)
+		this.registerEditorSuggest(this.suggest)
 		// registerMirror(this);
 
 		/* Rerender preview views */

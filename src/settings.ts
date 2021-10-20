@@ -44,6 +44,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 		this.makeToggle(containerEl, "autoReload", l["setting.autoReload.name"], l["setting.autoReload.desc"])
 		this.makeToggle(containerEl, "errorLogging", l["setting.errorLog.name"], l["setting.errorLog.desc"])
 		this.makeToggle(containerEl, "verboseLogging", l["setting.verbose.name"], l["setting.verbose.desc"])
+		this.makeToggle(containerEl, "templateSuggest", l["setting.templateSuggest.name"], l["setting.templateSuggest.desc"])
 		
 		// this.makeToggle(containerEl, "shadowMode", "Shadow Mode", "Embed skribis in a shadow root", () => invokeMethodOf<SkribiChild>("rerender", ...this.plugin.children)) // hidden for now (this kills the skribichild)
 	}
@@ -78,6 +79,7 @@ export interface SkribosSettings {
 	devLogging: boolean;
 	errorLogging: boolean;
 	autoReload: boolean;
+	templateSuggest: boolean;
 
 	/* unlisted */
 	reflectStyleTagText: boolean;
@@ -91,6 +93,7 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	devLogging: false,
 	errorLogging: false,
 	autoReload: true,
+	templateSuggest: true,
 	
 	reflectStyleTagText: true,
 	shadowMode: false,

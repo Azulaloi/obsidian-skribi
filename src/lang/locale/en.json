@@ -21,6 +21,8 @@
   "setting.verbose.desc": "Enable to get more detailed logs in the console.",
   "setting.autoReload.name": "Auto Reload",
   "setting.autoReload.desc": "Enable to automatically reload rendered skribis when scripts or relevant templates are updated.",
+  "setting.templateSuggest.name": "Template Suggestions",
+  "setting.templateSuggest.desc": "Displays a suggestion popover when invoking a template that prompts with template names and value keys.",
 
   "modal.insert.title": "Insert Skribi Template",
   "modal.insert.append": "Append",
