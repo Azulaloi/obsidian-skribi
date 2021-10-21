@@ -121,7 +121,10 @@ export default class SkribiProcessor {
 
 			elCodes.forEach(async (el) => {
 				preparseSkribi(el).then(async (src) => {
-					if (src != null) renderState(el, {class: REGENT_CLS.stasis, hover: l['regent.stasis.hover']})
+					if (src != null) {
+						renderState(el, {class: REGENT_CLS.stasis, hover: l['regent.stasis.hover'], noRegent: true,})
+						// renderRegent(el, {class: REGENT_CLS.stasis, hover: l['regent.stasis.hover']})
+					}
 				})
 			})
 			dLog("processor hit limit"); 
@@ -240,7 +243,12 @@ export default class SkribiProcessor {
 				con = skCtx.source
 				err = `SkribiError: Cannot read undefined template '${id}'\n`
 				let info = mdCtx.getSectionInfo(mdCtx.el)
-				if (info) err += `   at (MarkdownSectionInfo) lineStart: ${info.lineStart}, lineEnd: ${info.lineEnd} (zero-indexed)`
+				if (info) {
+					err += `    at (${(file?.name ? `'/${file.name}'` : null) ?? "source"}) `
+					err += (info.lineStart == info.lineEnd)
+							? `line: ${info.lineStart+1}` 
+							: `lines: ${info.lineStart+1} to ${info.lineEnd+1}`
+				}
 			}
 
 			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}

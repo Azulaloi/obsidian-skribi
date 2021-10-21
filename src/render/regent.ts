@@ -1,3 +1,5 @@
+import { CLS } from "src/types/const"
+
 export const REGENT_CLS = {
 	regent: "skribi-regent", // Regent base
 	error: "skr-error", // Something threw somewhere
@@ -47,7 +49,7 @@ export async function renderState(el: HTMLElement, dataIn: RegentData) {
 		hover: ""
 	}, dataIn || {})
 
-	el.className = `skribi-regent ${data.class}`
+	el.className = `${data.noRegent ? "" : REGENT_CLS.regent} ${data.class}`
 	el.setAttribute("title", data.hover)
 }
 

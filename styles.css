@@ -5,7 +5,7 @@ div[skribi], div[skribi] p {
 :root {
   --skribi-error-col: red;
   --skribi-wait-col: rgb(111, 126, 214);
-  --skribi-stasis-col:lightblue;
+  --skribi-stasis-col: lightblue;
   --skribi-loading-col:greenyellow;
   --skribi-self-col: orange;
   --skribi-depth-col: rgb(111, 126, 214);
@@ -17,6 +17,8 @@ code.skribi-regent {
   font-size: 1.1em;
   font-variant: small-caps;
   text-transform: lowercase;
+  border: 1px solid black;
+  filter: drop-shadow(0 0 2px black);
 }
 
 code.skribi-regent.skr-error {
@@ -68,6 +70,11 @@ code.skribi-regent.skr-stasis::after {
   height: 18px;
   vertical-align: -0.3em;
   margin-left: 0.2em;
+}
+
+code.skr-stasis:not(.skribi-regent) {
+  opacity: 0.85;
+  color: var(--skribi-stasis-col);
 }
 
 code.skribi-regent.skr-self {

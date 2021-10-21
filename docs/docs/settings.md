@@ -33,3 +33,7 @@ The time info was more helpful before I converted to an async design, but alas. 
 ## **Template Suggestions**
 
 Presents a suggestion popover when invoking a template, similar to the suggestions when creating a wikilink. Will suggest templates as well as any property keys defined in the templates frontmatter (like the insertion modal).
+
+## **CSS Animations**
+
+Toggles animations (adds the class 'skribi-anims' to the document body). There aren't that many animations, but just in case.

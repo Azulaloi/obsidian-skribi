@@ -1,6 +1,6 @@
 import { normalizePath, parseFrontMatterStringArray, MarkdownRenderer, setIcon } from "obsidian"
 import SkribosPlugin from "src/main"
-import { createRegent, REGENT_CLS } from "./regent"
+import { createRegent, REGENT_CLS, renderRegent } from "./regent"
 import { dLog, isExtant } from "../util"
 import { l } from "src/lang/babel"
 
@@ -100,9 +100,10 @@ export async function embedMedia (
         }
 
         if (d <= 0)  {
-          let [regent] = createRegent({class: REGENT_CLS.depth, hover: l["regent.depth.hover"]})
-          fish.replaceWith(regent)
+          // let [regent] = createRegent({class: REGENT_CLS.depth, hover: l["regent.depth.hover"]})
+          // fish.replaceWith(regent)
 
+          renderRegent(fish as HTMLElement, {class: REGENT_CLS.depth, hover: l["regent.depth.hover"]})
           dLog("embedder hit limit")
         } else {
           proms.push(createEmbedPromise())

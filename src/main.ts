@@ -30,6 +30,7 @@ export default class SkribosPlugin extends Plugin {
 
 		await this.loadSettings();
 		this.addSettingTab(new SkribosSettingTab(this.app, this));
+		document.body.toggleClass(CLS.anim, this.settings.cssAnimations)
 
 		this.eta = new EtaHandler(this)
 		this.processor = new SkribiProcessor(this)
@@ -45,7 +46,6 @@ export default class SkribosPlugin extends Plugin {
 		this.suggest = new TemplateSuggest(this)
 		this.registerEditorSuggest(this.suggest)
 		// registerMirror(this);
-		document.body.toggleClass(CLS.anim, this.settings.cssAnimations)
 
 		/* Rerender preview views */
 		this.app.workspace.onLayoutReady(() => {
