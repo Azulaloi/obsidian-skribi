@@ -1,4 +1,5 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
+import { SkribiSyntaxError } from "src/eta/comp";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
@@ -237,7 +238,6 @@ export default class SkribiProcessor {
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
 		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
-
 			/* If a template skribi's template does not exist (intentionally not caught until this point) */
 			if (con === undefined && !this.eta.hasPartial(id)) {
 				con = skCtx.source
@@ -251,8 +251,12 @@ export default class SkribiProcessor {
 				}
 			}
 
+			// if (err instanceof SkribiSyntaxError) {
+				Object.assign(err, {hasData: true, skSrc: skCtx.source, skCon: con})
+				// }
+
 			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}
-			renderError(el, (err?.hasData) ? err : {msg: err?.msg || err || "Render Error"}).then(errEl => {
+			renderError(el, (err?.hasData) ? err : {msg: (err?.msg ?? err) || "Render Error"}).then(errEl => {
 				/* Alter the child so that it may yet live (and listen for source updates) */
 				Object.assign(child, {
 					containerEl: errEl,
@@ -276,6 +280,7 @@ export default class SkribiProcessor {
 			handled = true;
 			return Promise.resolve([null, null])
 		})
+		/* END ERROR HANDLING */
 		
 		/* RENDERING */
 		dLog("renderSkribi:", el, mdCtx, skCtx, id)

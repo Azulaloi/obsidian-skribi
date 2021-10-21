@@ -17,8 +17,17 @@ code.skribi-regent {
   font-size: 1.1em;
   font-variant: small-caps;
   text-transform: lowercase;
+  background-color: var(--background-primary-alt);
   border: 1px solid black;
   filter: drop-shadow(0 0 2px black);
+  user-select: none;
+}
+code.skribi-regent.has-link {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+code.skribi-regent.has-link:hover {
+  background-color: var(--interactive-hover);
 }
 
 code.skribi-regent.skr-error {
@@ -285,6 +294,63 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
 }
 .skribi-confirmation-modal .skribi-confirm-modal-buttons button:hover {
   background-color: var(--interactive-hover);
+}
+
+div.skribi-modal-error-parseErrMsg {
+  margin-bottom: 1em;
+}
+div.skribi-modal-error-field-container {
+  margin-bottom: 1em;
+}
+
+div.skribi-modal-error-field-content {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 6px 6px;
+  font-family: "Consolas";
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: normal;
+  font-size: 90%;
+  text-indent: 0;
+  width: 100%;
+  cursor: text;
+  user-select: text;
+}
+
+div.skribi-modal-error-field-line {
+  height: 1.5em;
+}
+div.skribi-modal-error-field-line div.skribi-line-number {
+  padding: 0 3px 0 5px;
+  text-align: right;
+  color: #999;
+  white-space: nowrap;
+  cursor: default;
+  width: 22px;
+  user-select: none;
+  display: inline-block;
+  background-color: #444;
+}
+div.skribi-modal-error-field-line div.skribi-line-content {
+  display: inline-block;
+  margin-left: 0.5em;
+}
+div.skribi-modal-error-field-line.skribi-line-errored div.skribi-line-number {
+  background-color: #fa3232;
+  color: #222;
+  font-weight: bolder;
+}
+div.skribi-modal-error-field-line.skribi-line-extraneous {
+  color: #323232;
+}
+div.skribi-modal-error-field-line:first-of-type div.skribi-line-number {
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+div.skribi-modal-error-field-line:last-of-type div.skribi-line-number {
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 
 /*--------------------------------------------------------------------------------------------

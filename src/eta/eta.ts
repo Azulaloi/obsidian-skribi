@@ -7,6 +7,7 @@ import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util";
 import { renderEtaAsync, renderEta, compileWith } from "./comp";
+import compileToString from "./mod";
 import { ProviderBus } from "./provider_bus";
 import { TemplateLoader } from "./templates";
 
@@ -122,7 +123,7 @@ export class EtaHandler {
       }
     }
 
-    let cfg = Eta.getConfig({varName: VAR_NAME})
+    let cfg = Eta.getConfig({varName: VAR_NAME/*, include: null, includeFile: null*/})
 
     /* the 'this' object of the sk context*/
     let binder = {}
@@ -147,7 +148,7 @@ export class EtaHandler {
     let scope: scopedVars = {
       'sk': sk,
       'E': cfg,
-      'cb': null,
+      'cb': () => {},
       ...this.bus.getScope(),
     }
 
@@ -197,7 +198,9 @@ export class EtaHandler {
       return (binder) ? this.templates.get(options.name).function.bind(binder) : this.templates.get(options.name)
     }
   
-    const templateFunc = typeof template === 'function' ? template : compileWith(Eta.compileToString(template, options), Object.keys(scope), options.async)
+    const templateFunc = (typeof template === 'function') 
+      ? template 
+      : compileWith(compileToString(template, options), Object.keys(scope), options.async)
   
     if (options.name) this.templates.define(options.name, {source: (String.isString(template) ? template : null), function: templateFunc});
   

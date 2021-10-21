@@ -1,3 +1,4 @@
+import { makeErrorModalLink } from "src/modal/errorModal"
 import { CLS } from "src/types/const"
 
 export const REGENT_CLS = {
@@ -30,7 +31,14 @@ export async function renderError(el: HTMLElement, e: RegentData) {
 			hover: 'Render Aborted'
 		}, e))
 	} else {
-		return renderRegent(el, {class: REGENT_CLS.error, label: 'sk', hover: e?.msg || "Unknown Error", clear: true})
+		let r = renderRegent(el, {
+			class: REGENT_CLS.error, 
+			label: 'sk', 
+			hover: (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error"), 
+			clear: true
+		})
+		makeErrorModalLink(r, e)
+		return r
 	}
 }
 
