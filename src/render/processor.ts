@@ -1,4 +1,5 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
+import { SkribiError } from "src/eta/error";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
@@ -93,11 +94,15 @@ export default class SkribiProcessor {
 						let nel = renderRegent(el, {class: REGENT_CLS.eval, hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
 							tproms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
-							.catch(e => {console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)}));
+							.catch(e => {
+								console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)
+							}));
 							temps++;
 						} else {
 							proms.push(this.processSkribi(nel, src.text, ctx, skCtx)
-							.catch(e => {console.warn(`Skribi: Dispatch Errored`, EBAR, e)}))
+							.catch(e => {
+								console.warn(`Skribi: Dispatch Errored`, EBAR, e)
+							}))
 						}
 					} 
 				} catch(e) {
@@ -238,16 +243,35 @@ export default class SkribiProcessor {
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
 		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
 			/* If a template skribi's template does not exist (intentionally not caught until this point) */
+			var util = require('util')
+
 			if (con === undefined && !this.eta.hasPartial(id)) {
+				let failed = this.eta.failedTemplates.has(id)
+
+				let msg = `Cannot read template '${id}'`
+				msg+= failed ? `\nTemplate exists, but failed to compile` : `\nNo such entry found`
+
+				let nerr = new SkribiError(msg)
+				if (failed)
 				con = skCtx.source
-				err = `SkribiError: Cannot read undefined template '${id}'\n`
+
+				let stack = msg
 				let info = mdCtx.getSectionInfo(mdCtx.el)
 				if (info) {
-					err += `    at (${(file?.name ? `'/${file.name}'` : null) ?? "source"}) `
-					err += (info.lineStart == info.lineEnd)
+					stack += `\n    at (${(file?.name ? `'/${file.name}'` : null) ?? "source"}) `
+					stack += (info.lineStart == info.lineEnd)
 							? `line: ${info.lineStart+1}` 
 							: `lines: ${info.lineStart+1} to ${info.lineEnd+1}`
 				}
+
+				nerr.stack = stack
+				Object.assign(nerr, {
+					subErr: err, 
+					_sk_templateFailure: failed 
+						? { id: id, error: this.eta.failedTemplates.get(id) } 
+						: undefined
+				})
+				err = nerr
 			}
 
 			Object.assign(err, {
@@ -255,6 +279,9 @@ export default class SkribiProcessor {
 				_sk_invocation: skCtx.source,
 				_sk_template: (skCtx.flag == 1 && this.eta.getPartial(id)?.source) ?? null
 			})
+
+			console.log(util.inspect(err, true, 7, true))
+
 
 			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}
 			renderError(el, (err?.hasData) ? err : {msg: (err?.msg ?? err) || "Render Error"}).then(errEl => {

@@ -7,6 +7,7 @@ import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
 import { FileMinder, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
+import compileToString from "./mod";
 
 export interface TemplateCache {
   source?: string,
@@ -62,11 +63,12 @@ export class TemplateLoader implements FileMinder {
 
     const readTemplates = templateFiles.map(async file => {
       let read = await this.plugin.app.vault.cachedRead(file)
+      // console.log(`reading ${file.name}`, isExtant(read))
 
       let fileFrontmatter = null
       if (file.extension == "eta") {
         let fmSearch = (/^---\n*(?<frontmatter>.*?)\n*---/s).exec(read);
-        if (fmSearch.groups.frontmatter) {
+        if (fmSearch?.groups?.frontmatter) {
           try {
             let yaml = parseYaml(fmSearch.groups.frontmatter.trim())
             fileFrontmatter = yaml
@@ -86,10 +88,13 @@ export class TemplateLoader implements FileMinder {
       }
       
       try {
-        let compiledString = Eta.compileToString(read, Eta.getConfig({varName: VAR_NAME, name: file.basename}))
+        let compiledString = compileToString(read, Eta.getConfig({varName: VAR_NAME, name: file.basename}))
+        // console.log(`compiling ${file.name} to string`)
         var compiled = compileWith(compiledString, [VAR_NAME, 'E', 'cb', ...scopeKeys], (read.contains('await')))
+        // console.log(`compiled ${file.name} as template`)
       } catch(err) {
-        this.templateFailures.set(file.basename, err || `Template failed to compile: Unknown Error`)
+        // console.log(`${file.name} err`)
+        this.templateFailures.set(file.basename, err ?? `Template failed to compile: Unknown Error`)
         console.warn(`Skribi: template '${file.basename}' failed to compile`, EBAR, err, EBAR, read)
         this.templateCache.remove(file.basename)
         failureCount++

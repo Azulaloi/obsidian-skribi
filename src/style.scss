@@ -278,7 +278,17 @@ body.skribi-anims code.skribi-regent.skr-depth {
 
 // Error
 
-div.skribi-modal-error-parseErrMsg {
+div.skribi-modal-error div.modal-title {
+  cursor: text;
+  user-select: text;
+}
+
+div.skribi-modal-error-message {
+  font-size: 1.4em;
+  margin: auto;
+  text-align: center;
+  cursor: text;
+  user-select: text;
   span.sk-label {
 
   }
@@ -366,45 +376,79 @@ div.skribi-modal-error-field-pointer {
 
 }
 
+// Table Lines
 table.skr-lines-table {
-  // color: red;
-  border-collapse: collapse;
-  
+  border-spacing: 0px;
+
   td.skr-numcell {
-    padding: 0 3px 0 5px;
-    text-align: right;
-    color: #999;
-    white-space: nowrap;
-    // position: absolute;
-    cursor: default;
-    // left: 0px;
+    height: 100%;
     width: 22px;
-    // overflow: hidden;
+    padding: 0 3px 0 5px;
+    vertical-align: top;
+    text-align: right;
+    white-space: nowrap;
+    cursor: default;
     user-select: none;
-    display: inline-block;
-    
+
+    color: #999;
+    background-color: #444;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
   }
 
   td.skr-concell {
     padding-left: 1em;
+
+    span.skr-err-ch {
+      // text-decoration: red wavy underline 3px; // not sure why this doesn't work
+      border-bottom: 2px dotted red;
+    }
   }
 
   col.skr-table-colnum {
     width: 20px;
-    background-color: #444;
+    // background-color: #444;
   }
 
   col.skr-table-colcon {
   }
 
-  tr:last-of-type {
-    color: red;
+  tr {
+    &.skribi-line-extraneous {
+      color: rgba(50, 50, 50, 150);
+    }
+
+    &.skribi-line-errored {
+      td.skr-numcell {
+        background-color: red;
+        color: black;
+      }
+    }
+
+    &.skribi-line-pointer {
+      background-color: #222;
+      td.skr-numcell {
+        background-color: #222;
+      }
+    }
+  }
+
+  tr:first-of-type {
     td.skr-numcell {
-      border-radius: 1em;
+      border-top-left-radius: 0.4em;
+      border-top-right-radius: 0.4em;
+    }
+  }
+
+  tr:last-of-type {
+    td.skr-numcell {
+      border-bottom-right-radius: 0.4em;
+      border-bottom-left-radius: 0.4em;
     }
   }
 }
 
+// Collapsible
 div.skribi-modal-error {
   .skr-collapsible {
     margin-top: 1em;
@@ -448,8 +492,6 @@ div.skribi-modal-error {
     border-bottom-right-radius: 0.4em;
     border-bottom-left-radius: 0.4em;
    }
-
-
 
    .skr-collapse-indicator {
      display: inline-block;

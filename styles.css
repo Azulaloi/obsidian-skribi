@@ -296,7 +296,17 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
   background-color: var(--interactive-hover);
 }
 
-div.skribi-modal-error-parseErrMsg {
+div.skribi-modal-error div.modal-title {
+  cursor: text;
+  user-select: text;
+}
+
+div.skribi-modal-error-message {
+  font-size: 1.4em;
+  margin: auto;
+  text-align: center;
+  cursor: text;
+  user-select: text;
   margin-bottom: 1em;
 }
 div.skribi-modal-error-field-container {
@@ -352,30 +362,51 @@ div.skribi-modal-error-field-line:last-of-type div.skribi-line-number {
 }
 
 table.skr-lines-table {
-  border-collapse: collapse;
+  border-spacing: 0px;
 }
 table.skr-lines-table td.skr-numcell {
+  height: 100%;
+  width: 22px;
   padding: 0 3px 0 5px;
+  vertical-align: top;
   text-align: right;
-  color: #999;
   white-space: nowrap;
   cursor: default;
-  width: 22px;
   user-select: none;
-  display: inline-block;
+  color: #999;
+  background-color: #444;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
 }
 table.skr-lines-table td.skr-concell {
   padding-left: 1em;
 }
+table.skr-lines-table td.skr-concell span.skr-err-ch {
+  border-bottom: 2px dotted red;
+}
 table.skr-lines-table col.skr-table-colnum {
   width: 20px;
-  background-color: #444;
 }
-table.skr-lines-table tr:last-of-type {
-  color: red;
+table.skr-lines-table tr.skribi-line-extraneous {
+  color: #323232;
+}
+table.skr-lines-table tr.skribi-line-errored td.skr-numcell {
+  background-color: red;
+  color: black;
+}
+table.skr-lines-table tr.skribi-line-pointer {
+  background-color: #222;
+}
+table.skr-lines-table tr.skribi-line-pointer td.skr-numcell {
+  background-color: #222;
+}
+table.skr-lines-table tr:first-of-type td.skr-numcell {
+  border-top-left-radius: 0.4em;
+  border-top-right-radius: 0.4em;
 }
 table.skr-lines-table tr:last-of-type td.skr-numcell {
-  border-radius: 1em;
+  border-bottom-right-radius: 0.4em;
+  border-bottom-left-radius: 0.4em;
 }
 
 div.skribi-modal-error .skr-collapsible {

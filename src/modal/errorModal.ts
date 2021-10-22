@@ -1,6 +1,8 @@
 import { match } from "assert";
+import { execFileSync } from "child_process";
 import { Modal, App, setIcon } from "obsidian";
 import { SkribiError, SkribiSyntaxError, SkribiEvalError } from "src/eta/error";
+import { createRegent, REGENT_CLS, renderRegent } from "src/render/regent";
 import { isExtant } from "src/util";
 
 
@@ -54,9 +56,11 @@ export class ErrorModal extends Modal {
             compField.content.append(lineEl)
           }
         })
-  
-        let srcField = makeField(this.contentEl, "Invocation String")
-        makeLines(srcField.content, err._sk_invocation.split(/\r\n|\n/))
+        
+        if (err?._sk_invocation) {
+          let srcField = makeField(this.contentEl, "Invocation String")
+          makeLines(srcField.content, err?._sk_invocation.split(/\r\n|\n/))
+        }
   
         if (err?._sk_template) {
           let tempField = makeField(this.contentEl, "Template Source")
@@ -87,32 +91,24 @@ export class ErrorModal extends Modal {
   
         let compField = makeField(this.contentEl, "Compiled Function", true, false)
         let lines = err._sk_function.toString().split(/\r\n|\n/)
-        // lines[0] = lines[0] + lines[1]
         let unrelated = [0, 1, 2, 3, 4, lines.length-1, lines.length-2, lines.length-3]
-        /*makeLines(compField.content, lines, isExtant(match) ? 
-        (ind: number, els: any) => {
-          if (unrelated.contains(ind)) {
-            els.lineEl.addClass('skribi-line-extraneous')
-          }
-  
-          if (ind == match.groups.line-1) {
-            els.lineEl.addClass('skribi-line-errored')
-            let pstr = "^".padStart(match.groups.ch)
-            let lineEl = createDiv({cls: "skribi-modal-error-field-line skerr-pointer"})
-            lineEl.createDiv({text: "@", cls: "skribi-line-number skerr-pointer"})
-            lineEl.createDiv({text: pstr, cls: "skribi-line-content skerr-pointer"})
-            compField.content.append(lineEl)
-          }
-        }: undefined)*/
-        makeLinesTable(compField.content, lines, (ind: number, els: linesTableCB) => {
+        makeLinesTable(compField.content, lines, isExtant(match) ? (ind: number, els: linesTableCB) => {
           if (unrelated.contains(ind)) {
             els.row.addClass('skribi-line-extraneous')
           }
 
           if (ind == match.groups.line-1) {
+            let text = els.con.textContent
+            let pre = text.substring(0, match.groups.ch-1)
+            let char = text.substring(match.groups.ch-1, match.groups.ch)
+            let post = text.substring(match.groups.ch)
+            els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
+            console.log([pre, char, post])
+
             els.row.addClass('skribi-line-errored')
             let pstr = "^".padStart(match.groups.ch)
             let row = els.table.insertRow()
+            row.addClass("skribi-line-pointer")
             let numCell = row.insertCell()
             numCell.setText("@")
             numCell.addClass("skr-numcell", "skr-pointer")
@@ -120,29 +116,61 @@ export class ErrorModal extends Modal {
             conCell.setText(pstr)
             conCell.addClass("skr-concell", "skr-pointer")
           }
-        })
+        }: undefined)
 
         let invField = makeField(this.contentEl, "Invocation String", true)
-        makeLines(invField.content, err._sk_invocation)
+        makeLinesTable(invField.content, err._sk_invocation)
 
         if (err?._sk_template) {
           let tempField = makeField(this.contentEl, "Template Source", true)
-          makeLines(tempField.content, err._sk_template)
+          makeLinesTable(tempField.content, err._sk_template)
         }
 
         let subErrField = makeField(this.contentEl, err.evalError.name + " Stack", true, true)
-        makeLines(subErrField.content, err.evalError.stack)
+        makeLinesTable(subErrField.content, err.evalError.stack)
 
         let errField = makeField(this.contentEl, err.name + " Stack", true, true)
-        makeLines(errField.content, err.evalError.stack)
+        makeLinesTable(errField.content, err.stack)
+      } else {
+        /* Generic SkribiError */
+        // let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
+        // subErrorMessage.createSpan({text: err.evalError.name + ": ", cls: 'sk-label'})
+        // subErrorMessage.createSpan({text: err.evalError.message, cls: 'sk-msg'})
+
+        if (err?._sk_templateFailure) {
+          let terr = err._sk_templateFailure
+
+          let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
+          subErrorMessage.createSpan({text: `Compile Error for '${terr.id}': `, cls: 'sk-label'})
+          let s = subErrorMessage.createSpan({cls: 'sk-msg'})
+          
+          let r = createRegent({
+            class: REGENT_CLS.error, 
+            label: 'sk', 
+            hover: (terr.error instanceof SkribiError) 
+              ? `${terr.error.name}: ${terr.error.message}`
+              : (terr.error.name ?? "Error") + ": " + (terr.error?.msg ?? terr.error?.message ?? "Unknown Error"),
+            clear: true
+          })
+          makeErrorModalLink(r[0], terr.error)
+          s.append(r[0])
+        }
+
+        let invField = makeField(this.contentEl, "Invocation String", true)
+        makeLinesTable(invField.content, err._sk_invocation)
+
+        let errField = makeField(this.contentEl, err.name + " Stack", true, true)
+        makeLinesTable(errField.content, err.stack)
       }
     } else {
+      /* !err instanceof SkribiError */
+
       console.log(Object.getPrototypeOf(err))
       console.log(err.msg)
       console.log(util.inspect(err, true, 7, true))
 
       let errField = makeField(this.contentEl, (err?.name ?? "Error") + ": " + (err?.msg ?? err?.message ?? "Unknown Error"), )
-      errField.content.setText(err.stack)
+      errField.content.setText(err?.stack ?? "")
 
       if (err?.skCon) {
         util.inspect(err.skCon)
@@ -150,8 +178,8 @@ export class ErrorModal extends Modal {
         compField.content.setText(err.skCon)
       }
 
-      let srcField = makeField(this.contentEl, "Source String")
-      makeLines(srcField.content, err.skSrc)
+      let srcField = makeField(this.contentEl, "Invocation String")
+      makeLines(srcField.content, err?._sk_invocation ?? "")
     }
 
     // var util = require('util')
