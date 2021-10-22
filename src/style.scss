@@ -291,6 +291,7 @@ div.skribi-modal-error-parseErrMsg {
 }
 
 div.skribi-modal-error-field-container {
+  margin-top: 1em;
   margin-bottom: 1em;
 }
 
@@ -311,7 +312,7 @@ div.skribi-modal-error-field-content {
 }
 
 div.skribi-modal-error-field-line {
-  height: 1.5em;
+  // height: 1.5em;
 
   div.skribi-line-number {
     padding: 0 3px 0 5px;
@@ -363,6 +364,109 @@ div.skribi-modal-error-field-line {
 
 div.skribi-modal-error-field-pointer {
 
+}
+
+table.skr-lines-table {
+  // color: red;
+  border-collapse: collapse;
+  
+  td.skr-numcell {
+    padding: 0 3px 0 5px;
+    text-align: right;
+    color: #999;
+    white-space: nowrap;
+    // position: absolute;
+    cursor: default;
+    // left: 0px;
+    width: 22px;
+    // overflow: hidden;
+    user-select: none;
+    display: inline-block;
+    
+  }
+
+  td.skr-concell {
+    padding-left: 1em;
+  }
+
+  col.skr-table-colnum {
+    width: 20px;
+    background-color: #444;
+  }
+
+  col.skr-table-colcon {
+  }
+
+  tr:last-of-type {
+    color: red;
+    td.skr-numcell {
+      border-radius: 1em;
+    }
+  }
+}
+
+div.skribi-modal-error {
+  .skr-collapsible {
+    margin-top: 1em;
+    width: fit-content; 
+    filter: drop-shadow(0 0 0.25rem black);
+    margin-bottom: 1em;
+    width: 100%;
+    .skribi-modal-error-field-container {
+      margin-top: 0em
+    }
+   }
+   .skr-collapsible-content {
+     min-height: 0px;
+     max-height: 100vh;
+    //  border: 2px solid gray;
+     overflow: hidden;
+     transition: max-height 0.2s ease, border-bottom-width 0.2s ease;
+   }
+   .is-collapsed .skr-collapsible-content {
+     border-bottom-width: 0px;
+     border-top-width: 0px;
+   }
+   
+  .skr-collapsible-titlebar {
+    width: 100%;
+    min-height: 2em;
+    border: 1px solid lightgray;
+    vertical-align: middle;
+    padding: 6px;
+    border-top-left-radius: 0.4em;
+    border-top-right-radius: 0.4em;
+    transition: border-bottom-right-radius 0.2s ease;
+
+    &.skr-collapsible-titletext {
+      display: inline-block;
+      margin: 0em 0em;
+      padding: 0px;
+    }
+   }
+   .is-collapsed .skr-collapsible-titlebar {
+    border-bottom-right-radius: 0.4em;
+    border-bottom-left-radius: 0.4em;
+   }
+
+
+
+   .skr-collapse-indicator {
+     display: inline-block;
+     height: 100%;
+     margin-right: 20px;
+     margin-left: 12px;
+     
+     svg {
+      height: 12px;
+      width: 12px;
+      transition: transform 0.2s ease-in-out;
+     }
+   }
+
+   .skr-collapsible.is-collapsed .skr-collapse-indicator {
+     transform: rotate(-90deg);
+   }
 }
 
 /*--------------------------------------------------------------------------------------------

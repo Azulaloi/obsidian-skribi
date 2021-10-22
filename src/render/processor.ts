@@ -1,5 +1,4 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
-import { SkribiSyntaxError } from "src/eta/comp";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
@@ -251,9 +250,11 @@ export default class SkribiProcessor {
 				}
 			}
 
-			// if (err instanceof SkribiSyntaxError) {
-				Object.assign(err, {hasData: true, skSrc: skCtx.source, skCon: con})
-				// }
+			Object.assign(err, {
+				hasData: true, 
+				_sk_invocation: skCtx.source,
+				_sk_template: (skCtx.flag == 1 && this.eta.getPartial(id)?.source) ?? null
+			})
 
 			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}
 			renderError(el, (err?.hasData) ? err : {msg: (err?.msg ?? err) || "Render Error"}).then(errEl => {
@@ -282,6 +283,7 @@ export default class SkribiProcessor {
 		})
 		/* END ERROR HANDLING */
 		
+
 		/* RENDERING */
 		dLog("renderSkribi:", el, mdCtx, skCtx, id)
 		if (isExtant(rendered)) {

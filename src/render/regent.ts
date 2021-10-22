@@ -1,3 +1,4 @@
+import { SkribiError } from "src/eta/error"
 import { makeErrorModalLink } from "src/modal/errorModal"
 import { CLS } from "src/types/const"
 
@@ -34,7 +35,9 @@ export async function renderError(el: HTMLElement, e: RegentData) {
 		let r = renderRegent(el, {
 			class: REGENT_CLS.error, 
 			label: 'sk', 
-			hover: (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error"), 
+			hover: (e instanceof SkribiError) 
+				? `${e.name}: ${e.message}`
+				: (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error"),
 			clear: true
 		})
 		makeErrorModalLink(r, e)

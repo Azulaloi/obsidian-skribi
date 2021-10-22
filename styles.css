@@ -300,6 +300,7 @@ div.skribi-modal-error-parseErrMsg {
   margin-bottom: 1em;
 }
 div.skribi-modal-error-field-container {
+  margin-top: 1em;
   margin-bottom: 1em;
 }
 
@@ -318,9 +319,6 @@ div.skribi-modal-error-field-content {
   user-select: text;
 }
 
-div.skribi-modal-error-field-line {
-  height: 1.5em;
-}
 div.skribi-modal-error-field-line div.skribi-line-number {
   padding: 0 3px 0 5px;
   text-align: right;
@@ -351,6 +349,87 @@ div.skribi-modal-error-field-line:first-of-type div.skribi-line-number {
 div.skribi-modal-error-field-line:last-of-type div.skribi-line-number {
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
+}
+
+table.skr-lines-table {
+  border-collapse: collapse;
+}
+table.skr-lines-table td.skr-numcell {
+  padding: 0 3px 0 5px;
+  text-align: right;
+  color: #999;
+  white-space: nowrap;
+  cursor: default;
+  width: 22px;
+  user-select: none;
+  display: inline-block;
+}
+table.skr-lines-table td.skr-concell {
+  padding-left: 1em;
+}
+table.skr-lines-table col.skr-table-colnum {
+  width: 20px;
+  background-color: #444;
+}
+table.skr-lines-table tr:last-of-type {
+  color: red;
+}
+table.skr-lines-table tr:last-of-type td.skr-numcell {
+  border-radius: 1em;
+}
+
+div.skribi-modal-error .skr-collapsible {
+  margin-top: 1em;
+  width: fit-content;
+  filter: drop-shadow(0 0 0.25rem black);
+  margin-bottom: 1em;
+  width: 100%;
+}
+div.skribi-modal-error .skr-collapsible .skribi-modal-error-field-container {
+  margin-top: 0em;
+}
+div.skribi-modal-error .skr-collapsible-content {
+  min-height: 0px;
+  max-height: 100vh;
+  overflow: hidden;
+  transition: max-height 0.2s ease, border-bottom-width 0.2s ease;
+}
+div.skribi-modal-error .is-collapsed .skr-collapsible-content {
+  border-bottom-width: 0px;
+  border-top-width: 0px;
+}
+div.skribi-modal-error .skr-collapsible-titlebar {
+  width: 100%;
+  min-height: 2em;
+  border: 1px solid lightgray;
+  vertical-align: middle;
+  padding: 6px;
+  border-top-left-radius: 0.4em;
+  border-top-right-radius: 0.4em;
+  transition: border-bottom-right-radius 0.2s ease;
+}
+div.skribi-modal-error .skr-collapsible-titlebar.skr-collapsible-titletext {
+  display: inline-block;
+  margin: 0em 0em;
+  padding: 0px;
+}
+div.skribi-modal-error .is-collapsed .skr-collapsible-titlebar {
+  border-bottom-right-radius: 0.4em;
+  border-bottom-left-radius: 0.4em;
+}
+div.skribi-modal-error .skr-collapse-indicator {
+  display: inline-block;
+  height: 100%;
+  margin-right: 20px;
+  margin-left: 12px;
+}
+div.skribi-modal-error .skr-collapse-indicator svg {
+  height: 12px;
+  width: 12px;
+  transition: transform 0.2s ease-in-out;
+}
+div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator {
+  transform: rotate(-90deg);
 }
 
 /*--------------------------------------------------------------------------------------------

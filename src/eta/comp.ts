@@ -5,6 +5,7 @@ import { TemplateFunctionScoped, scopedVars } from "src/types/types"
 import { dLog, getAsyncConstructor, promiseImpl } from "src/util"
 import { EtaHandler } from "./eta"
 import { parse } from "acorn"
+import { SkribiSyntaxError } from "./error";
 
 /** Adds the entries of scope to a function string. 
 * @param functionString A string function compiled by Eta's compileToString() 
@@ -86,75 +87,4 @@ export function compileWith(functionString: string, keys: string[], async?: bool
   */
 
   return compiled as TemplateFunctionScoped
-}
-
-/* Version of Eta's render function, modified to handle scoped templates */
-export function renderEta(
-  handler: EtaHandler,
-  template: string | TemplateFunctionScoped,
-  data: object,
-  config?: PartialConfig,
-  cb?: CallbackFn,
-  scope?: scopedVars,
-  binder?: any
-  ): string | Promise<string> | void {
-  const options = Eta.getConfig(config || {})
-
-  if (options.async) {
-    // if (cb) {
-      // try { 
-        // const templateFn = handler.getCached(template, options, scope, binder)
-        // templateFn(scope)
-      // } catch(e) {
-        // return cb(e)
-      // }
-    // } else {
-
-      // return (async () => handler.getCached(template, options, scope, binder)(scope))()
-      return new promiseImpl(function (resolve: Function, reject: Function) {
-        try {
-          resolve(handler.getCached(template, options, scope, binder)(scope))
-        } catch (e) {
-          reject(e)
-        }
-      })
-    // }
-  } else {
-    let func = handler.getCached(template, options, scope, binder)
-    dLog(`Rendering function`, func)
-    return func(scope)
-  }
-}
-
-/* Version of Eta's async render function, just sets async to true */
-/* Note: perf impact of using async templatefunctions is negligible */
-export function renderEtaAsync(
-  handler: EtaHandler,
-  template: string | TemplateFunctionScoped,
-  data: object,
-  config?: PartialConfig,
-  cb?: CallbackFn,
-  scope?: scopedVars,
-  binder?: any
-  ): string | Promise<string> | void {
-    return renderEta(handler, template, data, Object.assign({}, config, {async: true}), cb, scope, binder)
-}
-
-export class SkribiSyntaxError extends Error {
-  hasData = true // flags the object to be passed whole in processor error handling
-
-  constructorError: SyntaxError
-  parseError: SyntaxError
-  packet: {
-    funcLines: string[]
-    loc: { line: number, column: number },    
-    raisedAt: number,    
-    pos: number
-  }
-  skSrc: string // assigned in processor error handling
-
-  name: string = "SkribiError"
-  constructor(msg: string) {
-    super(msg);
-  }
 }

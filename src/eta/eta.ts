@@ -6,7 +6,8 @@ import { EBAR, VAR_NAME } from "src/types/const";
 import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util";
-import { renderEtaAsync, renderEta, compileWith } from "./comp";
+import { compileWith } from "./comp";
+import { renderEtaAsync, renderEta } from "./eval";
 import compileToString from "./mod";
 import { ProviderBus } from "./provider_bus";
 import { TemplateLoader } from "./templates";
@@ -123,7 +124,10 @@ export class EtaHandler {
       }
     }
 
-    let cfg = Eta.getConfig({varName: VAR_NAME/*, include: null, includeFile: null*/})
+    let cfg = Eta.getConfig({
+      varName: VAR_NAME, 
+      async: content.toString().contains('await') // This will catch strings containing await as well
+    })
 
     /* the 'this' object of the sk context*/
     let binder = {}
@@ -156,14 +160,14 @@ export class EtaHandler {
       return scope
     }
 
-    let ren = (content.toString().contains('await')) // This will catch strings containing await as well, maybe a flag should be used instead
-      ? renderEtaAsync(this, content, {}, cfg, null, scope, binder)
-      : renderEta(this, content, {}, cfg, null, scope, binder)
-
+    let ren = renderEta(this, content, {}, cfg, null, scope, binder);
+    
     if (ren instanceof Promise) {
+      console.log(ren)
       return await ren.then((r) => {return Promise.resolve([r, packet])}, (r) => {return Promise.reject(r)})
-    } else if (String.isString(ren)) { return Promise.resolve([ren as string, packet]) }
-    else return Promise.reject("EtaHandler.renderAsync: Unknown Error")
+    } else if (String.isString(ren)) {
+      return Promise.resolve([ren as string, packet]) 
+    } else return Promise.reject("EtaHandler.renderAsync: Unknown Error")
   }
 
   /* this is somehow 1.3x slower than renderAsync */
@@ -193,7 +197,7 @@ export class EtaHandler {
    * @param options EtaConfig 
    * @param scope Object containing objects that should be available in the returned function's scope 
    * @param binder Object to which the returned function will be bound */
-  getCached(template: string | TemplateFunctionScoped, options: EtaConfig, scope?: Stringdex, binder?: any): TemplateFunctionScoped {
+  getCached(template: string | TemplateFunctionScoped, options: EtaConfig, scope?: Stringdex, binder?: any): templateGet {
     if (options.name && this.templates.get(options.name)) {
       return (binder) ? this.templates.get(options.name).function.bind(binder) : this.templates.get(options.name)
     }
@@ -204,7 +208,16 @@ export class EtaHandler {
   
     if (options.name) this.templates.define(options.name, {source: (String.isString(template) ? template : null), function: templateFunc});
   
-    return (binder) ? templateFunc.bind(binder) : templateFunc
+    return {
+      func: ((binder) ? templateFunc.bind(binder) : templateFunc),
+      unboundFunc: templateFunc
+    }
   }
 }
 
+/* The unbound function is included because bound functions cannot be toString()-ed, 
+which is needed to display the function in the ErrorModal. */
+interface templateGet {
+  func: TemplateFunctionScoped
+  unboundFunc: Function
+}
