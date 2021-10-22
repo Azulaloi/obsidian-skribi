@@ -1,19 +1,13 @@
-import { match } from "assert";
-import { execFileSync } from "child_process";
 import { Modal, App, setIcon } from "obsidian";
 import { SkribiError, SkribiSyntaxError, SkribiEvalError } from "src/eta/error";
-import { createRegent, REGENT_CLS, renderRegent } from "src/render/regent";
+import { createRegent, REGENT_CLS } from "src/render/regent";
 import { isExtant } from "src/util";
-
 
 type errorModalPacket = {
   error: any
 }
 
 export class ErrorModal extends Modal {
-  private resolve: (value: string) => void;
-  private reject: (reason?: any) => void;
-
   error: any = null
   
   constructor(app: App, error?: any) {
@@ -21,74 +15,92 @@ export class ErrorModal extends Modal {
     this.error = error
   }
 
+  /* TODO: make this more concise */
+  /* TODO: also I should put most of this logic elsewhere so that the console logging can benefit from it */
   onOpen(){
     var util = require('util')
     let err = this.error
-    
-    var errorField: HTMLElement;
     this.containerEl.addClass("skribi-modal-error")
 
     if (err instanceof SkribiError) {
       this.titleEl.innerText = "SkribiError: " + err.message
 
       if (err instanceof SkribiSyntaxError) {
-        // errorField = this.contentEl.createDiv({cls: "skribi-modal-error-field-error"})
-        // errorField.innerText = err.packet.funcLines.join('\n')
-  
         let parseErrMsg = this.contentEl.createDiv({cls: 'skribi-modal-error-parseErrMsg'})
         parseErrMsg.createSpan({text: 'SyntaxError: ', cls: 'sk-label'})
         parseErrMsg.createSpan({text: err.parseError.message, cls: 'sk-msg'})
   
-        let compField = makeField(this.contentEl, "Compiled Function")
+        let compField = makeField(this.contentEl, "Compiled Function", true)
         let lines = err.packet.funcLines
         let unrelated = [0, 1, 2, lines.length-1, lines.length-2]
-        makeLines(compField.content, lines, (ind: number, els: any) => {
+        makeLinesTable(compField.content, lines, (ind: number, els: linesTableCB) => {
           if (unrelated.contains(ind)) {
-            els.lineEl.addClass('skribi-line-extraneous')
+            els.row.addClass('skribi-line-extraneous')
           }
   
           if (ind == err.packet.loc.line-1) {
-            els.lineEl.addClass('skribi-line-errored')
-            let pstr = "^".padStart(err.packet.loc.column)
-            let lineEl = createDiv({cls: "skribi-modal-error-field-line skerr-pointer"})
-            lineEl.createDiv({text: "@", cls: "skribi-line-number skerr-pointer"})
-            lineEl.createDiv({text: pstr, cls: "skribi-line-content skerr-pointer"})
-            compField.content.append(lineEl)
+            let text = els.con.textContent
+            let pre = text.substring(0, err.packet.loc.column)
+            let char = text.substring(err.packet.loc.column, err.packet.loc.column+1)
+            let post = text.substring(err.packet.loc.column+1)
+            els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
+            console.log([pre, char, post])
+
+            els.row.addClass('skribi-line-errored')
+            let pstr = "".padStart(err.packet.loc.column) + "^"
+            let row = els.table.insertRow()
+            row.addClass("skribi-line-pointer")
+            let numCell = row.insertCell()
+            numCell.setText("@")
+            numCell.addClass("skr-numcell", "skr-pointer")
+            let conCell = row.insertCell()
+            conCell.setText(pstr)
+            conCell.addClass("skr-concell", "skr-pointer")
           }
         })
         
         if (err?._sk_invocation) {
-          let srcField = makeField(this.contentEl, "Invocation String")
-          makeLines(srcField.content, err?._sk_invocation.split(/\r\n|\n/))
+          let srcField = makeField(this.contentEl, "Invocation String", true)
+          makeLinesTable(srcField.content, err?._sk_invocation.split(/\r\n|\n/))
         }
   
         if (err?._sk_template) {
-          let tempField = makeField(this.contentEl, "Template Source")
-          makeLines(tempField.content, err._sk_template.split(/\r\n|\n/))
+          let tempField = makeField(this.contentEl, "Template Source", true)
+          makeLinesTable(tempField.content, err._sk_template.split(/\r\n|\n/))
         }
 
-        // console.log(util.inspect(err, true, 7, true))
+        if (err.parseError?.stack) {
+          let subErrField = makeField(this.contentEl, (err.parseError?.name ?? "UnknownError") + " Stack", true, true)
+          makeLinesTable(subErrField.content, err.parseError.stack)
+        } else {
+          let inspect = util.inspect(err.parseError, true, 7)
+          console.log(inspect)
+          let subErrField = makeField(this.contentEl, (err.parseError?.name ?? "UnknownError") + " Inspection", true, true)
+          makeLinesTable(subErrField.content, inspect)
+        }
+
+        let errField = makeField(this.contentEl, err.name + " Stack", true, true)
+        makeLinesTable(errField.content, err.stack)
+
       } else if (err instanceof SkribiEvalError) {
-        // console.log(Object.getPrototypeOf(err))
-        // console.log(util.inspect(err, true, 7, true))
-        // console.log(err.evalError.name)
-  
         let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
-        subErrorMessage.createSpan({text: err.evalError.name + ": ", cls: 'sk-label'})
-        subErrorMessage.createSpan({text: err.evalError.message, cls: 'sk-msg'})
+        subErrorMessage.createSpan({text: (err.evalError?.name ?? "UnknownError") + ": ", cls: 'sk-label'})
+        subErrorMessage.createSpan({
+          text: err.evalError?.message ?? (String.isString(err.evalError) ? err.evalError : "unknown"), 
+          cls: 'sk-msg'
+        })
 
         // let errField = makeField(this.contentEl, err.evalError.name + ": " + err.evalError.message)
         // errField.content.setText(err.evalError.stack)
 
-        var match: any;
-        if (err.evalError instanceof TypeError) {
-          // at Object.eval (eval at compileWith (eval at <anonymous> (app://obsidian.md/app.js:1:1287967)), <anonymous>:6:8)
-          // let match = err.evalError.stack.match(/(at Object.eval \(\))/)
-          // let match = err.evalError.stack.match(/at Object.eval \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/)
-          match = (/at Object.eval \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
+        var match: any = null;
+        if (err.evalError?.stack) {
+          /* This should find the position trace from certain types of errors */
+          match = (/eval at compileWith \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
+          // match = (/at Object.eval \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
           console.log(match)
         }
-  
+
         let compField = makeField(this.contentEl, "Compiled Function", true, false)
         let lines = err._sk_function.toString().split(/\r\n|\n/)
         let unrelated = [0, 1, 2, 3, 4, lines.length-1, lines.length-2, lines.length-3]
@@ -103,7 +115,7 @@ export class ErrorModal extends Modal {
             let char = text.substring(match.groups.ch-1, match.groups.ch)
             let post = text.substring(match.groups.ch)
             els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
-            console.log([pre, char, post])
+            // console.log([pre, char, post])
 
             els.row.addClass('skribi-line-errored')
             let pstr = "^".padStart(match.groups.ch)
@@ -126,16 +138,20 @@ export class ErrorModal extends Modal {
           makeLinesTable(tempField.content, err._sk_template)
         }
 
-        let subErrField = makeField(this.contentEl, err.evalError.name + " Stack", true, true)
-        makeLinesTable(subErrField.content, err.evalError.stack)
+        if (err.evalError?.stack) {
+          let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "UnknownError") + " Stack", true, true)
+          makeLinesTable(subErrField.content, err.evalError.stack)
+        } else {
+          let inspect = util.inspect(err.evalError, true, 7)
+          console.log(inspect)
+          let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "UnknownError") + " Inspection", true, true)
+          makeLinesTable(subErrField.content, inspect)
+        }
 
         let errField = makeField(this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
       } else {
         /* Generic SkribiError */
-        // let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
-        // subErrorMessage.createSpan({text: err.evalError.name + ": ", cls: 'sk-label'})
-        // subErrorMessage.createSpan({text: err.evalError.message, cls: 'sk-msg'})
 
         if (err?._sk_templateFailure) {
           let terr = err._sk_templateFailure
@@ -161,35 +177,34 @@ export class ErrorModal extends Modal {
 
         let errField = makeField(this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
+
+        if (err?._sk_template) {
+          let tempField = makeField(this.contentEl, "Template Source", true)
+          makeLinesTable(tempField.content, err._sk_template)
+        }
       }
     } else {
-      /* !err instanceof SkribiError */
-
-      console.log(Object.getPrototypeOf(err))
-      console.log(err.msg)
-      console.log(util.inspect(err, true, 7, true))
+      /* Non-skribi error, type unknown (may not be instanceof Error) */
 
       let errField = makeField(this.contentEl, (err?.name ?? "Error") + ": " + (err?.msg ?? err?.message ?? "Unknown Error"), )
-      errField.content.setText(err?.stack ?? "")
+      makeLinesTable(errField.content, err?.stack ?? err ?? "")
 
-      if (err?.skCon) {
-        util.inspect(err.skCon)
+      if (err?._sk_function) {
         let compField = makeField(this.contentEl, "Compiled Function")
-        compField.content.setText(err.skCon)
+        compField.content.setText(err._sk_function)
       }
 
-      let srcField = makeField(this.contentEl, "Invocation String")
-      makeLines(srcField.content, err?._sk_invocation ?? "")
+      if (err?._sk_invocation) {
+        let srcField = makeField(this.contentEl, "Invocation String")
+        makeLines(srcField.content, err?._sk_invocation ?? "")
+      }
+
+      if (!err?.stack) {
+        let inspect = util.inspect(err, true, 7)
+        let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "Unknown") + " Inspection", true, true)
+        makeLinesTable(subErrField.content, inspect)
+      }
     }
-
-    // var util = require('util')
-    // console.log(util.inspect(this.error, true, 7, true))
-    // console.log(Object.getPrototypeOf(this.error) == SkribiSyntaxError.prototype)
-
-    // if (String.isString(this?.error)) 
-    // errorField.innerText = this.error?.msg?.stack ?? this.error
-    // console.log(this.error)
-
   }
 }
 

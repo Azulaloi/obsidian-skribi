@@ -280,7 +280,7 @@ export default class SkribiProcessor {
 				_sk_template: (skCtx.flag == 1 && this.eta.getPartial(id)?.source) ?? null
 			})
 
-			console.log(util.inspect(err, true, 7, true))
+			// console.log(util.inspect(err, true, 7, true))
 
 
 			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}

@@ -385,7 +385,7 @@ table.skr-lines-table td.skr-concell span.skr-err-ch {
   border-bottom: 2px dotted red;
 }
 table.skr-lines-table col.skr-table-colnum {
-  width: 20px;
+  width: 25px;
 }
 table.skr-lines-table tr.skribi-line-extraneous {
   color: #323232;

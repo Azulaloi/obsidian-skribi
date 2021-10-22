@@ -398,6 +398,7 @@ table.skr-lines-table {
 
   td.skr-concell {
     padding-left: 1em;
+    // white-space: nowrap;
 
     span.skr-err-ch {
       // text-decoration: red wavy underline 3px; // not sure why this doesn't work
@@ -406,7 +407,7 @@ table.skr-lines-table {
   }
 
   col.skr-table-colnum {
-    width: 20px;
+    width: 25px;
     // background-color: #444;
   }
 

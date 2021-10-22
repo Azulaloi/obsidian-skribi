@@ -75,7 +75,7 @@ function compileScope(buff: Array<AstObject>, config: EtaConfig) {
           content = 'E.filter(' + content + ')'
         }
 
-        returnStr += 'tR+=' + content + ';\n'
+        returnStr += 'tR+=' + content + conSemi(content) + '\n'
       } else if (type === 'i') {
         // interpolate
 
@@ -96,4 +96,8 @@ function compileScope(buff: Array<AstObject>, config: EtaConfig) {
   }
 
   return returnStr
+}
+
+function conSemi(str: string) {
+  return (str.endsWith(';') ? '' : ';')
 }
