@@ -1,14 +1,22 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
 import { Stringdex } from "src/types/types";
-import { dLog, vLog } from "src/util";
+import { dLog, isExtant, vLog } from "src/util";
+import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
 
 interface SkChild {
-	scriptsUpdated: () => any
+	scriptsUpdated: (id?: string) => void
+	sources: skChildSources
 }
 
 type skChildState = "pre" | "post" | "error"
+type skChildSources = {
+	templates: string[],
+	styles: string[],
+	integrations: string[],
+	scripts: string[]
+}
 
 export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private plugin: SkribosPlugin
@@ -24,9 +32,11 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	templateKey?: string // The source template
 	source: string // The uncompiled source string of the skribi invocation
 	hash: number // Assigned when needed
-	sources: {templates: string[], styles: string[]} = {
+	sources: skChildSources = {
 		templates: [],
-		styles: []
+		styles: [],
+		integrations: [],
+		scripts: []
 	}
 
 	constructor(plugin: SkribosPlugin, el: HTMLElement) {
@@ -47,21 +57,37 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
     }
   }
 
-	public scriptsUpdated() {
-		this.rerender()
+	public scriptsUpdated(id?: string) {
+		if (this.plugin.settings.autoReload) {
+			if (!isExtant(id) || this.sources.scripts.contains(id)) this.rerender()
+		}
+	}
+
+	public pluginUpdated(id: string, loading?: boolean) {
+		if (this.plugin.settings.autoReload) {
+			if (this.sources.integrations.contains(id)) {
+				if (loading) {
+					setTimeout(() => this.rerender(), 100)
+				} else this.rerender()
+			}
+		}
 	}
 
 	public templatesUpdated(id: string, newId?: string) {	
-		if ((this?.templateKey == id) || this.sources.templates.contains(id)) {
-			dLog("Child received template update notification that matched one of its sources", id, this)
-			this.rerender((id == this?.templateKey) ? id : null)
+		if (this.plugin.settings.autoReload) {
+			if ((this?.templateKey == id) || this.sources.templates.contains(id)) {
+				dLog("Child received template update notification that matched one of its sources", id, this)
+				this.rerender((id == this?.templateKey) ? id : null)
+			}
 		}
 	}
 
 	public stylesUpdated(id: string) {
-		if ((this.sources.styles).contains(id)) {
-			dLog("Child received style update notification that matched one of its sources", id, this)
-			this.rerender()
+		if (this.plugin.settings.autoReload) {
+			if ((this.sources.styles).contains(id)) {
+				dLog("Child received style update notification that matched one of its sources", id, this)
+				this.rerender()
+			}
 		}
 	}
 

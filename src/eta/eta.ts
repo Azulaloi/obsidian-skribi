@@ -7,7 +7,7 @@ import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util";
 import { compileWith } from "./comp";
-import { renderEtaAsync, renderEta } from "./eval";
+import { renderEta } from "./eval";
 import compileToString from "./mod";
 import { ProviderBus } from "./provider_bus";
 import { TemplateLoader } from "./templates";
@@ -153,7 +153,7 @@ export class EtaHandler {
       'sk': sk,
       'E': cfg,
       'cb': () => {},
-      ...this.bus.getScope(),
+      ...this.bus.getScope({child: ctxIn?.child._c}),
     }
 
     function getEnv() {

@@ -10,6 +10,7 @@ import { l } from './lang/babel';
 import SkribiProcessor from './render/processor';
 import TemplateSuggest from './suggest';
 import { CLS } from './types/const';
+import { around } from 'monkey-around';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -55,6 +56,30 @@ export default class SkribosPlugin extends Plugin {
 				}
 			})
 		})
+
+		/* Register plugin status listeners (to listen for integration predicates) */
+		const patchPluginLoad = around(this.app.plugins, {
+			enablePlugin(old) {
+				return function (x: any) {
+					this.app.workspace.trigger("skribi:plugin-load", x)
+					return old.call(this, x)
+				}
+			}, 
+			disablePlugin(old) {
+				return function (x: any) {
+					this.app.workspace.trigger("skribi:plugin-unload", x)
+					return old.call(this, x)
+				}
+			}
+		})
+		this.register(patchPluginLoad)
+		
+		this.registerEvent(this.app.workspace.on("skribi:plugin-load", (id: string) => {
+			Array.from(this.children).forEach(child => child.pluginUpdated(id, true))
+		}))
+		this.registerEvent(this.app.workspace.on("skribi:plugin-unload", (id: string) => {
+			Array.from(this.children).forEach(child => child.pluginUpdated(id))
+		}))
 	}
 
 	/** Register our commands. */

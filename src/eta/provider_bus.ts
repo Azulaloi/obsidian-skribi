@@ -1,8 +1,7 @@
-import { App, MarkdownRenderer } from "obsidian";
 import SkribosPlugin from "src/main";
 import { VAR_NAME } from "src/types/const";
 import { DynamicState, Stringdex } from "src/types/types";
-import { ensureArray, isFunc } from "src/util";
+import { isFunc } from "src/util";
 import { EtaHandler } from "./eta";
 import { ProviderSK } from "./providers/base";
 import { ProviderDataview } from "./providers/integration/dv";
@@ -127,7 +126,10 @@ export class ProviderBus {
 
     if (this.isStaticScopeDirty) this.createStaticScope()
 
-    return Object.assign({}, this.scopeStatic, {[MODULE_NAME_INTEGRATIONS]: this.createPredicatedScope(ctx || null)})
+    return Object.assign({}, this.scopeStatic, {
+      [MODULE_NAME_INTEGRATIONS]: this.createPredicatedScope(ctx || null),
+      js: this.scriptLoader.createObject(ctx || null) // we're already getting JS from static scope, but we need to getterize it with access to the child
+    })
   }
 
   /* Creates scope object. Should not be used to get the scope. */
@@ -149,10 +151,13 @@ export class ProviderBus {
     let spaces: {[key: string]: any} = {};
    
     for (let p of this.providersPredicated) {
-      Object.defineProperty(spaces, p[0], { get: function() {
-          if (p[1].predicateCheck()) return p[1].createObject()
-          else throw new Error(p[1].predicateError())
-        } 
+      Object.defineProperty(spaces, p[0], { 
+        get: function() {
+          ctx?.child.sources.integrations.push(p[1].predicatePluginName) // we add the source either way, so that the error child can listen
+          if (p[1].predicateCheck()) {
+            return p[1].createObject(ctx)
+          } else throw new Error(p[1].predicateError())
+        }
       })
     }
     

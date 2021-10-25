@@ -30,7 +30,7 @@ export abstract class Provider implements IProvider {
 
   [index: string]: any;
 
-  createObject(): Stringdex {
+  createObject(...args: any): Stringdex {
     return {...Object.fromEntries(this.functions)}
   }
 
@@ -46,9 +46,9 @@ export abstract class Provider implements IProvider {
 
   /**
    * @param clean If true, provider.isDirty = false */
-  setDirty(dirty?: boolean) {
+  setDirty(dirty?: boolean, ...data: any) {
     this.isDirty = isExtant(dirty) ? dirty : true
-    this.bus.providerNotificationDirty(this, this.isDirty)
+    this.bus.providerNotificationDirty(this, this.isDirty, ...data)
   }
 
   /* May be called without data. */

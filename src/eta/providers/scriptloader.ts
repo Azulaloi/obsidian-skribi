@@ -1,5 +1,5 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
-import { FileMinder, Stringdex } from "src/types/types";
+import { DynamicState, FileMinder, Stringdex } from "src/types/types";
 import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util";
 import { Provider } from "../provider_abs";
 
@@ -35,17 +35,23 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     })
   }
 
-  createObject(): Stringdex {
-    let exports: Map<string, any> = new Map()
+  createObject(ctx?: DynamicState): Stringdex {
+    let exports = {}
     this.loadedModules.forEach((value, key) => {
       let single = (Object.keys(value.properties).length == 1) 
 
-      exports.set((value.name ?? (single ? Object.keys(value.properties)[0] : key)),
-        single ? Object.values(value.properties)[0] : value.properties
-      )
+      let exKey = (value.name ?? (single ? Object.keys(value.properties)[0] : key))
+      let exVal = single ? Object.values(value.properties)[0] : value.properties
+      
+      Object.defineProperty(exports, exKey, {
+        get: function() {
+          if (ctx) ctx?.child.sources.scripts.push(key);
+          return exVal
+        }
+      })
     })
 
-    return {...Object.fromEntries(exports)}
+    return exports
   }
 
   async readFiles(...files: TFile[]): Promise<[string, Stringdex][]> {
@@ -91,10 +97,8 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     return super.reload()
   }
 
-  postDirty() {
-    if (this.bus.plugin.settings.autoReload) {
-      Array.from(this.bus.plugin.children).forEach(child => child.scriptsUpdated())
-    }
+  postDirty(id?: string) {
+    Array.from(this.bus.plugin.children).forEach(child => child.scriptsUpdated(id))
   }
 
   /* FileMinder Functions */
@@ -106,14 +110,14 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     vLog(`File '${file.name}' in script directory modified, updating...`)
     this.clearJS(file)
     this.loadAndSet(file)
-    .then(() => {this.setDirty()}, () => this.clearJS(file))
+    .then(() => {this.setDirty(null, file.basename)}, () => this.clearJS(file))
   }
 
   fileDeleted(file: TAbstractFile): void {
     if (!isFile(file)) return;
     vLog(`File '${file.name}' removed from script directory, unloading...`)
     this.clearJS(file)
-    this.setDirty()
+    this.setDirty(null, file.basename)
   }
 
   fileAdded(file: TAbstractFile): void {
@@ -128,7 +132,7 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     vLog(`Script file '${oldName}' renamed to '${file.name}', updating...`)
     this.clearJS(oldName)
     this.loadAndSet(file)
-    .then(() => {this.setDirty()}, () => {})
+    .then(() => {this.setDirty(null, oldName)}, () => {})
   }
 
   directoryChanged(): void {

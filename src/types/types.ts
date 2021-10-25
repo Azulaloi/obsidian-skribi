@@ -53,9 +53,9 @@ export interface scopedVars extends Stringdex {
 export declare type TemplateFunctionScoped = (scope: scopedVars) => Promise<string>;
 
 export interface DynamicState {
-  el: HTMLElement,
-  file: TFile,
-  child: SkribiChild
+  el?: HTMLElement,
+  file?: TFile,
+  child?: SkribiChild,
 }
 
 /* For objects that must react to file change events */

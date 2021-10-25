@@ -137,6 +137,7 @@ export class TestModal extends Modal {
     vLog(`Performance test settled in: ${roundTo(window.performance.now()-timeStart, 3)}ms`)
 
     let fullfilled: [any[], number, number][] = settledValues.map((v) => {if (v.status == 'fulfilled') return v.value})
+    console.log(fullfilled)
     let times = fullfilled.map((result) => (result[1] as number - (result[2] as number)))
     let avg = average(...times)
     
