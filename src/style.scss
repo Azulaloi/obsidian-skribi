@@ -481,7 +481,9 @@ div.skribi-modal-error {
     padding: 6px;
     border-top-left-radius: 0.4em;
     border-top-right-radius: 0.4em;
-    transition: border-bottom-right-radius 0.2s ease;
+    border-bottom-right-radius: 0em;
+    border-bottom-left-radius: 0em;
+    transition: border-bottom-right-radius 0.2s ease-in-out, border-bottom-left-radius 0.2s ease-in-out;
 
     &.skr-collapsible-titletext {
       display: inline-block;

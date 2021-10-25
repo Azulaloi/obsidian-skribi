@@ -36,8 +36,3 @@ export default {
     })
   ]
 };
-
-// can't put comments in json so this goes HERE INSTEAD
-// "rollup-plugin-scss": "^3.0.0",
-// "sass": "^1.39.0",
-// ^ these two weren't doing their JOB so they get put in the COMMENT ZONE

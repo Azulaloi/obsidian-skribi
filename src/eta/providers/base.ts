@@ -2,6 +2,7 @@ import { EventRef, MarkdownRenderer } from "obsidian";
 import { Provider } from "src/eta/provider_abs";
 import { CLS } from "src/types/const";
 import { Stringdex } from "src/types/types";
+import { SkribiError } from "../error";
 
 export class ProviderSK extends Provider {
   async init() {
@@ -23,7 +24,17 @@ export class ProviderSK extends Provider {
         let abortPacket = String.isString(s) 
         ? {hasData: true, flag: 'abort', hover: s} 
         : Object.assign({hasData: true, flag: 'abort'}, s)
-        throw abortPacket
+        // throw abortPacket
+
+        /*try {
+          //@ts-ignore
+          a.b.c += 0;
+        } catch(e) {
+          console.log(e)
+        }*/
+        // console.log((new Error()).stack.split("\n")[2].trim().split(" ")[1])
+        // console.log((new Error()).stack)
+        throw new SkribiError("Abort")
       },
       getTemplateSource: function(s: string): Promise<any> {
         return makeInitPromise(this.child, () => {
@@ -48,7 +59,8 @@ export class ProviderSK extends Provider {
           this.child._c.listenFor("style", styleSnip)
           return this.child.addStyle(await this.getStyle(styleSnip))
         })
-      }
+      },
+      util: require('util')
     }
   }
 }

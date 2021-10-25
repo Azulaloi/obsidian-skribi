@@ -1,3 +1,4 @@
+import { getLineInfo, tokenizer } from "acorn";
 import { Modal, App, setIcon } from "obsidian";
 import { SkribiError, SkribiSyntaxError, SkribiEvalError } from "src/eta/error";
 import { createRegent, REGENT_CLS } from "src/render/regent";
@@ -33,6 +34,8 @@ export class ErrorModal extends Modal {
         let compField = makeField(this.contentEl, "Compiled Function", true)
         let lines = err.packet.funcLines
         let unrelated = [0, 1, 2, lines.length-1, lines.length-2]
+        // console.log(getLineInfo(err.packet.funcLines.join("\n"), err.packet.pos))
+        // let len = err.packet.raisedAt - err.packet.pos
         makeLinesTable(compField.content, lines, (ind: number, els: linesTableCB) => {
           if (unrelated.contains(ind)) {
             els.row.addClass('skribi-line-extraneous')
@@ -40,14 +43,20 @@ export class ErrorModal extends Modal {
   
           if (ind == err.packet.loc.line-1) {
             let text = els.con.textContent
-            let pre = text.substring(0, err.packet.loc.column)
-            let char = text.substring(err.packet.loc.column, err.packet.loc.column+1)
-            let post = text.substring(err.packet.loc.column+1)
+            let pre = text.substring(0, err.packet.loc.column-1)
+            let char = text.substring(err.packet.loc.column-1, err.packet.loc.column)
+            let post = text.substring(err.packet.loc.column)
+
+            // let pre = text.substring(0, err.packet.loc.column)
+            // let char = text.substring(err.packet.loc.column, )
+            // let post = text.substring(err.packet.loc.column + len)
+
+            console.log(err.packet)
             els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
             console.log([pre, char, post])
 
             els.row.addClass('skribi-line-errored')
-            let pstr = "".padStart(err.packet.loc.column) + "^"
+            let pstr = "^".padStart(err.packet.loc.column)
             let row = els.table.insertRow()
             row.addClass("skribi-line-pointer")
             let numCell = row.insertCell()
@@ -114,6 +123,10 @@ export class ErrorModal extends Modal {
             let pre = text.substring(0, match.groups.ch-1)
             let char = text.substring(match.groups.ch-1, match.groups.ch)
             let post = text.substring(match.groups.ch)
+
+            // let tokens = [...tokenizer(lines[ind].substr(match.groups.ch-1), {"ecmaVersion": 2020})]
+            // console.log(tokens)
+
             els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
             // console.log([pre, char, post])
 
