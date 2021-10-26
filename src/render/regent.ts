@@ -1,4 +1,4 @@
-import { SkribiError } from "src/eta/error"
+import { SkribiError, SkribiEvalError, SkribiSyntaxError } from "src/eta/error"
 import { makeErrorModalLink } from "src/modal/errorModal"
 import { CLS } from "src/types/const"
 
@@ -32,12 +32,23 @@ export async function renderError(el: HTMLElement, e: RegentData) {
 			hover: 'Render Aborted'
 		}, e))
 	} else {
+		var hover = "";
+
+		if (e instanceof SkribiError) {
+			hover = `${e.name}: ${e.message}`
+			if (e instanceof SkribiEvalError) {
+				hover += `\n${e.evalError.name}: ${e.evalError.message}`
+			} else if (e instanceof SkribiSyntaxError) {
+				hover += `\n${e.parseError.name}: ${e.parseError.message}`
+			}
+		} else {
+			hover = (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error");
+		}
+
 		let r = renderRegent(el, {
 			class: REGENT_CLS.error, 
 			label: 'sk', 
-			hover: (e instanceof SkribiError) 
-				? `${e.name}: ${e.message}`
-				: (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error"),
+			hover: hover,
 			clear: true
 		})
 		makeErrorModalLink(r, e)

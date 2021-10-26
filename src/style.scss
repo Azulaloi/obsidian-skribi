@@ -376,6 +376,12 @@ div.skribi-modal-error-field-pointer {
 
 }
 
+span.skribi-modal-version-number {
+  font-style: italic;
+  color: var(--text-muted);
+  user-select: text;
+}
+
 // Table Lines
 table.skr-lines-table {
   border-spacing: 0px;

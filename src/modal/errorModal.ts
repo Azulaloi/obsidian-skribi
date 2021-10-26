@@ -51,9 +51,9 @@ export class ErrorModal extends Modal {
             // let char = text.substring(err.packet.loc.column, )
             // let post = text.substring(err.packet.loc.column + len)
 
-            console.log(err.packet)
+            // console.log(err.packet)
             els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
-            console.log([pre, char, post])
+            // console.log([pre, char, post])
 
             els.row.addClass('skribi-line-errored')
             let pstr = "^".padStart(err.packet.loc.column)
@@ -107,7 +107,7 @@ export class ErrorModal extends Modal {
           /* This should find the position trace from certain types of errors */
           match = (/eval at compileWith \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
           // match = (/at Object.eval \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
-          console.log(match)
+          // console.log(match)
         }
 
         let compField = makeField(this.contentEl, "Compiled Function", true, false)
@@ -156,7 +156,7 @@ export class ErrorModal extends Modal {
           makeLinesTable(subErrField.content, err.evalError.stack)
         } else {
           let inspect = util.inspect(err.evalError, true, 7)
-          console.log(inspect)
+          // console.log(inspect)
           let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "UnknownError") + " Inspection", true, true)
           makeLinesTable(subErrField.content, inspect)
         }
@@ -218,6 +218,8 @@ export class ErrorModal extends Modal {
         makeLinesTable(subErrField.content, inspect)
       }
     }
+
+    this.contentEl.createSpan({cls: 'skribi-modal-version-number', text: `SkribosPlugin ${this.app.plugins.plugins["obsidian-skribi"].manifest.version}`})
   }
 }
 
