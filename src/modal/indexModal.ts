@@ -69,11 +69,15 @@ export class IndexModal extends Modal {
         let field = createDiv({cls: ['skribi-index-entry', 'skribi-index-entry-failure']})
         field.createDiv({text: entry[1].extension, cls: ['skribi-index-entry-extension', `skribi-index-entry-extension-${entry[1].extension}`]})
         let label = field.createDiv({text: entry[0], cls: 'skribi-index-entry-label'})
-        label.onClickEvent((e) => {
-          e.preventDefault();
-          this.plugin.app.workspace.openLinkText(entry[0], this.plugin.settings.templateFolder)
-          this.close()
-        })
+        if (entry[1].extension == "md") {
+          label.onClickEvent((e) => {
+            e.preventDefault();
+            this.plugin.app.workspace.openLinkText(entry[0], this.plugin.settings.templateFolder)
+            this.close()
+          })
+        } else {
+          label.addClass('skribi-index-entry-label-nolink')
+        }
 
         let r = createRegent({
           class: REGENT_CLS.error, 
@@ -95,11 +99,16 @@ export class IndexModal extends Modal {
       let field = createDiv({cls: 'skribi-index-entry'})
       field.createDiv({text: entry[1].extension, cls: ['skribi-index-entry-extension', `skribi-index-entry-extension-${entry[1].extension}`]})
       let label = field.createDiv({text: entry[0], cls: 'skribi-index-entry-label'})
-      label.onClickEvent((e) => {
-        e.preventDefault();
-        this.plugin.app.workspace.openLinkText(entry[0], this.plugin.settings.templateFolder)
-        this.close()
-      })
+      if (entry[1].extension == "md") {
+        label.onClickEvent((e) => {
+          e.preventDefault();
+          this.plugin.app.workspace.openLinkText(entry[0], this.plugin.settings.templateFolder)
+          this.close()
+        })
+      } else {
+        label.addClass('skribi-index-entry-label-nolink')
+      }
+
       
       templatesField.content.append(field)
     }

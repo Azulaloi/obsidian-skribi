@@ -2,7 +2,11 @@
 
 Opens a prompt to insert a template. Will prompt you for variables, as defined in the [Template Metadata](../syntax/template_metadata).
 
-This was something I made for testing during development so I'm not sure exactly how useful it will be to you, but 
+## View Templates
+
+Opens a modal that displays your loaded templates. Clicking an entry will open the template file in the editor (currently only works for `.md` files). Templates that failed to compile will have an error indicator displayed that you can click to open an error modal with more information. 
+
+The list will automatically refresh whenever the template cache is updated (so you can leave this open while you edit templates in an external editor, and see them move to/from the error list immediately). You can also force a refresh with the refresh index button (just in case).
 
 ## Reload Skribis
 

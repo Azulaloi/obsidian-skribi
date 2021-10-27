@@ -437,20 +437,15 @@ div.skribi-modal-index {
     cursor: default;
 
     .skribi-index-entry-extension {
-      // background-color: var(--background-secondary-alt);
       border-radius: 3px;
       font-size: 9px;
-      // font-weight: 600;
-      // letter-spacing: 0.05em;
       line-height: 14px;
       margin-left: 4px;
       padding: 0 4px;
       text-transform: uppercase;
       vertical-align: middle;
       user-select: none;
-
       align-self: center;
-
       text-align: center;
       font-family: var(--font-monospace);
       letter-spacing: 1px;
@@ -459,10 +454,8 @@ div.skribi-modal-index {
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--background-modifier-accent);
       font-weight: 600;
-  
       display: inline-block;
       width: 3.5em;
-      // border-right: 1px solid white
     }
 
     .skribi-index-entry-label {
@@ -507,16 +500,11 @@ div.skribi-modal-index {
       border-bottom: 1px solid gray;
       &:last-of-type { border-bottom: none; }
   
-  
-  
       .skribi-index-entry-label {
-        // float: left;
         flex: 1;
       }
   
       code.skribi-regent {
-        // display: inline-block;
-        // float: right;
         margin-right: 1em;
       }
     }

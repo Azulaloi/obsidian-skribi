@@ -1,5 +1,5 @@
 import * as Eta from "eta";
-import { FrontMatterCache, parseYaml, TAbstractFile, TFile } from "obsidian";
+import { parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
 import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util";
