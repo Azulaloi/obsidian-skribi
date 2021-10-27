@@ -11,6 +11,7 @@ import SkribiProcessor from './render/processor';
 import TemplateSuggest from './suggest';
 import { CLS } from './types/const';
 import { around } from 'monkey-around';
+import { IndexModal } from './modal/indexModal';
 
 export default class SkribosPlugin extends Plugin {
 	settings: SkribosSettings;
@@ -114,6 +115,10 @@ export default class SkribosPlugin extends Plugin {
 			} : null
 			
 			new TestModal(this, fill).open()
+		}})
+
+		this.addCommand({id: "view-templates", name: "View Templates", callback: () => {
+			new IndexModal(this).open()
 		}})
 	}
 	

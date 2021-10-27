@@ -256,6 +256,16 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
   text-align: center;
 }
 
+span.skribi-modal-version-number {
+  font-style: italic;
+  color: var(--text-faint);
+  user-select: text;
+  font-size: small;
+}
+
+/*---------------
+/  Performance Test Modal
+/----------------*/
 .skribi-test-modal .skribi-autofill-notification {
   font-style: italic;
 }
@@ -267,6 +277,9 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
   font-weight: bold;
 }
 
+/*---------------
+/  Confirmation Modal
+/----------------*/
 .skribi-confirmation-modal .skribi-confirmation-modal-description {
   width: 100%;
   text-align: center;
@@ -296,6 +309,9 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
   background-color: var(--interactive-hover);
 }
 
+/*---------------
+/  Error Modal
+/----------------*/
 div.skribi-modal-error div.modal-title {
   cursor: text;
   user-select: text;
@@ -361,12 +377,87 @@ div.skribi-modal-error-field-line:last-of-type div.skribi-line-number {
   border-bottom-right-radius: 3px;
 }
 
-span.skribi-modal-version-number {
-  font-style: italic;
+/*---------------
+/  Index
+/----------------*/
+div.skribi-modal-index .skribi-index-entry {
+  cursor: default;
+}
+div.skribi-modal-index .skribi-index-entry .skribi-index-entry-extension {
+  border-radius: 3px;
+  font-size: 9px;
+  line-height: 14px;
+  margin-left: 4px;
+  padding: 0 4px;
+  text-transform: uppercase;
+  vertical-align: middle;
+  user-select: none;
+  align-self: center;
+  text-align: center;
+  font-family: var(--font-monospace);
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--background-modifier-accent);
+  font-weight: 600;
+  display: inline-block;
+  width: 3.5em;
+}
+div.skribi-modal-index .skribi-index-entry .skribi-index-entry-label {
+  display: inline-block;
+  margin-left: 1em;
+  cursor: pointer;
+  user-select: text;
   color: var(--text-muted);
+  transition: color 0.1s ease-in-out;
+}
+div.skribi-modal-index .skribi-index-entry .skribi-index-entry-label:hover {
+  color: var(--text-normal);
+}
+div.skribi-modal-index .skribi-index-entry .skribi-index-entry-label.skribi-index-entry-label-nolink {
+  transition: none;
+  cursor: text;
+}
+div.skribi-modal-index .skribi-index-entry .skribi-index-entry-label.skribi-index-entry-label-nolink:hover {
+  color: var(--text-muted);
+}
+div.skribi-modal-index .skribi-index-entry.skribi-index-entry-failure {
+  padding-bottom: 0.2em;
+  padding-top: 0.2em;
+  display: flex;
+  border-bottom: 1px solid gray;
+}
+div.skribi-modal-index .skribi-index-entry.skribi-index-entry-failure:last-of-type {
+  border-bottom: none;
+}
+div.skribi-modal-index .skribi-index-entry.skribi-index-entry-failure .skribi-index-entry-label {
+  flex: 1;
+}
+div.skribi-modal-index .skribi-index-entry.skribi-index-entry-failure code.skribi-regent {
+  margin-right: 1em;
+}
+
+div.skribi-modal-index-field-container {
+  margin-bottom: 1em;
+}
+
+div.skribi-modal-index-field-content {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 6px 6px;
+  font-family: "Consolas";
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: normal;
+  font-size: 90%;
+  text-indent: 0;
+  width: 100%;
+  cursor: text;
   user-select: text;
 }
 
+/*---------------
+/  Table
+/----------------*/
 table.skr-lines-table {
   border-spacing: 0px;
 }
@@ -415,27 +506,30 @@ table.skr-lines-table tr:last-of-type td.skr-numcell {
   border-bottom-left-radius: 0.4em;
 }
 
-div.skribi-modal-error .skr-collapsible {
+/*---------------
+/  Collapsibles
+/----------------*/
+div.skribi-modal-error .skr-collapsible, div.skribi-modal-index .skr-collapsible {
   margin-top: 1em;
   width: fit-content;
   filter: drop-shadow(0 0 0.25rem black);
   margin-bottom: 1em;
   width: 100%;
 }
-div.skribi-modal-error .skr-collapsible .skribi-modal-error-field-container {
+div.skribi-modal-error .skr-collapsible .skribi-modal-error-field-container, div.skribi-modal-index .skr-collapsible .skribi-modal-error-field-container {
   margin-top: 0em;
 }
-div.skribi-modal-error .skr-collapsible-content {
+div.skribi-modal-error .skr-collapsible-content, div.skribi-modal-index .skr-collapsible-content {
   min-height: 0px;
   max-height: 100vh;
   overflow: hidden;
   transition: max-height 0.2s ease, border-bottom-width 0.2s ease;
 }
-div.skribi-modal-error .is-collapsed .skr-collapsible-content {
+div.skribi-modal-error .is-collapsed .skr-collapsible-content, div.skribi-modal-index .is-collapsed .skr-collapsible-content {
   border-bottom-width: 0px;
   border-top-width: 0px;
 }
-div.skribi-modal-error .skr-collapsible-titlebar {
+div.skribi-modal-error .skr-collapsible-titlebar, div.skribi-modal-index .skr-collapsible-titlebar {
   width: 100%;
   min-height: 2em;
   border: 1px solid lightgray;
@@ -447,27 +541,27 @@ div.skribi-modal-error .skr-collapsible-titlebar {
   border-bottom-left-radius: 0em;
   transition: border-bottom-right-radius 0.2s ease-in-out, border-bottom-left-radius 0.2s ease-in-out;
 }
-div.skribi-modal-error .skr-collapsible-titlebar.skr-collapsible-titletext {
+div.skribi-modal-error .skr-collapsible-titlebar.skr-collapsible-titletext, div.skribi-modal-index .skr-collapsible-titlebar.skr-collapsible-titletext {
   display: inline-block;
   margin: 0em 0em;
   padding: 0px;
 }
-div.skribi-modal-error .is-collapsed .skr-collapsible-titlebar {
+div.skribi-modal-error .is-collapsed .skr-collapsible-titlebar, div.skribi-modal-index .is-collapsed .skr-collapsible-titlebar {
   border-bottom-right-radius: 0.4em;
   border-bottom-left-radius: 0.4em;
 }
-div.skribi-modal-error .skr-collapse-indicator {
+div.skribi-modal-error .skr-collapse-indicator, div.skribi-modal-index .skr-collapse-indicator {
   display: inline-block;
   height: 100%;
   margin-right: 20px;
   margin-left: 12px;
 }
-div.skribi-modal-error .skr-collapse-indicator svg {
+div.skribi-modal-error .skr-collapse-indicator svg, div.skribi-modal-index .skr-collapse-indicator svg {
   height: 12px;
   width: 12px;
   transition: transform 0.2s ease-in-out;
 }
-div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator {
+div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator, div.skribi-modal-index .skr-collapsible.is-collapsed .skr-collapse-indicator {
   transform: rotate(-90deg);
 }
 

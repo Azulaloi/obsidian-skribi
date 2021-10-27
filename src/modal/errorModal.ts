@@ -1,12 +1,8 @@
-import { getLineInfo, tokenizer } from "acorn";
-import { Modal, App, setIcon } from "obsidian";
+import { Modal, App } from "obsidian";
 import { SkribiError, SkribiSyntaxError, SkribiEvalError } from "src/eta/error";
 import { createRegent, REGENT_CLS } from "src/render/regent";
 import { isExtant } from "src/util";
-
-type errorModalPacket = {
-  error: any
-}
+import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/interface";
 
 export class ErrorModal extends Modal {
   error: any = null
@@ -31,7 +27,7 @@ export class ErrorModal extends Modal {
         parseErrMsg.createSpan({text: 'SyntaxError: ', cls: 'sk-label'})
         parseErrMsg.createSpan({text: err.parseError.message, cls: 'sk-msg'})
   
-        let compField = makeField(this.contentEl, "Compiled Function", true)
+        let compField = makeField("error", this.contentEl, "Compiled Function", true)
         let lines = err.packet.funcLines
         let unrelated = [0, 1, 2, lines.length-1, lines.length-2]
         // console.log(getLineInfo(err.packet.funcLines.join("\n"), err.packet.pos))
@@ -69,26 +65,26 @@ export class ErrorModal extends Modal {
         })
         
         if (err?._sk_invocation) {
-          let srcField = makeField(this.contentEl, "Invocation String", true)
+          let srcField = makeField("error", this.contentEl, "Invocation String", true)
           makeLinesTable(srcField.content, err?._sk_invocation.split(/\r\n|\n/))
         }
   
         if (err?._sk_template) {
-          let tempField = makeField(this.contentEl, "Template Source", true)
+          let tempField = makeField("error", this.contentEl, "Template Source", true)
           makeLinesTable(tempField.content, err._sk_template.split(/\r\n|\n/))
         }
 
         if (err.parseError?.stack) {
-          let subErrField = makeField(this.contentEl, (err.parseError?.name ?? "UnknownError") + " Stack", true, true)
+          let subErrField = makeField("error", this.contentEl, (err.parseError?.name ?? "UnknownError") + " Stack", true, true)
           makeLinesTable(subErrField.content, err.parseError.stack)
         } else {
           let inspect = util.inspect(err.parseError, true, 7)
           console.log(inspect)
-          let subErrField = makeField(this.contentEl, (err.parseError?.name ?? "UnknownError") + " Inspection", true, true)
+          let subErrField = makeField("error", this.contentEl, (err.parseError?.name ?? "UnknownError") + " Inspection", true, true)
           makeLinesTable(subErrField.content, inspect)
         }
 
-        let errField = makeField(this.contentEl, err.name + " Stack", true, true)
+        let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
 
       } else if (err instanceof SkribiEvalError) {
@@ -110,7 +106,7 @@ export class ErrorModal extends Modal {
           // console.log(match)
         }
 
-        let compField = makeField(this.contentEl, "Compiled Function", true, false)
+        let compField = makeField("error", this.contentEl, "Compiled Function", true, false)
         let lines = err._sk_function.toString().split(/\r\n|\n/)
         let unrelated = [0, 1, 2, 3, 4, lines.length-1, lines.length-2, lines.length-3]
         makeLinesTable(compField.content, lines, isExtant(match) ? (ind: number, els: linesTableCB) => {
@@ -143,25 +139,25 @@ export class ErrorModal extends Modal {
           }
         }: undefined)
 
-        let invField = makeField(this.contentEl, "Invocation String", true)
+        let invField = makeField("error", this.contentEl, "Invocation String", true)
         makeLinesTable(invField.content, err._sk_invocation)
 
         if (err?._sk_template) {
-          let tempField = makeField(this.contentEl, "Template Source", true)
+          let tempField = makeField("error", this.contentEl, "Template Source", true)
           makeLinesTable(tempField.content, err._sk_template)
         }
 
         if (err.evalError?.stack) {
-          let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "UnknownError") + " Stack", true, true)
+          let subErrField = makeField("error", this.contentEl, (err.evalError?.name ?? "UnknownError") + " Stack", true, true)
           makeLinesTable(subErrField.content, err.evalError.stack)
         } else {
           let inspect = util.inspect(err.evalError, true, 7)
           // console.log(inspect)
-          let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "UnknownError") + " Inspection", true, true)
+          let subErrField = makeField("error", this.contentEl, (err.evalError?.name ?? "UnknownError") + " Inspection", true, true)
           makeLinesTable(subErrField.content, inspect)
         }
 
-        let errField = makeField(this.contentEl, err.name + " Stack", true, true)
+        let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
       } else {
         /* Generic SkribiError */
@@ -185,36 +181,36 @@ export class ErrorModal extends Modal {
           s.append(r[0])
         }
 
-        let invField = makeField(this.contentEl, "Invocation String", true)
+        let invField = makeField("error", this.contentEl, "Invocation String", true)
         makeLinesTable(invField.content, err._sk_invocation)
 
-        let errField = makeField(this.contentEl, err.name + " Stack", true, true)
+        let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
 
         if (err?._sk_template) {
-          let tempField = makeField(this.contentEl, "Template Source", true)
+          let tempField = makeField("error", this.contentEl, "Template Source", true)
           makeLinesTable(tempField.content, err._sk_template)
         }
       }
     } else {
       /* Non-skribi error, type unknown (may not be instanceof Error) */
 
-      let errField = makeField(this.contentEl, (err?.name ?? "Error") + ": " + (err?.msg ?? err?.message ?? "Unknown Error"), )
+      let errField = makeField("error", this.contentEl, (err?.name ?? "Error") + ": " + (err?.msg ?? err?.message ?? "Unknown Error"), )
       makeLinesTable(errField.content, err?.stack ?? err ?? "")
 
       if (err?._sk_function) {
-        let compField = makeField(this.contentEl, "Compiled Function")
+        let compField = makeField("error", this.contentEl, "Compiled Function")
         compField.content.setText(err._sk_function)
       }
 
       if (err?._sk_invocation) {
-        let srcField = makeField(this.contentEl, "Invocation String")
+        let srcField = makeField("error", this.contentEl, "Invocation String")
         makeLines(srcField.content, err?._sk_invocation ?? "")
       }
 
       if (!err?.stack) {
         let inspect = util.inspect(err, true, 7)
-        let subErrField = makeField(this.contentEl, (err.evalError?.name ?? "Unknown") + " Inspection", true, true)
+        let subErrField = makeField("error", this.contentEl, (err.evalError?.name ?? "Unknown") + " Inspection", true, true)
         makeLinesTable(subErrField.content, inspect)
       }
     }
@@ -235,119 +231,3 @@ export function makeErrorModalLink(el: HTMLElement, err: any): HTMLElement {
 	return el
 }
 
-function makeLines(fieldEl: HTMLElement, linesIn: string | string[], 
-  cb?: (ind: number, els: {lineEl: HTMLElement, numEl: HTMLElement, conEl: HTMLElement}) => any) 
-{
-  let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
-
-  for (let i = 0; i < lines.length; i++) {
-    let lineEl = createDiv({cls: "skribi-modal-error-field-line"})
-    let numEl = lineEl.createDiv({text: (i+1).toString(), cls: "skribi-line-number"})
-    let conEl = lineEl.createDiv({text: lines[i], cls: "skribi-line-content"})
-    
-    fieldEl.append(lineEl)
-    if (cb) {cb(i, {lineEl: lineEl, numEl: numEl, conEl: conEl})} 
-  }
-}
-
-interface linesTableCB {
-  table: HTMLTableElement, row: HTMLTableRowElement, 
-  num: HTMLTableCellElement, con: HTMLTableCellElement
-}
-function makeLinesTable(fieldEl: HTMLElement, linesIn: string | string[],
-  cb?: (ind: number, els: linesTableCB) => any)
-{
-  let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
-  let tab = createEl('table', {cls: "skr-lines-table"}) 
-  let colGroup = tab.createEl('colgroup')
-  colGroup.append(createEl('col', {cls: 'skr-table-colnum'}), createEl('col', {cls: 'skr-table-colcon'}))
-
-  for (let i = 0; i < lines.length; i++) {
-    let row = tab.insertRow()
-    let numCell = row.insertCell()
-    let conCell = row.insertCell()
-
-    numCell.addClass("skr-numcell")
-    numCell.setText((i+1).toString())
-    conCell.addClass("skr-concell")
-    conCell.setText(lines[i])
-    
-    if (cb) {cb(i, {table: tab, row: row, num: numCell, con: conCell})} 
-  }
-  fieldEl.append(tab)
-}
-
-function makeField(containerEl: HTMLElement, name: string, wrap?: boolean, startCollapsed?: boolean) {
-  let fieldContainer = createDiv({"cls": "skribi-modal-error-field-container"})
-  let fieldTitle = (!wrap) ? fieldContainer.createDiv({text: name, cls: "skribi-modal-error-field-title"}) : null
-  let fieldContent = fieldContainer.createDiv({cls: "skribi-modal-error-field-content"})
-
-  containerEl.append(fieldContainer)
-
-  var col
-  if (wrap) {
-    col = wrapCollapse(fieldContainer, startCollapsed)
-    col.collapseTitleTextEl.setText(name)
-  }
-
-  return {
-    container: fieldContainer,
-    title: fieldTitle ?? col.collapseTitleTextEl,
-    content: fieldContent,
-    col: col ?? null
-  }
-}
-
-function wrapCollapse(el: HTMLElement, startCollapsed?: boolean) {
-  let oel = el
-  let col = new Collapsible(el, startCollapsed)
-  el.replaceWith(col.collapseEl)
-  setIcon(col.collapseIndicator, "right-triangle")
-  col.collapseContentEl.append(oel)
-  return col
-}
-
-const CLS = {
-	COLLAPSIBLE: "skr-collapsible",
-	COLLAPSIBLE_TITLEBAR: "skr-collapsible-titlebar",
-	COLLAPSIBLE_CONTENT: "skr-collapsible-content",
-	COLLAPSIBLE_TITLETEXT: "skr-collapsible-titletext",
-	COLLAPSIBLE_INDICATOR: "skr-collapse-indicator",
-	COLLAPSIBLE_IS_COLLAPSED: "is-collapsed"
-}
-
-class Collapsible {
-  collapseEl: HTMLDivElement;
-  collapseTitleEl: HTMLElement;
-  collapseContentEl: HTMLElement;
-  collapseTitleTextEl: HTMLElement;
-  collapseIndicator: HTMLSpanElement;
-  
-  constructor(el: HTMLElement, startCollapsed?: boolean) {
-    this.collapseEl = createDiv({cls: CLS.COLLAPSIBLE})
-    this.collapseTitleEl = this.collapseEl.createDiv({cls: CLS.COLLAPSIBLE_TITLEBAR})
-    this.collapseContentEl = this.collapseEl.appendChild(createDiv({cls: CLS.COLLAPSIBLE_CONTENT}))		
-  
-    this.collapseTitleTextEl = this.collapseTitleEl.createSpan({cls: CLS.COLLAPSIBLE_TITLETEXT})
-    this.collapseIndicator = createSpan({cls: CLS.COLLAPSIBLE_INDICATOR})
-    this.collapseTitleEl.prepend(this.collapseIndicator)
-
-    if (startCollapsed) {
-      this.collapseEl.addClass(CLS.COLLAPSIBLE_IS_COLLAPSED);
-      this.collapseContentEl.setAttribute("style", `max-height: 0px;`)
-    }
-
-    this.collapseTitleEl.addEventListener("click", (event: any) => {
-    let b = this.collapseEl.hasClass(CLS.COLLAPSIBLE_IS_COLLAPSED)
-    let h = b ? (el.clientHeight + (el.clientHeight * 0.2)) : 0
-    this.collapseContentEl.setAttribute("style", `max-height: ${h}px;`);
-    this.collapseEl.toggleClass(CLS.COLLAPSIBLE_IS_COLLAPSED, !b)
-  })
-  
-    /* Calculate max height before first collapse */
-    this.collapseTitleEl.addEventListener("mouseover", () => {
-      if ((!this.collapseContentEl.hasAttribute("style")) )
-        this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
-    });
-  }
-}

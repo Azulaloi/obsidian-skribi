@@ -12,7 +12,14 @@ import compileToString from "./mod";
 export interface TemplateCache {
   source?: string,
   function: TemplateFunctionScoped,
-  frontmatter?: Stringdex
+  frontmatter?: Stringdex,
+  extension?: string // optional to support future methods of atypical (non-file) caching
+}
+
+export interface TemplateErrorCache {
+  source: string,
+  error: any,
+  extension?: string 
 }
 
 /* Responsible for the caching and management of templates. */
@@ -22,7 +29,8 @@ export class TemplateLoader implements FileMinder {
   private plugin: SkribosPlugin
 
   templateCache: Cacher<TemplateCache> = new Cacher<TemplateCache>({})
-  templateFailures: Map<string, string> = new Map();
+  // templateFailures: Map<string, string> = new Map();
+  templateFailures: Cacher<TemplateErrorCache> = new Cacher<TemplateErrorCache>({})
   styleCache: Cacher<string> = new Cacher<string>({})
 
   constructor(handler: EtaHandler) {
@@ -94,18 +102,21 @@ export class TemplateLoader implements FileMinder {
         // console.log(`compiled ${file.name} as template`)
       } catch(err) {
         // console.log(`${file.name} err`)
-        this.templateFailures.set(file.basename, err ?? `Template failed to compile: Unknown Error`)
+        // this.templateFailures.set(file.basename, err ?? `Template failed to compile: Unknown Error`)
+        this.templateFailures.define(file.basename, {error: err, source: read, extension: file.extension})
         console.warn(`Skribi: template '${file.basename}' failed to compile`, EBAR, err, EBAR, read)
         this.templateCache.remove(file.basename)
         failureCount++
         return Promise.reject()
       }
   
-      this.templateFailures.delete(file.basename)
+      // this.templateFailures.delete(file.basename)
+      this.templateFailures.remove(file.basename)
       this.templateCache.define(file.basename, {
-        'source': read,
-        'function': compiled,
-        'frontmatter': fileFrontmatter ? withoutKey(fileFrontmatter, 'position') : null
+        source: read,
+        function: compiled,
+        frontmatter: fileFrontmatter ? withoutKey(fileFrontmatter, 'position') : null,
+        extension: file.extension
       })
       successCount++
 
@@ -138,6 +149,10 @@ export class TemplateLoader implements FileMinder {
           child.stylesUpdated(styleFiles[0].basename)
         })
         vLog(`Update style '${styleFiles[0].basename}'`)
+      }
+
+      if ((styleFiles.length > 0) || (templateFiles.length > 0)) {
+        this.plugin.app.workspace.trigger('skribi:template-index-modified')
       }
     }
 

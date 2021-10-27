@@ -223,6 +223,17 @@ body.skribi-anims code.skribi-regent.skr-depth {
  text-align: center;
 }
 
+span.skribi-modal-version-number {
+  font-style: italic;
+  color: var(--text-faint);
+  user-select: text;
+  font-size: small;
+}
+
+/*---------------
+/  Performance Test Modal
+/----------------*/
+
 .skribi-test-modal {
   .skribi-autofill-notification {
     font-style: italic;
@@ -238,6 +249,10 @@ body.skribi-anims code.skribi-regent.skr-depth {
     }
   }
 }
+
+/*---------------
+/  Confirmation Modal
+/----------------*/
 
 .skribi-confirmation-modal {
   .skribi-confirmation-modal-description {
@@ -276,7 +291,9 @@ body.skribi-anims code.skribi-regent.skr-depth {
   }
 }
 
-// Error
+/*---------------
+/  Error Modal
+/----------------*/
 
 div.skribi-modal-error div.modal-title {
   cursor: text;
@@ -376,13 +393,162 @@ div.skribi-modal-error-field-pointer {
 
 }
 
-span.skribi-modal-version-number {
-  font-style: italic;
+
+
+/*---------------
+/  Index
+/----------------*/
+
+
+@mixin entry-tag($tag) {
+  &::before {
+    content: $tag;
+    // background-color: var(--background-secondary-alt);
+    border-radius: 3px;
+    font-size: 9px;
+    // font-weight: 600;
+    // letter-spacing: 0.05em;
+    line-height: 14px;
+    margin-left: 4px;
+    padding: 0 4px;
+    text-transform: uppercase;
+    align-self: center;
+
+    text-align: center;
+    font-family: var(--font-monospace);
+    letter-spacing: 1px;
+    background-color: hsl(var(--accent-hsl), 0.05);
+    border: 1px solid hsl(var(--accent-hsl), 0.25);
+    color: var(--background-modifier-accent);
+    font-weight: 600;
+
+    display: inline-block;
+    width: 2.5em;
+    border-right: 1px solid white
+  }
+}
+
+div.skribi-modal-index {
+  .skribi-index-list {
+
+  }
+
+  .skribi-index-entry {
+    cursor: default;
+
+    .skribi-index-entry-extension {
+      // background-color: var(--background-secondary-alt);
+      border-radius: 3px;
+      font-size: 9px;
+      // font-weight: 600;
+      // letter-spacing: 0.05em;
+      line-height: 14px;
+      margin-left: 4px;
+      padding: 0 4px;
+      text-transform: uppercase;
+      vertical-align: middle;
+      user-select: none;
+
+      align-self: center;
+
+      text-align: center;
+      font-family: var(--font-monospace);
+      letter-spacing: 1px;
+      // background-color: hsl(var(--accent-hsl), 0.05);
+      // border: 1px solid hsl(var(--accent-hsl), 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--background-modifier-accent);
+      font-weight: 600;
+  
+      display: inline-block;
+      width: 3.5em;
+      // border-right: 1px solid white
+    }
+
+    .skribi-index-entry-label {
+      display: inline-block;
+      margin-left: 1em;
+      cursor: pointer;
+      user-select: text;
+      color: var(--text-muted);
+      transition: color 0.1s ease-in-out;
+
+      &:hover {
+        color: var(--text-normal)
+      }
+
+      &.skribi-index-entry-label-nolink {
+        transition: none;
+        cursor: text;
+
+        &:hover{
+          color: var(--text-muted);
+        }
+      }
+    }
+
+    &.skribi-index-entry-eta {
+      // @include entry-tag('eta')
+    }
+
+    &.skribi-index-entry-md {
+      // @include entry-tag('md')
+    }
+
+    &.skribi-index-entry-css {
+      // @include entry-tag('css')
+    }
+
+    &.skribi-index-entry-failure {
+      padding-bottom: 0.2em;
+      padding-top: 0.2em;
+      display: flex;
+      
+      border-bottom: 1px solid gray;
+      &:last-of-type { border-bottom: none; }
+  
+  
+  
+      .skribi-index-entry-label {
+        // float: left;
+        flex: 1;
+      }
+  
+      code.skribi-regent {
+        // display: inline-block;
+        // float: right;
+        margin-right: 1em;
+      }
+    }
+  }
+
+
+}
+
+div.skribi-modal-index-field-container {
+  // margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+div.skribi-modal-index-field-content {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 6px 6px;
+  font-family: 'Consolas';
   color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: normal;
+  font-size: 90%;
+  text-indent: 0;
+  width: 100%;
+  cursor: text;
   user-select: text;
 }
 
-// Table Lines
+/*---------------
+/  Table
+/----------------*/
+
 table.skr-lines-table {
   border-spacing: 0px;
 
@@ -455,8 +621,11 @@ table.skr-lines-table {
   }
 }
 
-// Collapsible
-div.skribi-modal-error {
+/*---------------
+/  Collapsibles
+/----------------*/
+
+div.skribi-modal-error, div.skribi-modal-index {
   .skr-collapsible {
     margin-top: 1em;
     width: fit-content; 

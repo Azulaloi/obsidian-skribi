@@ -142,7 +142,9 @@ export default class SkribiProcessor {
 
   /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
-		let el = renderRegent(args.el, {class: REGENT_CLS.wait, hover: l["regent.wait.hover"], clear: true})
+		let el = this.plugin.initLoaded 
+			? renderRegent(args.el, {class: REGENT_CLS.eval, hover: l['regent.loading.hover'], clear: true})
+			: renderRegent(args.el, {class: REGENT_CLS.wait, hover: l["regent.wait.hover"], clear: true})
 
 		return (this.plugin.initLoaded) 
 			? await this.processSkribiTemplate(el, args.src, args.mdCtx, args.skCtx)
@@ -180,7 +182,7 @@ export default class SkribiProcessor {
 
 		let template = this.eta.getPartial(parsed.id)?.function
 		if (!isExtant(template)) {
-			if (this.eta.failedTemplates.has(parsed.id)) {el = await renderError(el, {msg: `Template ${parsed.id} exists but failed to compile, with error:` + EBAR + this.eta.failedTemplates.get(parsed.id)}) }
+			if (this.eta.failedTemplates.has(parsed.id)) {el = await renderError(el, {msg: `Template ${parsed.id} exists but failed to compile, with error:` + EBAR + this.eta.failedTemplates.get(parsed.id).error}) }
 			else {el = await renderError(el, {msg: `SkribiError: Cannot read undefined template '${parsed.id}' (no such template exists)`})}
 			/* We intentionally attempt to render the template even though we know it doesn't exist,
 			because it will be caught and converted into a ghost listener. */
@@ -268,7 +270,7 @@ export default class SkribiProcessor {
 				Object.assign(nerr, {
 					subErr: err, 
 					_sk_templateFailure: failed 
-						? { id: id, error: this.eta.failedTemplates.get(id) } 
+						? { id: id, error: this.eta.failedTemplates.get(id).error } 
 						: undefined
 				})
 				err = nerr

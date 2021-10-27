@@ -36,6 +36,7 @@ declare module 'obsidian' {
 		on(name: 'az-weather:api-tick', callback: () => any, ctx?: any): EventRef;
 
     on(name: 'skribi:template-init-complete', callback: () => any, ctx?: string): EventRef;
+    on(name: 'skribi:template-index-modified', callback: () => any): EventRef;
     on(name: 'skribi:plugin-load', callback: (id: string) => any): EventRef;
     on(name: 'skribi:plugin-unload', callback: (id: string) => any): EventRef;
 	}
