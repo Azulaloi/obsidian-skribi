@@ -2,7 +2,7 @@ import * as Eta from "eta";
 import { PartialConfig } from "eta/dist/types/config"
 import { CallbackFn } from "eta/dist/types/file-handlers"
 import { TemplateFunctionScoped, scopedVars } from "src/types/types"
-import { dLog, getAsyncConstructor, promiseImpl } from "src/util"
+import { dLog, getAsyncConstructor, promiseImpl } from "src/util/util"
 import { EtaHandler } from "./eta"
 import { parse } from "acorn"
 import { SkribiSyntaxError } from "./error";

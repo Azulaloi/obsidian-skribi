@@ -1,8 +1,10 @@
 import { Modal, App } from "obsidian";
-import { SkribiError, SkribiSyntaxError, SkribiEvalError } from "src/eta/error";
-import { createRegent, REGENT_CLS } from "src/render/regent";
-import { isExtant } from "src/util";
+import { SkribiError, SkribiSyntaxError, SkribiEvalError, SkribiEtaSyntaxError } from "src/eta/error";
+import { createRegent } from "src/render/regent";
+import { isExtant } from "src/util/util";
 import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/interface";
+import { REGENT_CLS } from "src/types/const";
+import { IndexModal } from "./indexModal";
 
 export class ErrorModal extends Modal {
   error: any = null
@@ -20,7 +22,7 @@ export class ErrorModal extends Modal {
     this.containerEl.addClass("skribi-modal-error")
 
     if (err instanceof SkribiError) {
-      this.titleEl.innerText = "SkribiError: " + err.message
+      this.titleEl.innerText = (err?.name ?? "SkribiError") + ": " + err.message
 
       if (err instanceof SkribiSyntaxError) {
         let parseErrMsg = this.contentEl.createDiv({cls: 'skribi-modal-error-parseErrMsg'})
@@ -159,10 +161,48 @@ export class ErrorModal extends Modal {
 
         let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
+      } else if (err instanceof SkribiEtaSyntaxError) {
+        console.log(err.packet)
+        let invField = makeField("error", this.contentEl, "Details", true)
+        if (err.packet?.loc) {
+          makeLinesTable(invField.content, err.packet.loc.src, (ind: number, els: linesTableCB) => {
+            if (ind == err.packet.loc.line-1) {
+              let text = els.con.textContent
+              let pre = text.substring(0, err.packet.loc.col-1)
+              let char = text.substring(err.packet.loc.col-1, err.packet.loc.col)
+              let post = text.substring(err.packet.loc.col)
+  
+              // let pre = text.substring(0, err.packet.loc.column)
+              // let char = text.substring(err.packet.loc.column, )
+              // let post = text.substring(err.packet.loc.column + len)
+  
+              // console.log(err.packet)
+              els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
+              // console.log([pre, char, post])
+  
+              els.row.addClass('skribi-line-errored')
+              let pstr = "^".padStart(err.packet.loc.column)
+              let row = els.table.insertRow()
+              row.addClass("skribi-line-pointer")
+              let numCell = row.insertCell()
+              numCell.setText("@")
+              numCell.addClass("skr-numcell", "skr-pointer")
+              let conCell = row.insertCell()
+              conCell.setText(pstr)
+              conCell.addClass("skr-concell", "skr-pointer")
+            }
+          })
+        } else {
+          makeLinesTable(invField.content, err.packet.stack)
+        }
+
+
+
       } else {
         /* Generic SkribiError */
 
         if (err?._sk_templateFailure) {
+          /* The source template failed to compile */
           let terr = err._sk_templateFailure
 
           let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
@@ -179,6 +219,15 @@ export class ErrorModal extends Modal {
           })
           makeErrorModalLink(r[0], terr.error)
           s.append(r[0])
+        } else if (err?._sk_nullTemplate) {
+          /* An undefined template was requested*/
+          let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
+          let span = subErrorMessage.createSpan({text: `View Template Index`, cls: 'skr-button'})
+          span.addEventListener('click', (ev) => {
+            ev.preventDefault()
+            let p = new IndexModal(this.app.plugins.plugins["obsidian-skribi"])
+            p.open()
+          })
         }
 
         let invField = makeField("error", this.contentEl, "Invocation String", true)

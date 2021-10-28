@@ -32,7 +32,7 @@ export default {
     scss({
       output: 'styles.css', 
       sass: require('sass'), 
-      watch: './src/style.scss'
+      watch: ['./src/style/main.scss', './src/style/regent.scss', './src/style/modal.scss'] // idk why * no work
     })
   ]
 };

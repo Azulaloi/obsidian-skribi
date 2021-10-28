@@ -1,5 +1,6 @@
 import { EventRef, MarkdownRenderer } from "obsidian";
 import { Provider } from "src/eta/provider_abs";
+import { createRegent } from "src/render/regent";
 import { CLS } from "src/types/const";
 import { Stringdex } from "src/types/types";
 import { SkribiError } from "../error";
@@ -60,7 +61,8 @@ export class ProviderSK extends Provider {
           return this.child.addStyle(await this.getStyle(styleSnip))
         })
       },
-      util: require('util')
+      util: require('util'),
+      createRegent: createRegent
     }
   }
 }

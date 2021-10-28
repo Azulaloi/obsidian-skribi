@@ -1,6 +1,6 @@
 import { Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, TFile } from "obsidian";
 import SkribosPlugin from "./main";
-import { isExtant } from "./util";
+import { isExtant } from "./util/util";
 
 export default class TemplateSuggest extends EditorSuggest<string> {
   plugin: SkribosPlugin

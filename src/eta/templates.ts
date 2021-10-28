@@ -2,7 +2,7 @@ import * as Eta from "eta";
 import { parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util";
+import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
 import { FileMinder, Stringdex, TemplateFunctionScoped } from "src/types/types";

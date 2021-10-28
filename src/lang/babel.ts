@@ -1,5 +1,5 @@
 import { Stringdex } from 'src/types/types'
-import { isExtant, vLog, vWarn } from 'src/util'
+import { isExtant, vLog, vWarn } from 'src/util/util'
 import en from './locale/en.json'
 import en_gb from './locale/en_gb.json'
 

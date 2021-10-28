@@ -28,3 +28,18 @@ export const CLS = {
 	virtual: "skribi-render-virtual",
 	anim: "skribi-anims",
 }
+
+export const REGENT_CLS = {
+	regent: "skribi-regent", // Regent base
+	error: "skr-error", // Something threw somewhere
+	abort: "skr-abort", // Aborted by sk.abort()
+	depth: "skr-depth", // Embedder depth limit
+	stasis: "skr-stasis", // Processor depth limit
+	wait: "skr-waiting", // Awaiting template load
+	eval: "skr-evaluating", // Awaiting function evaluation
+	self: "skr-self", // Within self definition
+	state: "skr-state", // Fallback for renderState
+	generic: "skr-generic", // Fallback for createRegent
+	syntax_eta: "skr-syntax-eta", // For eta syntax errors
+	syntax_js: "skr-syntax-js" // For JS syntax errors
+}

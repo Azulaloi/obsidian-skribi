@@ -1,0 +1,495 @@
+/*--------------------------------------------------------------------------------------------
+/  Modals
+/-------------------------------------------------------------------------------------------*/
+
+.skribi-modal-field-append {
+  font-style: italic;
+}
+
+.skribi-modal-desc {
+ width: 100%;
+ text-align: center;
+}
+
+span.skribi-modal-version-number {
+  font-style: italic;
+  color: var(--text-faint);
+  user-select: text;
+  font-size: small;
+}
+
+/*---------------
+/  Performance Test Modal
+/----------------*/
+
+.skribi-test-modal {
+  .skribi-autofill-notification {
+    font-style: italic;
+  }
+
+  .skribi-button-eval {
+    .setting-item-control {
+      width: 100%;
+      button {
+        margin: auto;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+/*---------------
+/  Confirmation Modal
+/----------------*/
+
+.skribi-confirmation-modal {
+  .skribi-confirmation-modal-description {
+    width: 100%;
+    text-align: center;
+  }
+
+  .skribi-confirmation-modal-link {
+    width: 100%;
+    text-align: center;
+    font-style: italic;
+    text-decoration: underline;
+    color: var(--text-muted);
+    font-size: 0.9em;
+  }
+
+  .skribi-confirm-modal-buttons {
+    margin-top: 1em;
+    display: flex;
+    width: 100%;
+
+    align-items: center;
+    justify-content: space-evenly;
+
+    button {
+      font-weight: bold;
+      flex: 0.5;
+
+      max-width: 40%;
+
+      background-color: var(--interactive-normal);
+      &:hover {
+        background-color: var(--interactive-hover);
+      }
+    }
+  }
+}
+
+/*---------------
+/  Error Modal
+/----------------*/
+
+div.skribi-modal-error div.modal-title {
+  cursor: text;
+  user-select: text;
+}
+
+div.skribi-modal-error-message {
+  font-size: 1.4em;
+  margin: auto;
+  text-align: center;
+  cursor: text;
+  user-select: text;
+  
+  span.sk-label {
+
+  }
+
+  span.sk-msg {
+
+  }
+
+  margin-bottom: 1em;
+
+  span.skr-button {
+
+    padding: 0.4em;
+
+    background-color: var(--background-primary-alt);
+    border: 2px solid black;
+    border-radius: 0.2em;
+    filter: drop-shadow(0 0 2px black);
+  
+    user-select: none;
+  
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.05s ease;;
+    display: inline-block;
+
+    &:active {
+      transform: scale(0.96);
+    }
+
+    &:hover {
+      background-color: var(--interactive-hover);
+    }
+  }
+}
+
+div.skribi-modal-error-field-container {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+div.skribi-modal-error-field-content {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 6px 6px;
+  font-family: 'Consolas';
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: normal;
+  font-size: 90%;
+  text-indent: 0;
+  width: 100%;
+  cursor: text;
+  user-select: text;
+
+}
+
+div.skribi-modal-error-field-line {
+  // height: 1.5em;
+
+  div.skribi-line-number {
+    padding: 0 3px 0 5px;
+    text-align: right;
+    color: #999;
+    white-space: nowrap;
+    // position: absolute;
+    cursor: default;
+    // left: 0px;
+    width: 22px;
+    // overflow: hidden;
+    user-select: none;
+    display: inline-block;
+    background-color: #444;
+  }
+
+  div.skribi-line-content {
+    display: inline-block;
+
+    margin-left: 0.5em;
+  }
+
+  &.skribi-line-errored {
+    div.skribi-line-number {
+      background-color: rgba(250, 50, 50, 255);
+      color: #222;
+      font-weight: bolder;
+    }
+  }
+
+  &.skribi-line-extraneous {
+    color: rgba(50, 50, 50, 150);
+  }
+
+  &:first-of-type {
+    div.skribi-line-number {
+      border-top-left-radius: 3px;
+      border-top-right-radius: 3px;
+    } 
+  }
+
+  &:last-of-type {
+    div.skribi-line-number {
+      border-bottom-left-radius: 3px;
+      border-bottom-right-radius: 3px;
+    }
+  }
+}
+
+div.skribi-modal-error-field-pointer {
+
+}
+
+
+/*---------------
+/  Index Modal
+/----------------*/
+
+
+@mixin entry-tag($tag) {
+  &::before {
+    content: $tag;
+    // background-color: var(--background-secondary-alt);
+    border-radius: 3px;
+    font-size: 9px;
+    // font-weight: 600;
+    // letter-spacing: 0.05em;
+    line-height: 14px;
+    margin-left: 4px;
+    padding: 0 4px;
+    text-transform: uppercase;
+    align-self: center;
+
+    text-align: center;
+    font-family: var(--font-monospace);
+    letter-spacing: 1px;
+    background-color: hsl(var(--accent-hsl), 0.05);
+    border: 1px solid hsl(var(--accent-hsl), 0.25);
+    color: var(--background-modifier-accent);
+    font-weight: 600;
+
+    display: inline-block;
+    width: 2.5em;
+    border-right: 1px solid white
+  }
+}
+
+div.skribi-modal-index {
+  .skribi-index-list {
+
+  }
+
+  .skribi-index-entry {
+    cursor: default;
+
+    .skribi-index-entry-extension {
+      border-radius: 3px;
+      font-size: 9px;
+      line-height: 14px;
+      margin-left: 4px;
+      padding: 0 4px;
+      text-transform: uppercase;
+      vertical-align: middle;
+      user-select: none;
+      align-self: center;
+      text-align: center;
+      font-family: var(--font-monospace);
+      letter-spacing: 1px;
+      // background-color: hsl(var(--accent-hsl), 0.05);
+      // border: 1px solid hsl(var(--accent-hsl), 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--background-modifier-accent);
+      font-weight: 600;
+      display: inline-block;
+      width: 3.5em;
+    }
+
+    .skribi-index-entry-label {
+      display: inline-block;
+      margin-left: 1em;
+      cursor: pointer;
+      user-select: text;
+      color: var(--text-muted);
+      transition: color 0.1s ease-in-out;
+
+      &:hover {
+        color: var(--text-normal)
+      }
+
+      &.skribi-index-entry-label-nolink {
+        transition: none;
+        cursor: text;
+
+        &:hover{
+          color: var(--text-muted);
+        }
+      }
+    }
+
+    &.skribi-index-entry-eta {
+      // @include entry-tag('eta')
+    }
+
+    &.skribi-index-entry-md {
+      // @include entry-tag('md')
+    }
+
+    &.skribi-index-entry-css {
+      // @include entry-tag('css')
+    }
+
+    &.skribi-index-entry-failure {
+      padding-bottom: 0.2em;
+      padding-top: 0.2em;
+      display: flex;
+      
+      border-bottom: 1px solid gray;
+      &:last-of-type { border-bottom: none; }
+  
+      .skribi-index-entry-label {
+        flex: 1;
+      }
+  
+      code.skribi-regent {
+        margin-right: 1em;
+      }
+    }
+  }
+
+
+}
+
+div.skribi-modal-index-field-container {
+  // margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+div.skribi-modal-index-field-content {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 6px 6px;
+  font-family: 'Consolas';
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: normal;
+  font-size: 90%;
+  text-indent: 0;
+  width: 100%;
+  cursor: text;
+  user-select: text;
+}
+
+/*---------------
+/  Table
+/----------------*/
+
+table.skr-lines-table {
+  border-spacing: 0px;
+
+  td.skr-numcell {
+    height: 100%;
+    width: 22px;
+    padding: 0 3px 0 5px;
+    vertical-align: top;
+    text-align: right;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+
+    color: #999;
+    background-color: #444;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+  }
+
+  td.skr-concell {
+    padding-left: 1em;
+    // white-space: nowrap;
+
+    span.skr-err-ch {
+      // text-decoration: red wavy underline 3px; // not sure why this doesn't work
+      border-bottom: 2px dotted red;
+    }
+  }
+
+  col.skr-table-colnum {
+    width: 25px;
+    // background-color: #444;
+  }
+
+  col.skr-table-colcon {
+  }
+
+  tr {
+    &.skribi-line-extraneous {
+      color: rgba(50, 50, 50, 150);
+    }
+
+    &.skribi-line-errored {
+      td.skr-numcell {
+        background-color: red;
+        color: black;
+      }
+    }
+
+    &.skribi-line-pointer {
+      background-color: #222;
+      td.skr-numcell {
+        background-color: #222;
+        border-top: 1px solid #222;
+        border-bottom: 1px solid #222;
+      }
+    }
+  }
+
+  tr:first-of-type {
+    td.skr-numcell {
+      border-top-left-radius: 0.4em;
+      border-top-right-radius: 0.4em;
+    }
+  }
+
+  tr:last-of-type {
+    td.skr-numcell {
+      border-bottom-right-radius: 0.4em;
+      border-bottom-left-radius: 0.4em;
+      &.skr-pointer {
+        border-bottom-right-radius: 0em;
+      }
+    }
+  }
+}
+
+/*---------------
+/  Collapsibles
+/----------------*/
+
+div.skribi-modal-error, div.skribi-modal-index {
+  .skr-collapsible {
+    margin-top: 1em;
+    width: fit-content; 
+    filter: drop-shadow(0 0 0.25rem black);
+    margin-bottom: 1em;
+    width: 100%;
+    .skribi-modal-error-field-container {
+      margin-top: 0em
+    }
+   }
+   .skr-collapsible-content {
+     min-height: 0px;
+     max-height: 100vh;
+    //  border: 2px solid gray;
+     overflow: hidden;
+     transition: max-height 0.2s ease, border-bottom-width 0.2s ease;
+   }
+   .is-collapsed .skr-collapsible-content {
+     border-bottom-width: 0px;
+     border-top-width: 0px;
+   }
+   
+  .skr-collapsible-titlebar {
+    width: 100%;
+    min-height: 2em;
+    border: 1px solid lightgray;
+    vertical-align: middle;
+    padding: 6px;
+    border-top-left-radius: 0.4em;
+    border-top-right-radius: 0.4em;
+    border-bottom-right-radius: 0em;
+    border-bottom-left-radius: 0em;
+    transition: border-bottom-right-radius 0.2s ease-in-out, border-bottom-left-radius 0.2s ease-in-out;
+
+    &.skr-collapsible-titletext {
+      display: inline-block;
+      margin: 0em 0em;
+      padding: 0px;
+    }
+   }
+   .is-collapsed .skr-collapsible-titlebar {
+    border-bottom-right-radius: 0.4em;
+    border-bottom-left-radius: 0.4em;
+   }
+
+   .skr-collapse-indicator {
+     display: inline-block;
+     height: 100%;
+     margin-right: 20px;
+     margin-left: 12px;
+     
+     svg {
+      height: 12px;
+      width: 12px;
+      transition: transform 0.2s ease-in-out;
+     }
+   }
+
+   .skr-collapsible.is-collapsed .skr-collapse-indicator {
+     transform: rotate(-90deg);
+   }
+}

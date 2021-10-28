@@ -1,6 +1,6 @@
 import SkribosPlugin from "src/main"
 import { EBAR } from "src/types/const"
-import { hash } from "src/util"
+import { hash } from "src/util/util"
 import type { SkribiChild } from "../child"
 import { prefixSelectors } from "./polyfill"
 

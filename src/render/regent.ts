@@ -1,19 +1,6 @@
 import { SkribiError, SkribiEvalError, SkribiSyntaxError } from "src/eta/error"
 import { makeErrorModalLink } from "src/modal/errorModal"
-import { CLS } from "src/types/const"
-
-export const REGENT_CLS = {
-	regent: "skribi-regent", // Regent base
-	error: "skr-error", // Something threw somewhere
-	abort: "skr-abort", // Aborted by sk.abort()
-	depth: "skr-depth", // Embedder depth limit
-	stasis: "skr-stasis", // Processor depth limit
-	wait: "skr-waiting", // Awaiting template load
-	eval: "skr-evaluating", // Awaiting function evaluation
-	self: "skr-self", // Within self definition
-	state: "skr-state", // Fallback for renderState
-	generic: "skr-generic", // Fallback for createRegent
-}
+import {  REGENT_CLS } from "src/types/const"
 
 export interface RegentData {
 	[index: string]: any,
@@ -21,6 +8,7 @@ export interface RegentData {
 	label?: string,
 	clear?: boolean,
 	hover?: string,
+	// icon?: string
 }
 
 /** Replaces 'el'. */
@@ -37,7 +25,7 @@ export async function renderError(el: HTMLElement, e: RegentData) {
 		if (e instanceof SkribiError) {
 			hover = `${e.name}: ${e.message}`
 			if (e instanceof SkribiEvalError) {
-				hover += `\n${e.evalError.name}: ${e.evalError.message}`
+				hover += `\n${e.evalError?.name}: ${e.evalError?.message}`
 			} else if (e instanceof SkribiSyntaxError) {
 				hover += `\n${e.parseError.name}: ${e.parseError.message}`
 			}
@@ -46,11 +34,12 @@ export async function renderError(el: HTMLElement, e: RegentData) {
 		}
 
 		let r = renderRegent(el, {
-			class: REGENT_CLS.error, 
+			class: e?.class ?? REGENT_CLS.error, 
 			label: 'sk', 
 			hover: hover,
 			clear: true
 		})
+
 		makeErrorModalLink(r, e)
 		return r
 	}
@@ -86,6 +75,7 @@ export function createRegent(dataIn?: RegentData): [HTMLElement, RegentData] {
 
 	const pre = createEl("code", {cls: `${REGENT_CLS.regent} ${data.class}`, text: data.label})
 	pre.setAttribute("title", data.hover)
+	// regentIcon(pre, data?.icon ?? data.class)
 
 	return [pre, data]
 }

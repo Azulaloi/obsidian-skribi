@@ -1,6 +1,6 @@
 import { Plugin } from "obsidian";
 import { Stringdex } from "src/types/types";
-import { isExtant } from "src/util";
+import { isExtant } from "src/util/util";
 import { ProviderBus } from "./provider_bus";
 
 export interface IProvider {

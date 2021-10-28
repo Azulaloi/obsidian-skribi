@@ -1,7 +1,8 @@
 import { EventRef, Modal, Setting } from "obsidian";
 import { TemplateCache, TemplateErrorCache } from "src/eta/templates";
 import SkribosPlugin from "src/main";
-import { createRegent, REGENT_CLS } from "src/render/regent";
+import { createRegent } from "src/render/regent";
+import { REGENT_CLS } from "src/types/const";
 import { makeField } from "src/util/interface";
 import { makeErrorModalLink } from "./errorModal";
 

@@ -1,6 +1,6 @@
 import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
-import { EBAR } from "./types/const";
-import { Stringdex } from "./types/types";
+import { EBAR } from "../types/const";
+import { Stringdex } from "../types/types";
 
 declare global {
 	interface Element {
@@ -200,3 +200,5 @@ export function hash(str: string) {
 	}
 	return hash >>> 0;
 }
+
+export type Values<T extends object> = T[keyof T];

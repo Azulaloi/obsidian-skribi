@@ -1,6 +1,6 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
 import { DynamicState, FileMinder, Stringdex } from "src/types/types";
-import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util";
+import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util/util";
 import { Provider } from "../provider_abs";
 
 // TODO: add system to auto-reload skribis when module cache changes 

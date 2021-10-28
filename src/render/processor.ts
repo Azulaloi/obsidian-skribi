@@ -1,15 +1,15 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
-import { SkribiError } from "src/eta/error";
+import { logError, SkribiError, SkribiSyntaxError } from "src/eta/error";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
-import { Modes, Flags, EBAR, CLS } from "src/types/const";
+import { Modes, Flags, EBAR, CLS, REGENT_CLS } from "src/types/const";
 import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, Stringdex, TemplateFunctionScoped } from "src/types/types";
-import { isExtant, dLog, vLog, roundTo } from "src/util";
+import { isExtant, dLog, vLog, roundTo } from "src/util/util";
 import { SkribiChild } from "./child";
 import { embedMedia } from "./embed";
 import { parseSkribi, preparseSkribi } from "./parse";
-import { renderRegent, renderError, renderState, REGENT_CLS } from "./regent";
+import { renderRegent, renderError, renderState } from "./regent";
 import { scopeStyle, stripStyleFromString } from "./style/style";
 
 export default class SkribiProcessor {
@@ -80,6 +80,7 @@ export default class SkribiProcessor {
 		if (!(d <= 0)) {
 			let tm = window.performance.now();
 			const elProms = Array.from(elCodes).map(async (el) => {
+				if (el.matches('.no-skribi')) return Promise.resolve();
 				let t = window.performance.now();
 				dLog("start:", t)
 				
@@ -244,10 +245,10 @@ export default class SkribiProcessor {
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
 		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
-			/* If a template skribi's template does not exist (intentionally not caught until this point) */
-			var util = require('util')
 
 			if (con === undefined && !this.eta.hasPartial(id)) {
+				/* Template skribi's template does not exist (intentionally not caught until this point) */
+
 				let failed = this.eta.failedTemplates.has(id)
 
 				let msg = `Cannot read template '${id}'`
@@ -271,22 +272,23 @@ export default class SkribiProcessor {
 					subErr: err, 
 					_sk_templateFailure: failed 
 						? { id: id, error: this.eta.failedTemplates.get(id).error } 
-						: undefined
+						: undefined,
+					_sk_nullTemplate: failed ? null : id
 				})
 				err = nerr
 			}
 
 			Object.assign(err, {
 				hasData: true, 
-				_sk_invocation: skCtx.source,
-				_sk_template: (skCtx.flag == 1 && this.eta.getPartial(id)?.source) ?? null
+				_sk_invocation: err?._sk_invocation ?? skCtx.source,
+				_sk_template: (skCtx.flag == 1 && this.eta.getPartial(id)?.source) ?? null,
+				class: (err instanceof SkribiError) ? err.regentClass : REGENT_CLS.error
 			})
 
-			// console.log(util.inspect(err, true, 7, true))
-
-
-			if (this.plugin.settings.errorLogging) {console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, con, EBAR, err)}
-			renderError(el, (err?.hasData) ? err : {msg: (err?.msg ?? err) || "Render Error"}).then(errEl => {
+			logError(err)
+			renderError(el, (err?.hasData) ? err : {msg: (err?.msg ?? err) || "Render Error"
+			
+			}).then(errEl => {
 				/* Alter the child so that it may yet live (and listen for source updates) */
 				Object.assign(child, {
 					containerEl: errEl,

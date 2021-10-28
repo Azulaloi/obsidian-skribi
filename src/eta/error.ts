@@ -1,5 +1,6 @@
 
 /* SkribiErrors are for handling errors that are expected to potentially result during normal use. */
+import { EBAR, REGENT_CLS } from "src/types/const";
 
 /* Generic SkribiError */
 export class SkribiError extends Error {
@@ -11,7 +12,9 @@ export class SkribiError extends Error {
     id: string;
     error: any;
   };
+  _sk_nullTemplate?: string // Flags that the error is from a non-extant template
 
+  regentClass: string = REGENT_CLS.error // Used for an error to specify a regent class
   name: string = "SkribiError"
   constructor(msg: string) {
     super(msg)
@@ -30,17 +33,50 @@ export class SkribiSyntaxError extends SkribiError {
     pos: number
   }
 
-  constructor(msg: string) {
-    super(msg);
+  regentClass = REGENT_CLS.syntax_js
+}
+
+/* For EtaErrs. Thrown during EtaHandler.getCached() */
+export class SkribiEtaSyntaxError extends SkribiError {
+  etaError: any
+  packet: {
+    firstLine: string,
+    stack: string | string[]
+    loc?: {line: number, col: number, src: string}
   }
+  name: string = "EtaSyntaxError"
+  regentClass = REGENT_CLS.syntax_eta
 }
 
 /* For handling any errors thrown during skribi evaluation. */
 export class SkribiEvalError extends SkribiError {
   _sk_function: Function // The unbound compiled function 
   evalError: Error // The caught causal error
+}
 
-  constructor(msg: string) {
-    super(msg)
+/* Logs an error to the console with appropriate error-specific formatting. */
+export function logError(err: any) {
+  if (window.app.plugins.plugins["obsidian-skribi"].settings.errorLogging) {
+    if (err instanceof SkribiError) {
+      if (err instanceof SkribiSyntaxError) {
+        console.warn(`SkribiError: syntax error! Displaying info...`, EBAR, err.parseError)
+
+      } else if (err instanceof SkribiEvalError) {
+        console.warn(`Skribi: eval error! Displaying content and error...`, EBAR, err.evalError)
+
+      } else {
+        console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, err)
+
+      }  
+    } else if (err?.name == "Eta Error") {
+      console.warn(`Skribi: eta syntax error! Displaying info...`, EBAR, err)
+
+    } else {
+      console.warn(`Skribi render threw error! Displaying content and error...`, EBAR, err)
+    }
   }
+}
+
+function insertPointer(stack: string, msg: string, ch: number) {
+  // let spaces = stack.slice(0, index.)
 }

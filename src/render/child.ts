@@ -1,7 +1,7 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
 import { Stringdex } from "src/types/types";
-import { dLog, isExtant, vLog } from "src/util";
+import { dLog, isExtant, vLog } from "src/util/util";
 import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
 

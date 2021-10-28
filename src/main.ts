@@ -1,4 +1,4 @@
-import './style.scss'
+import './style/main.scss'
 import { MarkdownView, Plugin } from 'obsidian';
 import { EtaHandler } from './eta/eta';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';

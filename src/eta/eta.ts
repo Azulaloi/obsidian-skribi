@@ -5,8 +5,9 @@ import { normalizePath, TFile } from "obsidian";
 import { EBAR, VAR_NAME } from "src/types/const";
 import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
-import { isExtant } from "../util";
+import { isExtant } from "../util/util";
 import { compileWith } from "./comp";
+import { SkribiEtaSyntaxError, SkribiSyntaxError } from "./error";
 import { renderEta } from "./eval";
 import compileToString from "./mod";
 import { ProviderBus } from "./provider_bus";
@@ -201,10 +202,36 @@ export class EtaHandler {
     if (options.name && this.templates.get(options.name)) {
       return (binder) ? this.templates.get(options.name).function.bind(binder) : this.templates.get(options.name)
     }
-  
-    const templateFunc = (typeof template === 'function') 
-      ? template 
-      : compileWith(compileToString(template, options), Object.keys(scope), options.async)
+
+    var templateFunc;
+    try {
+      templateFunc = (typeof template === 'function') 
+        ? template 
+        : compileWith(compileToString(template, options), Object.keys(scope), options.async)
+    } catch (err) {
+      if (err?.name == "Eta Error") { 
+        let firstLine = (err.message as string).split('\n', 1)
+        let stack = (err.message as string).substr(firstLine[0].length)
+
+        let match = /.* at line (?<line>\d) col (?<col>\d)/.exec(err.message)
+
+        throw Object.assign(new SkribiEtaSyntaxError(firstLine[0].substr(0, firstLine[0].length - 1)), {
+          etaError: err,
+          packet: {
+            firstLine: firstLine[0],
+            stack: stack.trimStart(),
+            loc: isExtant(match) && String.isString(template) ? {
+              line: match.groups.line,
+              col: match.groups.col,
+              src: template
+            } : null
+          }
+        })
+
+      } else {
+        throw err
+      } 
+    }
   
     if (options.name) this.templates.define(options.name, {source: (String.isString(template) ? template : null), function: templateFunc});
   

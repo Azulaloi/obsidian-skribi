@@ -1,6 +1,6 @@
 import { App, Modal } from "obsidian"
 import { l } from "src/lang/babel";
-import { kls } from "src/util";
+import { kls } from "src/util/util";
 
 interface confirmationModalValues {
   title: string

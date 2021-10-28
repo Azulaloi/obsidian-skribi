@@ -2,7 +2,7 @@ import { AbstractTextComponent, Editor, EditorRangeOrCaret,KeymapEventHandler, M
 import { l } from "src/lang/babel";
 import SkribosPlugin from "../main";
 import { fieldPrompt, promptTypes } from "../types/types";
-import { isExtant, toDupeRecord } from "../util";
+import { isExtant, toDupeRecord } from "../util/util";
 
 export class InsertionModal extends Modal {
   private plugin: SkribosPlugin;

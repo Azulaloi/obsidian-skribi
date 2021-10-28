@@ -1,4 +1,4 @@
-import { isExtant } from "src/util";
+import { isExtant } from "src/util/util";
 
 /* Check if code block is that good good and if so what type of good good */
 export async function preparseSkribi(el: HTMLElement, str?: string, flg?: any) {
