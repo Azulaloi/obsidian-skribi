@@ -33,10 +33,22 @@ export class IndexModal extends Modal {
 
   // TODO: Create a pseudochild listener
   onOpen() {
-    let confirm = new Setting(this.contentEl)
-    let cb = confirm.addButton((button) => button
+    let refresh = new Setting(this.contentEl)
+    let refreshButton = refresh.addButton((button) => button
       .setButtonText("Refresh Index")
       .onClick(() => this.regen()))
+
+    let recomp = new Setting(this.contentEl)
+    let recompButton = recomp.addButton((button) => button
+      .setButtonText("Recompile All")
+      .onClick(() => {
+        this.plugin.eta.recompileTemplates().then(() => {
+          Array.from(this.plugin.children).forEach((child) => {
+            child.rerender()
+          })
+          this.regen()
+        })
+      }))
       
     this.contentEl.append(this.fieldsDiv)
     this.generateFields(this.fieldsDiv)

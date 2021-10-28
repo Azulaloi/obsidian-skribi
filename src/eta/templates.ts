@@ -1,5 +1,5 @@
 import * as Eta from "eta";
-import { parseYaml, TAbstractFile, TFile } from "obsidian";
+import { Notice, parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
 import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util/util";
@@ -43,7 +43,7 @@ export class TemplateLoader implements FileMinder {
   }
 
   private async initLoad() {
-    await this.definePartials(...getFiles(this.plugin.app, this.directory)) 
+    await this.reload().catch((e) => Promise.reject(e))
     this.plugin.app.workspace.trigger('skribi:template-init-complete')
     return Promise.resolve()
   }
@@ -190,6 +190,8 @@ export class TemplateLoader implements FileMinder {
   }
 
   public async reload(): Promise<void> {
+    if (this.directory.length <= 0) {new Notice("Skribi: template directory not defined!"); return Promise.reject("No Template Directory")}
+
     this.templateCache.reset()
     return this.definePartials(...getFiles(this.plugin.app, this.directory))
   }

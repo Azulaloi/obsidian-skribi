@@ -94,7 +94,7 @@ export class EtaHandler {
   recompileTemplates() {
     // If the bus scope changes, the templates must be recompiled. 
     // The bus scope should not change post-init unless an external source modifies the provider list.
-    this.loader.reload()
+    return this.loader.reload()
   }
 
   getPartial(id: string) {

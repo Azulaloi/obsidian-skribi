@@ -12,9 +12,13 @@ import TemplateSuggest from './suggest';
 import { CLS } from './types/const';
 import { around } from 'monkey-around';
 import { IndexModal } from './modal/indexModal';
+import RenderModal from './modal/renderModal';
+import { PluginData } from './data/data';
 
 export default class SkribosPlugin extends Plugin {
+	data: PluginData;
 	settings: SkribosSettings;
+	
 	eta: EtaHandler;
 	processor: SkribiProcessor
 	suggest: TemplateSuggest
@@ -22,15 +26,15 @@ export default class SkribosPlugin extends Plugin {
 	varName: string = "sk";
 	initLoaded: boolean = false;
 
-	l = l
-
 	children: SkribiChild[] = []
-	childProto: any = SkribiChild // for dev memory querying 
+	private childProto: any = SkribiChild // for dev memory querying 
+	private l = l // for dev testing from console (import to us)
 
 	async onload() {
 		console.log('Skribi: Loading...');
 
-		await this.loadSettings();
+		// await this.loadSettings();
+		await this.initData();
 		this.addSettingTab(new SkribosSettingTab(this.app, this));
 		document.body.toggleClass(CLS.anim, this.settings.cssAnimations)
 
@@ -120,6 +124,18 @@ export default class SkribosPlugin extends Plugin {
 		this.addCommand({id: "view-templates", name: "View Templates", callback: () => {
 			new IndexModal(this).open()
 		}})
+
+		this.addCommand({id: "render-template", name: "Render Template", callback: () => {
+			if (!this.initLoaded) return;
+			let x = new SuggestionModal(this);
+			new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
+			.then(result => {
+				if (this.eta.hasPartial(result)) {
+					let i = new RenderModal(this, result)
+					i.open();
+				}
+			}, (r) => {});
+		}})
 	}
 	
 	onunload() {
@@ -133,11 +149,16 @@ export default class SkribosPlugin extends Plugin {
 		document.body.removeClass(CLS.anim)
 	}
 
+	async initData() {
+		this.data = Object.assign({}, await this.loadData());
+		this.settings = this.data.settings = Object.assign({}, DEFAULT_SETTINGS, this.data.settings)
+		return this.writeData();
+	}
+
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+	async writeData() {return this.saveData(this.data)}
+	async saveSettings() {return this.writeData();}
 }

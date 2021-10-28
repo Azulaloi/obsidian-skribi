@@ -23,7 +23,7 @@ export function getFiles(app: App, dir: string): TFile[] {
 	let dirPath = normalizePath(dir)
 	let fo = app.vault.getAbstractFileByPath(dirPath);
 
-	if (!fo || !(fo instanceof TFolder)) throw `Skribi: Could not find folder '${dirPath}'`;
+	if (!fo || !(fo instanceof TFolder)) throw new Error(`Could not locate directory "${dirPath}"`)
 
 	let files: TFile[] = [];
 	Vault.recurseChildren(fo, (fi) => {

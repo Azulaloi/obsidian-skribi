@@ -95,15 +95,13 @@ export default class SkribiProcessor {
 						let nel = renderRegent(el, {class: REGENT_CLS.eval, hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
 							tproms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
-							.catch(e => {
-								console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)
-							}));
+								.catch(e => {console.warn(`Skribi: Dispatch Errored (Template)`, EBAR, e)})
+							);
 							temps++;
 						} else {
 							proms.push(this.processSkribi(nel, src.text, ctx, skCtx)
-							.catch(e => {
-								console.warn(`Skribi: Dispatch Errored`, EBAR, e)
-							}))
+								.catch(e => {console.warn(`Skribi: Dispatch Errored`, EBAR, e)})
+							);
 						}
 					} 
 				} catch(e) {
@@ -178,7 +176,7 @@ export default class SkribiProcessor {
 		catch (e) { renderError(el, e); return Promise.reject('Parsing Error') }
 
 		/* Abort if being rendered in its own definition */
-		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath).basename == parsed.id) {
+		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)?.basename == parsed.id) {
 			renderRegent(el, {class: REGENT_CLS.self, hover: l['Render Aborted: within self definition']}); return Promise.reject('Within Self Definition'); }
 
 		let template = this.eta.getPartial(parsed.id)?.function

@@ -29,8 +29,10 @@ export class SkribosSettingTab extends PluginSettingTab {
 			.addTextArea((text: TextAreaComponent) => {text
 				.setValue(this.plugin.settings.templateFolder)
 				.onChange(async (value) => {
-					this.plugin.settings.templateFolder = value;
-					await this.plugin.saveSettings();
+					let previous = this.plugin.settings.templateFolder
+					this.saveSetting('templateFolder', value, () => {
+						if (previous !== value) this.plugin.eta.loader.directoryChanged();
+					})
 				}); text.inputEl.cols = 30; return text});
 
 		new Setting(containerEl)
@@ -39,7 +41,10 @@ export class SkribosSettingTab extends PluginSettingTab {
 			.addTextArea((text: TextAreaComponent) => {text
 				.setValue(this.plugin.settings.scriptFolder)
 				.onChange(async (value) => {
-					this.saveSetting('scriptFolder', value, () => this.plugin.eta.bus.scriptLoader.directoryChanged())
+					let previous = this.plugin.settings.scriptFolder
+					this.saveSetting('scriptFolder', value, () => {
+						if (previous !== value) this.plugin.eta.bus.scriptLoader.directoryChanged();
+					})
 				}); text.inputEl.cols = 30; return text});
 
 		this.makeToggle(containerEl, "autoReload", l["setting.autoReload.name"], l["setting.autoReload.desc"])
@@ -67,7 +72,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 		})
 	}
 
-	saveSetting = debounce(async (setting: string, value: string | number | boolean, cb?: Function, ...args: any[]) => {
+	saveSetting = debounce(async (setting: keyof SkribosSettings, value: string | number | boolean, cb?: Function, ...args: any[]) => {
 		// console.log("saving: " + setting + " = " + value)
 		this.plugin.settings[setting] = value;
 		this.plugin.saveSettings().then(() => {if (isExtant(cb) && isFunc(cb)) cb(...args || null)})
