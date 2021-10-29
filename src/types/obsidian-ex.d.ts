@@ -32,6 +32,11 @@ declare module 'obsidian' {
       open(): void
       openTabById(id: string): void
     }
+    commands: {
+      listCommands(): Command[]
+      removeCommand(id: string): void
+      findCommand(id: string): Command | null // Returns command with id 'id', if extant
+    }
   }
 
   interface Workspace {

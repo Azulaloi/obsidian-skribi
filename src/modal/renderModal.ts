@@ -1,6 +1,7 @@
 import { Component, MarkdownSectionInformation, Modal, Setting } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, Modes } from "src/types/const";
+import { Stringdex } from "src/types/types";
 import { toDupeRecord } from "src/util/util";
 
 export default class RenderModal extends Modal {
@@ -8,11 +9,13 @@ export default class RenderModal extends Modal {
   templateKey: string;
   renderEl: HTMLElement
   component: Component
+  values: Stringdex = {}
 
-  constructor(plugin: SkribosPlugin, templateKey: string) {
+  constructor(plugin: SkribosPlugin, templateKey: string, values?: Stringdex) {
     super(plugin.app)
     this.plugin = plugin
     this.templateKey = templateKey.toString()
+    this.values = values ?? {}
     this.renderEl = this.contentEl.createDiv({cls: ['skribi-modal-render-container', 'markdown-preview-view']})
     this.component = new Component()
   }
@@ -24,7 +27,13 @@ export default class RenderModal extends Modal {
 
   render() {
     this.renderEl.empty()
-    this.renderEl.createEl('code', {text: `{:${this.templateKey}}`})
+    let txt = `{:${this.templateKey}`
+    txt += Object.entries(this.values).reduce((prev: string, cur: string) => {
+      return prev + `| ${cur[0]}: ${cur[1]}`
+    }, "")
+    txt += '}'
+    console.log(txt)
+    this.renderEl.createEl('code', {text: txt})
 
     let container = createDiv()
     let el = createDiv()

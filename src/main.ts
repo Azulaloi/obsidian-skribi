@@ -13,7 +13,7 @@ import { CLS } from './types/const';
 import { around } from 'monkey-around';
 import { IndexModal } from './modal/indexModal';
 import RenderModal from './modal/renderModal';
-import { PluginData } from './data/data';
+import { PluginData, renderModalPreset } from './data/data';
 
 export default class SkribosPlugin extends Plugin {
 	data: PluginData;
@@ -136,6 +136,12 @@ export default class SkribosPlugin extends Plugin {
 				}
 			}, (r) => {});
 		}})
+
+		for (let preset of Object.entries(this.data.renderModalPresets) as [string, renderModalPreset][]) {
+			this.addCommand({id: `render-preset_${preset[0]}`, name: `Render Preset - ${preset[0]}`, callback: () => {
+				new RenderModal(this, preset[1].key, preset[1].arguments).open()
+			}})
+		}
 	}
 	
 	onunload() {
@@ -159,4 +165,10 @@ export default class SkribosPlugin extends Plugin {
 
 	async writeData() {return this.saveData(this.data)}
 	async saveSettings() {return this.writeData();}
+}
+
+function findPresetCommands(plugin: SkribosPlugin) {
+	let commands = plugin.app.commands.listCommands()
+	let presetCommands = commands.filter((co) => co.id.startsWith('obsidian-skribi:render-preset_'))
+	return presetCommands
 }

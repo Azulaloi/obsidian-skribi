@@ -1,7 +1,7 @@
 import { SkribosSettings } from "src/settings";
 import { Stringdex } from "src/types/types";
 
-type renderModalPreset = {
+export type renderModalPreset = {
   key: string
   arguments: Stringdex<string>
 }

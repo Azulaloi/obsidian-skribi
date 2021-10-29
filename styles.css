@@ -595,27 +595,27 @@ table.skr-lines-table tr:last-of-type td.skr-numcell.skr-pointer {
 /*---------------
 /  Collapsibles
 /----------------*/
-div.skribi-modal-error .skr-collapsible, div.skribi-modal-index .skr-collapsible {
+div.skribi-modal-error .skr-collapsible, div.skribi-modal-index .skr-collapsible, div.skribi-settings .skr-collapsible {
   margin-top: 1em;
   width: fit-content;
   filter: drop-shadow(0 0 0.25rem black);
   margin-bottom: 1em;
   width: 100%;
 }
-div.skribi-modal-error .skr-collapsible .skribi-modal-error-field-container, div.skribi-modal-index .skr-collapsible .skribi-modal-error-field-container {
+div.skribi-modal-error .skr-collapsible .skribi-modal-error-field-container, div.skribi-modal-index .skr-collapsible .skribi-modal-error-field-container, div.skribi-settings .skr-collapsible .skribi-modal-error-field-container {
   margin-top: 0em;
 }
-div.skribi-modal-error .skr-collapsible-content, div.skribi-modal-index .skr-collapsible-content {
+div.skribi-modal-error .skr-collapsible-content, div.skribi-modal-index .skr-collapsible-content, div.skribi-settings .skr-collapsible-content {
   min-height: 0px;
   max-height: 100vh;
   overflow: hidden;
   transition: max-height 0.2s ease, border-bottom-width 0.2s ease;
 }
-div.skribi-modal-error .is-collapsed .skr-collapsible-content, div.skribi-modal-index .is-collapsed .skr-collapsible-content {
+div.skribi-modal-error .is-collapsed .skr-collapsible-content, div.skribi-modal-index .is-collapsed .skr-collapsible-content, div.skribi-settings .is-collapsed .skr-collapsible-content {
   border-bottom-width: 0px;
   border-top-width: 0px;
 }
-div.skribi-modal-error .skr-collapsible-titlebar, div.skribi-modal-index .skr-collapsible-titlebar {
+div.skribi-modal-error .skr-collapsible-titlebar, div.skribi-modal-index .skr-collapsible-titlebar, div.skribi-settings .skr-collapsible-titlebar {
   width: 100%;
   min-height: 2em;
   border: 1px solid lightgray;
@@ -627,28 +627,84 @@ div.skribi-modal-error .skr-collapsible-titlebar, div.skribi-modal-index .skr-co
   border-bottom-left-radius: 0em;
   transition: border-bottom-right-radius 0.2s ease-in-out, border-bottom-left-radius 0.2s ease-in-out;
 }
-div.skribi-modal-error .skr-collapsible-titlebar.skr-collapsible-titletext, div.skribi-modal-index .skr-collapsible-titlebar.skr-collapsible-titletext {
+div.skribi-modal-error .skr-collapsible-titlebar.skr-collapsible-titletext, div.skribi-modal-index .skr-collapsible-titlebar.skr-collapsible-titletext, div.skribi-settings .skr-collapsible-titlebar.skr-collapsible-titletext {
   display: inline-block;
   margin: 0em 0em;
   padding: 0px;
 }
-div.skribi-modal-error .is-collapsed .skr-collapsible-titlebar, div.skribi-modal-index .is-collapsed .skr-collapsible-titlebar {
+div.skribi-modal-error .is-collapsed .skr-collapsible-titlebar, div.skribi-modal-index .is-collapsed .skr-collapsible-titlebar, div.skribi-settings .is-collapsed .skr-collapsible-titlebar {
   border-bottom-right-radius: 0.4em;
   border-bottom-left-radius: 0.4em;
 }
-div.skribi-modal-error .skr-collapse-indicator, div.skribi-modal-index .skr-collapse-indicator {
+div.skribi-modal-error .skr-collapse-indicator, div.skribi-modal-index .skr-collapse-indicator, div.skribi-settings .skr-collapse-indicator {
   display: inline-block;
   height: 100%;
   margin-right: 20px;
   margin-left: 12px;
 }
-div.skribi-modal-error .skr-collapse-indicator svg, div.skribi-modal-index .skr-collapse-indicator svg {
+div.skribi-modal-error .skr-collapse-indicator svg, div.skribi-modal-index .skr-collapse-indicator svg, div.skribi-settings .skr-collapse-indicator svg {
   height: 12px;
   width: 12px;
   transition: transform 0.2s ease-in-out;
 }
-div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator, div.skribi-modal-index .skr-collapsible.is-collapsed .skr-collapse-indicator {
+div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator, div.skribi-modal-index .skr-collapsible.is-collapsed .skr-collapse-indicator, div.skribi-settings .skr-collapsible.is-collapsed .skr-collapse-indicator {
   transform: rotate(-90deg);
+}
+
+.skribi-settings .skr-collapsible {
+  margin-bottom: 2em;
+}
+
+div.skribi-presets-list {
+  width: 100%;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+}
+div.skribi-presets-list .setting-item-control {
+  justify-content: space-evenly;
+}
+div.skribi-presets-list .skr-collapsible {
+  border-left: 2px solid var(--text-accent);
+  border-radius: 8px;
+  margin-left: 2em;
+}
+div.skribi-presets-list .skr-collapsible .skr-collapsible-titlebar {
+  border: none;
+}
+
+.skr-collapsible-titlebar .setting-item.skribi-preset-key {
+  padding: 0px;
+  border: none;
+  display: inline-block;
+}
+.skr-collapsible-titlebar .setting-item.skribi-preset-key .setting-item-info {
+  display: none;
+}
+.skribi-preset-entry .setting-item {
+  padding: 12px 0 12px 0;
+  overflow-y: auto;
+  max-height: unset;
+  padding: 0px;
+  border: none;
+  display: inline-block;
+  width: 100%;
+  --azse-entrycol: var(--text-accent);
+  padding: 2px;
+  margin: 12px 0px;
+  border-top: 0px;
+}
+.skribi-preset-entry .setting-item .setting-item-info {
+  display: none;
+}
+.skribi-preset-entry .setting-item .setting-item, .skribi-preset-entry .setting-item .setting-item-control {
+  max-height: unset;
+  overflow-y: visible;
+}
+.skribi-preset-entry .setting-item textarea {
+  padding: 4px 10px;
+  margin: 0px 4px;
+  height: 2.5em;
+  max-height: 2.5em;
 }
 
 /*--------------------------------------------------------------------------------------------
