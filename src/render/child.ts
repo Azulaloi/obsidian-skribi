@@ -1,6 +1,6 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
-import { Stringdex } from "src/types/types";
+import { SkContext, Stringdex } from "src/types/types";
 import { dLog, isExtant, vLog } from "src/util/util";
 import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
@@ -22,6 +22,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private plugin: SkribosPlugin
 
 	packet: Stringdex
+	private _entryPacket: SkContext['entryPacket'] = null;
 	private intervals: number[] = [];
 	private cbOnUnload: [Function, any][] = []
 	private cbOnPost: [Function, any][] = []
@@ -100,6 +101,21 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		if (this.packet == null) {
 			this.packet = packet;
 		}
+	}
+
+	collapse() {
+		let pre = createEl('code', {text: this.source})
+		this.containerEl.replaceWith(pre)
+		this.unload()
+	}
+
+	reset() {
+		let pre = createEl('code', {text: this.source})
+		this.containerEl.replaceWith(pre)
+		this.unload()
+		console.log(this._entryPacket)
+		// this._entryPacket[1] = this.containerEl.parentElement
+		this.plugin.processor.processEntry(...this._entryPacket)
 	}
 
 	onload() {}

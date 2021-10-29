@@ -3,6 +3,7 @@ import { logError, SkribiError, SkribiSyntaxError } from "src/eta/error";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
+import { makeErrorModalLink } from "src/modal/errorModal";
 import { Modes, Flags, EBAR, CLS, REGENT_CLS } from "src/types/const";
 import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { isExtant, dLog, vLog, roundTo } from "src/util/util";
@@ -47,6 +48,7 @@ export default class SkribiProcessor {
 		self?: boolean,
 		srcIn?: string
 	): Promise<Promise<SkribiResult>[] | null> {
+		let entryPacket = [mode, doc, ctx, depth, self, srcIn]
 		let nestExtant = isExtant(ctx.remainingNestLevel)
 		let nestLevel = nestExtant ? ctx.remainingNestLevel : null;
 		/* nestExtant means that we are inside of a natural transclusion */
@@ -91,7 +93,7 @@ export default class SkribiProcessor {
 
 				try {
 					if (src != null) {
-						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: originalText}
+						let skCtx: SkContext = {time: window.performance.now(), depth: d, flag: src.flag, source: originalText, entryPacket: entryPacket as any}
 						let nel = renderRegent(el, {class: REGENT_CLS.eval, hover: l['regent.loading.hover']})
 						if (src.flag == 1) {
 							tproms.push(this.awaitTemplatesLoaded({el: nel, src: src.text, mdCtx: ctx, skCtx: skCtx})
@@ -141,6 +143,10 @@ export default class SkribiProcessor {
 
   /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
+		if (isExtant(this.plugin.eta.loader.initError)) {
+			return await this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
+		}
+		
 		let el = this.plugin.initLoaded 
 			? renderRegent(args.el, {class: REGENT_CLS.eval, hover: l['regent.loading.hover'], clear: true})
 			: renderRegent(args.el, {class: REGENT_CLS.wait, hover: l["regent.wait.hover"], clear: true})
@@ -236,44 +242,49 @@ export default class SkribiProcessor {
 				}
 			}).bind(this),
 			templateKey: (skCtx.flag == 1) ? id : null,
-			source: skCtx.source
+			source: skCtx.source,
+			_entryPacket: skCtx.entryPacket
 		}) 
 			
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
 		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
-
 			if (con === undefined && !this.eta.hasPartial(id)) {
-				/* Template skribi's template does not exist (intentionally not caught until this point) */
+				if (isExtant(this.plugin.eta.loader.initError)) {
+					/* Loader failed to init */
+					err = this.plugin.eta.loader.initError
+				} else {
+					/* Template skribi's template does not exist (intentionally not caught until this point) */
 
-				let failed = this.eta.failedTemplates.has(id)
+					let failed = this.eta.failedTemplates.has(id)
 
-				let msg = `Cannot read template '${id}'`
-				msg+= failed ? `\nTemplate exists, but failed to compile` : `\nNo such entry found`
+					let msg = `Cannot read template '${id}'`
+					msg+= failed ? `\nTemplate exists, but failed to compile` : `\nNo such entry found`
 
-				let nerr = new SkribiError(msg)
-				if (failed)
-				con = skCtx.source
+					let nerr = new SkribiError(msg)
+					if (failed)
+					con = skCtx.source
 
-				let stack = msg
-				let info = mdCtx.getSectionInfo(mdCtx.el)
-				if (info) {
-					stack += `\n    at (${(file?.name ? `'/${file.name}'` : null) ?? "source"}) `
-					stack += (info.lineStart == info.lineEnd)
-							? `line: ${info.lineStart+1}` 
-							: `lines: ${info.lineStart+1} to ${info.lineEnd+1}`
+					let stack = msg
+					let info = mdCtx.getSectionInfo(mdCtx.el)
+					if (info) {
+						stack += `\n    at (${(file?.name ? `'/${file.name}'` : null) ?? "source"}) `
+						stack += (info.lineStart == info.lineEnd)
+								? `line: ${info.lineStart+1}` 
+								: `lines: ${info.lineStart+1} to ${info.lineEnd+1}`
+					}
+
+					nerr.stack = stack
+					Object.assign(nerr, {
+						subErr: err, 
+						_sk_templateFailure: failed 
+							? { id: id, error: this.eta.failedTemplates.get(id).error } 
+							: undefined,
+						_sk_nullTemplate: failed ? null : id
+					})
+					err = nerr
 				}
-
-				nerr.stack = stack
-				Object.assign(nerr, {
-					subErr: err, 
-					_sk_templateFailure: failed 
-						? { id: id, error: this.eta.failedTemplates.get(id).error } 
-						: undefined,
-					_sk_nullTemplate: failed ? null : id
-				})
-				err = nerr
 			}
 
 			Object.assign(err, {

@@ -28,6 +28,10 @@ declare module 'obsidian' {
       enablePlugin: Function;
       disablePlugin: Function;
     }
+    setting: {
+      open(): void
+      openTabById(id: string): void
+    }
   }
 
   interface Workspace {

@@ -1,6 +1,6 @@
 import { EtaConfig } from "eta/dist/types/config";
 import { CallbackFn } from "eta/dist/types/file-handlers";
-import { TAbstractFile, TFile } from "obsidian";
+import { MarkdownPostProcessorContext, TAbstractFile, TFile } from "obsidian";
 import { SkribiChild } from "src/render/child";
 import { Modes, Flags } from "./const";
 
@@ -13,7 +13,8 @@ export interface SkContext {
 	flag: number,
 	depth: number, 
 	source: string, // Original text content
-	ctx?: any	// Stores passed template values, null on non-templates
+	ctx?: any,	// Stores passed template values, null on non-templates
+	entryPacket?: [ProcessorMode, HTMLElement, MarkdownPostProcessorContext, number, boolean, string]
 }
 
 export interface ProcessorMode {

@@ -228,14 +228,39 @@ export class ErrorModal extends Modal {
             let p = new IndexModal(this.app.plugins.plugins["obsidian-skribi"])
             p.open()
           })
+        } else if (err?._sk_errorPacket) {
+          /* An internal error has occured that should be displayed */
+          let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
+          subErrorMessage.createSpan({text: err._sk_errorPacket.name, cls: 'sk-label'})
+          subErrorMessage.createSpan({text: err._sk_errorPacket.message, cls: 'sk-msg'})
+          
+          if (err._sk_errorPacket?.err) {
+            if (err._sk_errorPacket.err?.stack) {
+              let errField = makeField("error", this.contentEl, (err._sk_errorPacket.err?.name ?? "UnknownError") + " Stack", true, true)
+              makeLinesTable(errField.content, err._sk_errorPacket.err.stack)
+            }
+          }
         }
 
-        let invField = makeField("error", this.contentEl, "Invocation String", true)
-        makeLinesTable(invField.content, err._sk_invocation)
+        if (err?.el) {
+          this.contentEl.append(err.el)
+        }
 
-        let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
-        makeLinesTable(errField.content, err.stack)
+        if (err?.tip) {
+          this.contentEl.createDiv({cls: ['skribi-modal-error-message', 'skr-tip']})
+          .createSpan({text: err.tip})
+        }
 
+        if (err?._sk_invocation) {
+          let invField = makeField("error", this.contentEl, "Invocation String", true)
+          makeLinesTable(invField.content, err._sk_invocation)
+        }
+        
+        if (err?.stack) {
+          let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
+          makeLinesTable(errField.content, err.stack)
+        }
+        
         if (err?._sk_template) {
           let tempField = makeField("error", this.contentEl, "Template Source", true)
           makeLinesTable(tempField.content, err._sk_template)

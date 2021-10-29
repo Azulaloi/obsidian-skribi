@@ -8,6 +8,8 @@ import { Cacher } from "./cacher";
 import { FileMinder, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { compileWith } from "./comp";
 import compileToString from "./mod";
+import { skInternalError, SkribiError } from "./error";
+import { appendFile } from "fs";
 
 export interface TemplateCache {
   source?: string,
@@ -33,13 +35,19 @@ export class TemplateLoader implements FileMinder {
   templateFailures: Cacher<TemplateErrorCache> = new Cacher<TemplateErrorCache>({})
   styleCache: Cacher<string> = new Cacher<string>({})
 
+  initError: any; // used to show error on await-regents
+
   constructor(handler: EtaHandler) {
     this.handler = handler
     this.plugin = handler.plugin
   }
 
   public async init(): Promise<any> {
-    return this.initLoad()
+    return this.initLoad().catch((err) => {
+      console.error("Skribi: TemplateLoader failed to initalize", EBAR, err);
+      this.initError = err
+      this.resetChildren()
+    })
   }
 
   private async initLoad() {
@@ -189,11 +197,41 @@ export class TemplateLoader implements FileMinder {
     }
   }
 
-  public async reload(): Promise<void> {
-    if (this.directory.length <= 0) {new Notice("Skribi: template directory not defined!"); return Promise.reject("No Template Directory")}
+  public async reload(): Promise<any> {
+    this.initError = null;
+    if (this.directory.length <= 0) {
+      // new Notice("Skribi: template directory not defined!"); 
+      throw skInternalError({ 
+        name: "TemplateLoader", message: "Template directory not defined!", err: null, 
+        regentClass: "skr-waiting skr-template-init-error", 
+        el: makeSettingsLink()
+      })
+    }
+
+    var files = null;
+    try { files = getFiles(this.plugin.app, this.directory) } 
+    catch (err) { 
+      throw skInternalError({
+        name: "TemplateLoader", message: err?.message, err: err, 
+        regentClass: "skr-waiting skr-template-init-error", 
+        el: makeSettingsLink()
+      })
+    }
 
     this.templateCache.reset()
-    return this.definePartials(...getFiles(this.plugin.app, this.directory))
+    await this.definePartials(...files)
+    
+    return Promise.resolve("") 
+  }
+
+  resetChildren() {
+    Array.from(this.plugin.children).forEach((child) => {
+      if (child?.templateKey) {
+        /* both of these options work but I made reset() cause I thought it didn't and now I wanna use it */
+        //child.rerender(child.templateKey)
+        child.reset() 
+      } 
+    })
   }
 
   /* FileMinder Functions */
@@ -233,12 +271,34 @@ export class TemplateLoader implements FileMinder {
     this.definePartials(file)
   }
 
-  directoryChanged(): void {
+  async directoryChanged() {
     vLog(`Template directory changed, reloading templates...`)
-    this.reload()
+    this.templateCache.reset()
+    this.templateFailures.reset()
+    this.styleCache.reset()
+    
+    var r
+    try {
+      r = await this.reload()
+    } catch(err) {
+      this.initError = err
+    } finally {
+      if (isExtant(r)) {this.plugin.app.workspace.trigger("skribi:template-init-complete")}
+      this.resetChildren()
+    }
   }
 
   isInDomain(file: TAbstractFile): boolean {
     return isInFolder(file, this.directory)
   }
+}
+
+function makeSettingsLink() {
+  let el = createDiv({cls: ['skribi-modal-error-message']})
+  el.createSpan({text: "Open Skribi Settings", cls: 'skr-button'})
+  el.addEventListener('click', (ev) => {
+    window.app.setting.open()
+    window.app.setting.openTabById('obsidian-skribi')
+  })
+  return el
 }

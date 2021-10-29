@@ -12,13 +12,31 @@ export class SkribiError extends Error {
     id: string;
     error: any;
   };
-  _sk_nullTemplate?: string // Flags that the error is from a non-extant template
+  _sk_nullTemplate?: string // Flags that the error is from a non-extant template (mutually exclusive with _sk_template and _sk_templateFailure)
+
+  _sk_errorPacket?: { // For packaging internal errors that might need to be displayed, exclusive with above _sk properties
+    err: any;
+    name: string;
+    message: string;
+  } = null
+  tip?: string
+  el?: HTMLElement
 
   regentClass: string = REGENT_CLS.error // Used for an error to specify a regent class
   name: string = "SkribiError"
   constructor(msg: string) {
     super(msg)
   }
+}
+
+export function skInternalError(name: string | any, message?: string, err?: any): SkribiError {
+  if (String.isString(name)) {
+    return Object.assign(new SkribiError("Internal Error"), {name: name, message: message ?? "", err: err ?? null}) 
+  } else return Object.assign(new SkribiError("Internal Error"), name)
+}
+
+export class SkribiInternalError extends Error {
+
 }
 
 /* For handling SyntaxErrors thrown during skribi compilation. */

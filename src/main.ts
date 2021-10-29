@@ -142,9 +142,7 @@ export default class SkribosPlugin extends Plugin {
 		this.eta.unload()
 		console.log('Skribi: Unloading...', this.children);  
 		Array.from(this.children).forEach((child) => {
-			let pre = createEl('code', {text: child.source})
-			child.containerEl.replaceWith(pre)
-			child.unload()
+			child.collapse()
 		})
 		document.body.removeClass(CLS.anim)
 	}
