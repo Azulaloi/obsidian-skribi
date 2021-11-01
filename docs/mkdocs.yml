@@ -47,5 +47,6 @@ nav:
   - Miscellaneous:
     - 'Settings': settings.md
     - 'Commands': commands.md
+    - 'Render Modal': misc/render_modal.md
     - 'Indicators': states.md
     - 'Localization': misc/localization.md

@@ -2,11 +2,14 @@ import { SkribosSettings } from "src/settings";
 import { Stringdex } from "src/types/types";
 
 export type renderModalPreset = {
+  index: number // order in list
+  name: string
   key: string
-  arguments: Stringdex<string>
+  append: string
+  arguments?: Stringdex<string>
 }
 
 export interface PluginData {
   settings: SkribosSettings;
-  renderModalPresets: Stringdex<renderModalPreset>
+  renderModalPresets: Record<string, renderModalPreset>//Stringdex<renderModalPreset>
 }

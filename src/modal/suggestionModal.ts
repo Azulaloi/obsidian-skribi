@@ -1,4 +1,4 @@
-import { FuzzySuggestModal } from "obsidian";
+import { FuzzyMatch, FuzzySuggestModal } from "obsidian";
 import SkribosPlugin from "src/main";
 
 export class SuggestionModal extends FuzzySuggestModal<string> {
@@ -6,13 +6,27 @@ export class SuggestionModal extends FuzzySuggestModal<string> {
   private reject: (reason?: any) => void;
 
   private plugin: SkribosPlugin
-  constructor(plugin: SkribosPlugin) {
+  private manual = false
+  constructor(plugin: SkribosPlugin, manualOption?: boolean) {
     super(plugin.app)
     this.plugin = plugin
+    this.manual = manualOption
   }
 
   getItems() {
-    return this.plugin.eta.getCacheKeys()
+    // if (this.manual) {
+      // return ['%%MANUAL%%'].concat(this.plugin.eta.getCacheKeys())
+    // } else {
+      return this.plugin.eta.getCacheKeys()
+    // }
+  }
+
+  renderSuggestion(item: FuzzyMatch<string>, el: HTMLElement) {
+    // if (this.manual && item.item == "%%MANUAL%%") {
+      // el.
+    // } else {
+      el.setText(item.item)
+    // }
   }
 
   getItemText(item: string): string {return item}

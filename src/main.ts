@@ -127,9 +127,10 @@ export default class SkribosPlugin extends Plugin {
 
 		this.addCommand({id: "render-template", name: "Render Template", callback: () => {
 			if (!this.initLoaded) return;
-			let x = new SuggestionModal(this);
+			let x = new SuggestionModal(this, true);
 			new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
 			.then(result => {
+				console.log(result)
 				if (this.eta.hasPartial(result)) {
 					let i = new RenderModal(this, result)
 					i.open();
@@ -138,8 +139,8 @@ export default class SkribosPlugin extends Plugin {
 		}})
 
 		for (let preset of Object.entries(this.data.renderModalPresets) as [string, renderModalPreset][]) {
-			this.addCommand({id: `render-preset_${preset[0]}`, name: `Render Preset - ${preset[0]}`, callback: () => {
-				new RenderModal(this, preset[1].key, preset[1].arguments).open()
+			this.addCommand({id: `render-preset_${preset[0]}`, name: `Render Preset - ${preset[1].name}`, callback: () => {
+				new RenderModal(this, preset[1].key, preset[1].append).open()
 			}})
 		}
 	}

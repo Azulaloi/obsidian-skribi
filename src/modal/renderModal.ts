@@ -9,14 +9,19 @@ export default class RenderModal extends Modal {
   templateKey: string;
   renderEl: HTMLElement
   component: Component
-  values: Stringdex = {}
+  // values: Stringdex = {}
+  append: string
 
-  constructor(plugin: SkribosPlugin, templateKey: string, values?: Stringdex) {
+  constructor(plugin: SkribosPlugin, templateKey: string, append?: string) {
     super(plugin.app)
     this.plugin = plugin
     this.templateKey = templateKey.toString()
-    this.values = values ?? {}
+    // this.values = values ?? {}
+    this.append = append
+
     this.renderEl = this.contentEl.createDiv({cls: ['skribi-modal-render-container', 'markdown-preview-view']})
+    this.modalEl.addClass('skribi-modal-render')
+    this.modalEl.setAttribute('skribi-render-modal-key', templateKey)
     this.component = new Component()
   }
 
@@ -28,9 +33,10 @@ export default class RenderModal extends Modal {
   render() {
     this.renderEl.empty()
     let txt = `{:${this.templateKey}`
-    txt += Object.entries(this.values).reduce((prev: string, cur: string) => {
+    /*txt += Object.entries(this.values).reduce((prev: string, cur: string) => {
       return prev + `| ${cur[0]}: ${cur[1]}`
-    }, "")
+    }, "") */
+    txt += this?.append ?? ""
     txt += '}'
     console.log(txt)
     this.renderEl.createEl('code', {text: txt})

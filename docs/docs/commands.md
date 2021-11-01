@@ -8,6 +8,10 @@ Opens a modal that displays your loaded templates. Clicking an entry will open t
 
 The list will automatically refresh whenever the template cache is updated (so you can leave this open while you edit templates in an external editor, and see them move to/from the error list immediately). You can also force a refresh with the refresh index button (just in case).
 
+## Render Template / Render Preset
+
+Opens a modal and renders a template within. See [Render Modal](../misc/render_modal) for details.
+
 ## Reload Skribis
 
 Causes all extant skribis to rerender themselves. Skribis will automatically rerender themselves if the loaded scripts or source template is modified, but maybe there's a use to doing it manually?

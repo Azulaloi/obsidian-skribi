@@ -30,7 +30,7 @@ export class confirmationModal extends Modal {
     this.titleEl.setText(this.fields.title)
     this.containerEl.addClazz(kls('confirmation-modal'), this.fields.class)
     if (this.fields.desc) this.contentEl.createDiv({cls: kls('confirmation-modal-description'), text: this.fields.desc})
-    this.contentEl.append(...this.fields.elements)
+    this.contentEl.append(...this.fields?.elements ?? [])
 
     let c = this.contentEl.createDiv({cls: kls('confirm-modal-buttons')})
     c.createEl("button", {text: this.fields.labelPos, cls: kls('modal-button-confirm')}, (b) => {  

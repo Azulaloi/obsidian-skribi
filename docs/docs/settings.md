@@ -37,3 +37,7 @@ Presents a suggestion popover when invoking a template, similar to the suggestio
 ## **CSS Animations**
 
 Toggles animations (adds the class 'skribi-anims' to the document body). There aren't that many animations, but just in case.
+
+## **Render Presets**
+
+Defines presets used to generate [render modal commands](../misc/render_modal).  

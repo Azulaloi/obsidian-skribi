@@ -103,12 +103,15 @@ export class Collapsible {
       this.collapseContentEl.setAttribute("style", `max-height: 0px;`)
     }
 
-    this.collapseTitleEl.addEventListener("click", (event: any) => {
-      let b = this.collapseEl.hasClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED)
-      let h = b ? (el.clientHeight + (el.clientHeight * 0.2)) : 0
-      this.collapseContentEl.setAttribute("style", `max-height: ${h}px;`);
-      this.collapseEl.toggleClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED, !b)
-      if (cb) cb(this.collapseEl.hasClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED))
+    this.collapseTitleEl.addEventListener("click", (event: MouseEvent) => {
+      let t = event.target as HTMLElement
+      if (!(t.nodeName === "BUTTON")) {
+        let b = this.collapseEl.hasClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED)
+        let h = b ? (el.clientHeight + (el.clientHeight * 0.2)) : 0
+        this.collapseContentEl.setAttribute("style", `max-height: ${h}px;`);
+        this.collapseEl.toggleClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED, !b)
+        if (cb) cb(this.collapseEl.hasClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED))
+      }
     })
   
     /* Calculate max height before first collapse */
