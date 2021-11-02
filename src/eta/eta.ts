@@ -7,7 +7,7 @@ import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util/util";
 import { compileWith } from "./comp";
-import { SkribiEtaSyntaxError, SkribiSyntaxError } from "./error";
+import { SkribiError, SkribiEtaSyntaxError, SkribiSyntaxError } from "./error";
 import { renderEta } from "./eval";
 import compileToString from "./mod";
 import { ProviderBus } from "./provider_bus";
@@ -148,6 +148,13 @@ export class EtaHandler {
       },
       this.bus.getScopeSK()
     )
+
+    /*
+    Object.defineProperty(sk.ctx, 'file', {get: function() {
+      if (file) return file
+      else throw new SkribiError("file (sk.ctx.file) does not exist in current render context")
+    }})
+    */
 
     /* Scope to pass to the function. Must contain all keys that function was compiled with. */
     let scope: scopedVars = {

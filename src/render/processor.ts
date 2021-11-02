@@ -183,7 +183,7 @@ export default class SkribiProcessor {
 
 		/* Abort if being rendered in its own definition */
 		if (this.plugin.app.metadataCache.getFirstLinkpathDest("", mdCtx.sourcePath)?.basename == parsed.id) {
-			renderRegent(el, {class: REGENT_CLS.self, hover: l['Render Aborted: within self definition']}); return Promise.reject('Within Self Definition'); }
+			renderRegent(el, {class: REGENT_CLS.self, hover: 'Render Aborted: within self definition'}); return Promise.reject('Within Self Definition'); }
 
 		let template = this.eta.getPartial(parsed.id)?.function
 		if (!isExtant(template)) {

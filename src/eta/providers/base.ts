@@ -15,7 +15,7 @@ export class ProviderSK extends Provider {
       render: function(str: string) {
         let e = createDiv({cls: CLS.virtual});
         console.log(this)
-        MarkdownRenderer.renderMarkdown(str, e, this.ctx.file.path, null);
+        MarkdownRenderer.renderMarkdown(str, e, this.ctx?.file?.path ?? "", null);
         return e.innerHTML
       },
       has: function(v: string) {

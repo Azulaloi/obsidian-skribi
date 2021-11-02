@@ -607,7 +607,6 @@ div.skribi-modal-error .skr-collapsible .skribi-modal-error-field-container, div
 }
 div.skribi-modal-error .skr-collapsible-content, div.skribi-modal-index .skr-collapsible-content, div.skribi-settings .skr-collapsible-content {
   min-height: 0px;
-  max-height: 100vh;
   overflow: hidden;
   transition: max-height 0.2s ease, border-bottom-width 0.2s ease;
 }

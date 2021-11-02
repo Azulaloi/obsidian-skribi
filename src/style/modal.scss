@@ -443,7 +443,7 @@ div.skribi-modal-error, div.skribi-modal-index, div.skribi-settings {
    }
    .skr-collapsible-content {
      min-height: 0px;
-     max-height: 100vh;
+    //  max-height: 100vh;
     //  border: 2px solid gray;
      overflow: hidden;
      transition: max-height 0.2s ease, border-bottom-width 0.2s ease;

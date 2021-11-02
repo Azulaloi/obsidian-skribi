@@ -128,8 +128,11 @@ export class ErrorModal extends Modal {
             els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
             // console.log([pre, char, post])
 
+            let tabs = text.match(/\t/g)
+            let tt = tabs?.length ?? 0
+
             els.row.addClass('skribi-line-errored')
-            let pstr = "^".padStart(match.groups.ch)
+            let pstr = ("^".padStart(tt+1, "	")).padStart(match.groups.ch)
             let row = els.table.insertRow()
             row.addClass("skribi-line-pointer")
             let numCell = row.insertCell()
@@ -145,7 +148,7 @@ export class ErrorModal extends Modal {
         makeLinesTable(invField.content, err._sk_invocation)
 
         if (err?._sk_template) {
-          let tempField = makeField("error", this.contentEl, "Template Source", true)
+          let tempField = makeField("error", this.contentEl, "Template Source", true, isExtant(match))
           makeLinesTable(tempField.content, err._sk_template)
         }
 
@@ -262,7 +265,7 @@ export class ErrorModal extends Modal {
         }
         
         if (err?._sk_template) {
-          let tempField = makeField("error", this.contentEl, "Template Source", true)
+          let tempField = makeField("error", this.contentEl, "Template Source", true, false)
           makeLinesTable(tempField.content, err._sk_template)
         }
       }
