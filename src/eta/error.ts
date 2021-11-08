@@ -39,6 +39,11 @@ export class SkribiInternalError extends Error {
 
 }
 
+export class SkribiAbortError extends SkribiError {
+  name: string = 'AbortError'
+  _sk_abortPacket: any = null
+}
+
 /* For handling SyntaxErrors thrown during skribi compilation. */
 export class SkribiSyntaxError extends SkribiError {
   constructorError: SyntaxError // Error thrown by function construction

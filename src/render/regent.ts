@@ -1,4 +1,4 @@
-import { SkribiError, SkribiEvalError, SkribiSyntaxError } from "src/eta/error"
+import { SkribiAbortError, SkribiError, SkribiEvalError, SkribiSyntaxError } from "src/eta/error"
 import { makeErrorModalLink } from "src/modal/errorModal"
 import {  REGENT_CLS } from "src/types/const"
 
@@ -13,36 +13,34 @@ export interface RegentData {
 
 /** Replaces 'el'. */
 export async function renderError(el: HTMLElement, e: RegentData) {
-	if (e?.flag && e.flag == "abort") {
-		return renderRegent(el, Object.assign({}, {
-			class: REGENT_CLS.abort,
-			label: 'sk',
-			hover: 'Render Aborted'
-		}, e))
-	} else {
-		var hover = "";
+	var hover = "";
+	var label = 'sk';
 
-		if (e instanceof SkribiError) {
-			hover = `${e.name}: ${e.message}`
-			if (e instanceof SkribiEvalError) {
+	if (e instanceof SkribiError) {
+		hover = `${e.name}: ${e.message}`
+		if (e instanceof SkribiEvalError) {
+			if (e?.evalError instanceof SkribiAbortError)	{
+				hover += `\n${e.evalError?.name}: ${e.evalError?._sk_abortPacket.hover}`
+				label = e.evalError?._sk_abortPacket?.label ?? label 
+			} else {
 				hover += `\n${e.evalError?.name}: ${e.evalError?.message}`
-			} else if (e instanceof SkribiSyntaxError) {
-				hover += `\n${e.parseError.name}: ${e.parseError.message}`
 			}
-		} else {
-			hover = (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error");
+		} else if (e instanceof SkribiSyntaxError) {
+			hover += `\n${e.parseError.name}: ${e.parseError.message}`
 		}
-
-		let r = renderRegent(el, {
-			class: e?.class ?? REGENT_CLS.error, 
-			label: 'sk', 
-			hover: hover,
-			clear: true
-		})
-
-		makeErrorModalLink(r, e)
-		return r
+	} else {
+		hover = (e?.name ?? "Error") + ": " + (e?.msg ?? e?.message ?? "Unknown Error");
 	}
+
+	let r = renderRegent(el, {
+		class: e?.class ?? REGENT_CLS.error, 
+		label: label, 
+		hover: hover,
+		clear: true
+	})
+
+	makeErrorModalLink(r, e)
+	return r
 }
 
 export function renderWait(el: HTMLElement) {

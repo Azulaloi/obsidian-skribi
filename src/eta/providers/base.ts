@@ -1,9 +1,9 @@
 import { EventRef, MarkdownRenderer } from "obsidian";
 import { Provider } from "src/eta/provider_abs";
 import { createRegent } from "src/render/regent";
-import { CLS } from "src/types/const";
+import { CLS, REGENT_CLS } from "src/types/const";
 import { Stringdex } from "src/types/types";
-import { SkribiError } from "../error";
+import { SkribiAbortError } from "../error";
 
 export class ProviderSK extends Provider {
   async init() {
@@ -21,21 +21,13 @@ export class ProviderSK extends Provider {
       has: function(v: string) {
         return !((this.v?.[v] == null) || (this.v?.[v] == undefined))
       },
-      abort: function(s: string | Stringdex) {
-        let abortPacket = String.isString(s) 
-        ? {hasData: true, flag: 'abort', hover: s} 
-        : Object.assign({hasData: true, flag: 'abort'}, s)
-        // throw abortPacket
+      abort: function(msg?: string, dataIn?: Stringdex) {
+        let data = dataIn ?? {}
+        let err = new SkribiAbortError(msg ?? "Evaluation Aborted")
+        err.name = data?.name ?? err.name
 
-        /*try {
-          //@ts-ignore
-          a.b.c += 0;
-        } catch(e) {
-          console.log(e)
-        }*/
-        // console.log((new Error()).stack.split("\n")[2].trim().split(" ")[1])
-        // console.log((new Error()).stack)
-        throw new SkribiError("Abort")
+        let abortPacket = Object.assign({cls: REGENT_CLS.abort, hover: err.message}, data ?? {})
+        throw Object.assign(err, {_sk_abortPacket: abortPacket})
       },
       getTemplateSource: function(s: string): Promise<any> {
         return makeInitPromise(this.child, () => {
@@ -61,7 +53,7 @@ export class ProviderSK extends Provider {
           return this.child.addStyle(await this.getStyle(styleSnip))
         })
       },
-      util: require('util'),
+      // util: require('util'),
       createRegent: createRegent
     }
   }

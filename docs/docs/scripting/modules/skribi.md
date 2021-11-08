@@ -42,11 +42,12 @@
       <td>Renders <code>text</code> as Obsidian Markdown inside a virtual element, then returns the element's <code>innerHTML</code>.</td>
     </tr>
     <tr id="abort">
-      <th><code>sk.abort(data?: string | any)</code></th>
+      <th><code>sk.abort(msg?: string, data?: any)</code></th>
       <td>=> <code>void</code></td>
-      <td>Aborts the render execution and renders an error block. If `data` is a string, the message will be `data`. Multiple values can optionally be passed to the abort block, by placing them in an string-indexed object. Valid values (<code>key</code> - description):  <ul>
-        <li><code>class: string</code> - CSS classes to add, space separated (default: 'abort')</li>
-        <li><code>hover: string</code> - The message shown on mouse hover (default: 'Render Aborted')</li>
+      <td>Aborts the render execution and renders an error block. Using this function provides finer control of error displays (useful for those making templates intended for use by others). If no arguments are provided, will render a generic 'abort' indicator. <code>msg</code> is equivalent to the message argument of an error constructor and may be null. The <code>data</code> argument can optionally contain additional properties. Valid properties (all optional): <ul>
+        <li><code>name: string</code> - Overwrites error name. </li>
+        <li><code>cls: string</code> - CSS classes to apply to the error indicator, space separated. (default: 'skr-abort')</li>
+        <li><code>hover: string</code> - The message shown on mouse hover (default: msg or "Evaluation Aborted")</li>
         <li><code>label: string</code> - The text shown in the block (default: 'sk')</li>
       </ul></td>
     </tr>

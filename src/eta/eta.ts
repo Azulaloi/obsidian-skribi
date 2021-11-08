@@ -134,7 +134,8 @@ export class EtaHandler {
     let binder = {}
 
     /* The 'sk' object */
-    let sk = Object.assign({},
+    let sk = Object.assign({__proto__: {constructor: function sk(){}}}, // this is just to change the name in the stack trace
+    // let sk = Object.assign({},
       ctxIn || {}, 
       {
         this: binder, 
@@ -148,7 +149,6 @@ export class EtaHandler {
       },
       this.bus.getScopeSK()
     )
-
     /*
     Object.defineProperty(sk.ctx, 'file', {get: function() {
       if (file) return file
@@ -171,7 +171,7 @@ export class EtaHandler {
     let ren = renderEta(this, content, {}, cfg, null, scope, binder);
     
     if (ren instanceof Promise) {
-      console.log(ren)
+      // console.log(ren)
       return await ren.then((r) => {return Promise.resolve([r, packet])}, (r) => {return Promise.reject(r)})
     } else if (String.isString(ren)) {
       return Promise.resolve([ren as string, packet]) 

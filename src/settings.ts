@@ -238,9 +238,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 	}
 
 	/* unused */
-	ruleTextField(set: Setting, presetKey: string, val: [string, string])  {
+	/* propTextField(set: Setting, presetKey: string, val: [string, string])  {
 		set.addTextArea((text) => { 
-			/* Property Key */	
+			// Property Key 	
 			var prevKey = val[0];
 
 			text.setValue(val[0])
@@ -258,7 +258,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 			text.inputEl.addClass("skr-preset-propkey")
 		})
 
-		/* Property Value */
+		// Property Value 
 		set.addTextArea((text) => {
 			text.setValue(val[1])
 			text.onChange(async (value) => {
@@ -267,7 +267,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 				this.display()
 			})
 		})
-	}
+	} */
 }
 
 const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']

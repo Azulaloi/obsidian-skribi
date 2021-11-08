@@ -1,5 +1,5 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
-import { logError, SkribiError, SkribiSyntaxError } from "src/eta/error";
+import { logError, SkribiAbortError, SkribiError, SkribiSyntaxError } from "src/eta/error";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
@@ -287,16 +287,24 @@ export default class SkribiProcessor {
 				}
 			}
 
+			var regentClass = (err instanceof SkribiError) ? err.regentClass : REGENT_CLS.error
+
+			if (err?.evalError instanceof SkribiAbortError) {
+				regentClass = err.evalError._sk_abortPacket.cls
+			}
+
+			// const util = require('util')
+			// console.log(util.inspect(err, 7))
+
 			Object.assign(err, {
-				hasData: true, 
 				_sk_invocation: err?._sk_invocation ?? skCtx.source,
 				_sk_template: (skCtx.flag == 1 && this.eta.getPartial(id)?.source) ?? null,
-				class: (err instanceof SkribiError) ? err.regentClass : REGENT_CLS.error
+				class: regentClass
 			})
 
 			logError(err)
-			renderError(el, (err?.hasData) ? err : {msg: (err?.msg ?? err) || "Render Error"
-			
+			renderError(el, (err?.hasData) ? err : {
+				msg: (err?.msg ?? err) || "Render Error"
 			}).then(errEl => {
 				/* Alter the child so that it may yet live (and listen for source updates) */
 				Object.assign(child, {
