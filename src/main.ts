@@ -16,19 +16,19 @@ import RenderModal from './modal/renderModal';
 import { PluginData, renderModalPreset } from './data/data';
 
 export default class SkribosPlugin extends Plugin {
-	data: PluginData;
-	settings: SkribosSettings;
+	data: PluginData
+	settings: SkribosSettings
 	
-	eta: EtaHandler;
+	eta: EtaHandler
 	processor: SkribiProcessor
 	suggest: TemplateSuggest
 
-	varName: string = "sk";
-	initLoaded: boolean = false;
+	varName: string = "sk"
+	initLoaded: boolean = false
 
 	children: SkribiChild[] = []
 	private childProto: any = SkribiChild // for dev memory querying 
-	private l = l // for dev testing from console (import to us)
+	private l = l // for dev testing from console
 
 	async onload() {
 		console.log('Skribi: Loading...');

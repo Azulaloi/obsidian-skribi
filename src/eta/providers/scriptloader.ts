@@ -3,7 +3,7 @@ import { DynamicState, FileMinder, Stringdex } from "src/types/types";
 import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util/util";
 import { Provider } from "../provider_abs";
 
-// TODO: add system to auto-reload skribis when module cache changes 
+/* Loads and provides JS files from the skript directory as modules. */
 export class ProviderScriptloader extends Provider implements FileMinder {
   loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
 

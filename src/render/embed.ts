@@ -9,9 +9,9 @@ const extImg = ["bmp", "png", "jpg", "jpeg", "gif", "svg"]
 const extAud = ["mp3", "wav", "m4a", "3gp", "flac", "ogg", "oga"]
 const extVid = ["mp4", "webm", "ogv"]
 const extTxt = ["md"]
-const extPdf = ["pdf"]
+const extPdf = ["pdf"] // TODO: implement PDF embeds
 
-/* Repairs media embeds that have been rendered to markdown */
+/* Repairs media embeds that have been rendered to markdown after the valid embedding period. */
 export async function embedMedia (
   el: HTMLElement, 
   srcPath: string,
@@ -29,7 +29,6 @@ export async function embedMedia (
   let d = (isExtant(elDepth) ? parseInt(elDepth) : isExtant(depth) ? depth : 0)
 
   dLog("embedder depth:", d)
-
 
   for (let fish of Array.from(catches)) {
     if (fish.hasClass("is-loaded")) continue;
@@ -73,7 +72,7 @@ export async function embedMedia (
   
               let cache = plugin.app.metadataCache.getCache(dest.path)
               let read = await plugin.app.vault.cachedRead(dest)
-              let classes = parseFrontMatterStringArray(cache?.frontmatter, "cssclass")
+              let classes = parseFrontMatterStringArray(cache?.frontmatter, "cssclass") ?? []
     
               let div = fish.createDiv({cls: "markdown-embed"})
               let divtitle = div.createDiv({cls: "markdown-embed-title", text: dest.basename})
@@ -85,7 +84,7 @@ export async function embedMedia (
                 plugin.app.workspace.openLinkText(src, srcPath);
               })
     
-              let pv = content.createDiv({cls: "markdown-preview-view"}); pv.addClazz(classes);
+              let pv = content.createDiv({cls: "markdown-preview-view"}); pv.addClass(...classes);
               let ps = pv.createDiv({cls: "markdown-preview-sizer markdown-preview-section"})
     
               let mkh = createDiv({attr: {"depth": depth.toString()}})
@@ -101,9 +100,6 @@ export async function embedMedia (
         }
 
         if (d <= 0)  {
-          // let [regent] = createRegent({class: REGENT_CLS.depth, hover: l["regent.depth.hover"]})
-          // fish.replaceWith(regent)
-
           renderRegent(fish as HTMLElement, {class: REGENT_CLS.depth, hover: l["regent.depth.hover"]})
           dLog("embedder hit limit")
         } else {

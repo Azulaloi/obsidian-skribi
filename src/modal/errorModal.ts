@@ -6,6 +6,8 @@ import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/int
 import { REGENT_CLS } from "src/types/const";
 import { IndexModal } from "./indexModal";
 
+/* A modal that displays information about the various types of possible errors that may occur when rendering a skribi. 
+ * Opened by error regents. */
 export class ErrorModal extends Modal {
   error: any = null
   
@@ -296,15 +298,14 @@ export class ErrorModal extends Modal {
   }
 }
 
+/** Adds an click event listener to 'el' that opens an error modal for the error 'err'. */
 export function makeErrorModalLink(el: HTMLElement, err: any): HTMLElement {
   el.addClass("has-link")
   el.addEventListener('click', (ev) => {
     ev.preventDefault()
-
     let p = new ErrorModal(window.app, err);
     p.open();
   })
-
 	return el
 }
 

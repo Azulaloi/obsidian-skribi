@@ -4,6 +4,7 @@ import SkribosPlugin from "../main";
 import { fieldPrompt, promptTypes } from "../types/types";
 import { isExtant, toDupeRecord } from "../util/util";
 
+/* A modal that prompts for values of, and inserts an invocation for, a template. */
 export class InsertionModal extends Modal {
   private plugin: SkribosPlugin;
   private editor: Editor;
@@ -119,11 +120,10 @@ export class InsertionModal extends Modal {
     return v
   }
 
+  /* Insert the invocation text. */
   doInsert() {
     let id = this.currentID
-
     let osel = this.editor.listSelections()
-    
     let toInsert = `\`{:${id}`
 
     for (let e of Object.entries(this.valFields)) {

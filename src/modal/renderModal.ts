@@ -1,9 +1,8 @@
-import { Component, MarkdownSectionInformation, Modal, Setting } from "obsidian";
+import { Component, MarkdownSectionInformation, Modal } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, Modes } from "src/types/const";
-import { Stringdex } from "src/types/types";
-import { toDupeRecord } from "src/util/util";
 
+/* A modal that renders a template. */
 export default class RenderModal extends Modal {
   private plugin: SkribosPlugin
   templateKey: string;

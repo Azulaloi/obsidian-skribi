@@ -1,6 +1,6 @@
+import { EBAR, REGENT_CLS } from "src/types/const";
 
 /* SkribiErrors are for handling errors that are expected to potentially result during normal use. */
-import { EBAR, REGENT_CLS } from "src/types/const";
 
 /* Generic SkribiError */
 export class SkribiError extends Error {
@@ -19,10 +19,10 @@ export class SkribiError extends Error {
     name: string;
     message: string;
   } = null
-  tip?: string
-  el?: HTMLElement
+  tip?: string // Used for displaying hints in the ErrorModal
+  el?: HTMLElement // Used for sending custom elements to display in the ErrorModal
 
-  regentClass: string = REGENT_CLS.error // Used for an error to specify a regent class
+  regentClass: string = REGENT_CLS.error // Used to specify a regent class
   name: string = "SkribiError"
   constructor(msg: string) {
     super(msg)
@@ -39,6 +39,7 @@ export class SkribiInternalError extends Error {
 
 }
 
+/* Used in sk.abort() invocations. */
 export class SkribiAbortError extends SkribiError {
   name: string = 'AbortError'
   _sk_abortPacket: any = null

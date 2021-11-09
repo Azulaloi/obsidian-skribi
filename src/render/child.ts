@@ -5,6 +5,8 @@ import { dLog, isExtant, vLog } from "src/util/util";
 import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
 
+/* The beating heart of an individual skreeb. */
+
 interface SkChild {
 	scriptsUpdated: (id?: string) => void
 	sources: skChildSources
@@ -45,6 +47,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		this.plugin = plugin
 	}
 
+	/* Provides the 'sk.child' object. */
   public provideContext() {
     return {
       el: this.containerEl,
@@ -53,17 +56,19 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
       registerEvent: this.skRegisterEvent.bind(this),
 			registerPost: this.skRegisterPost.bind(this),
 			addStyle: this.skAddStyle.bind(this),
-      reload: this.rerender, // Bound on assignment
+      reload: this.rerender, // Bound on assignment in renderSkribi()
       _c: this
     }
   }
 
+	/* Called when a script was updated. Reloads if 'id' is in script sources or null. */
 	public scriptsUpdated(id?: string) {
 		if (this.plugin.settings.autoReload) {
 			if (!isExtant(id) || this.sources.scripts.contains(id)) this.rerender()
 		}
 	}
 
+	/* Called when a plugin loads or unloads. Reloads if 'id' is in plugin sources. */
 	public pluginUpdated(id: string, loading?: boolean) {
 		if (this.plugin.settings.autoReload) {
 			if (this.sources.integrations.contains(id)) {
@@ -74,6 +79,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		}
 	}
 
+	/* Called when a template was updated. Reloads if 'id' is in template sources. */
 	public templatesUpdated(id: string, newId?: string) {	
 		if (this.plugin.settings.autoReload) {
 			if ((this?.templateKey == id) || this.sources.templates.contains(id)) {
@@ -83,6 +89,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		}
 	}
 
+	/* Called when a style template was updated. Reloads if 'id' is in style sources. */
 	public stylesUpdated(id: string) {
 		if (this.plugin.settings.autoReload) {
 			if ((this.sources.styles).contains(id)) {
@@ -92,8 +99,10 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		}
 	}
 
+	/* Add a style or template source to listen for modifications to. */
 	listenFor(type: "style" | "template", id: string) {
 		let l = (type == "style" ? this.sources.styles : type == "template" ? this.sources.templates : null)
+		
 		if (l) l.push(id) 
 	}
 
@@ -103,12 +112,14 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		}
 	}
 
+	/* Reverts to a pre-invocation state, such as when plugin is unloaded. */
 	collapse() {
 		let pre = createEl('code', {text: this.source})
 		this.containerEl.replaceWith(pre)
 		this.unload()
 	}
 
+	/* Reinvoke child from processor entry point. Distinct from rerender, which reinvokes from renderSkribi(). */
 	reset() {
 		let pre = createEl('code', {text: this.source})
 		this.containerEl.replaceWith(pre)
@@ -120,13 +131,12 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 
 	onload() {}
 
-	/* NOT called by child.unload() (except sometimes it is) */
 	onunload() {
 		dLog("skreeb unload", this.containerEl);
 		this.clear()
 	}
 
-	/* Called by rerender. */
+	/* Clear responsibilities and retainers, prep for collection. */
 	clear() {
 		vLog("clear", this.containerEl)
 		for (let i of this.intervals) window.clearInterval(i); // there might be cases where this doesn't get called properly (?)

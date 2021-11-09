@@ -7,7 +7,7 @@ import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util/util";
 import { compileWith } from "./comp";
-import { SkribiError, SkribiEtaSyntaxError, SkribiSyntaxError } from "./error";
+import { SkribiEtaSyntaxError } from "./error";
 import { renderEta } from "./eval";
 import compileToString from "./mod";
 import { ProviderBus } from "./provider_bus";
@@ -149,7 +149,9 @@ export class EtaHandler {
       },
       this.bus.getScopeSK()
     )
+
     /*
+    // While this does provide a helpful error message, it precludes the use of ?. operators which are more useful
     Object.defineProperty(sk.ctx, 'file', {get: function() {
       if (file) return file
       else throw new SkribiError("file (sk.ctx.file) does not exist in current render context")
@@ -190,6 +192,7 @@ export class EtaHandler {
     else return Promise.reject("Unknown error")
   }
 
+  /* Currently used by StyleExtender. TODO: more robust API (post release feature) */
   render(content: string, ctxIn?: any) {
     let context = ctxIn || {};
 

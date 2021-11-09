@@ -1,7 +1,8 @@
 import { ProviderPredicated } from "../../provider_abs";
-import type WeatherAPI from "../../../../../obsidian-weather/src/api";
+// import type WeatherAPI from "../../../../../obsidian-weather/src/api";
 import { EventRef } from "obsidian";
 
+/* Integration module for my WIP weather plugin (https://github.com/Azulaloi/obsidian-weather) */
 export class ProviderWeather extends ProviderPredicated {
   predicatePluginName: string = 'obsidian-weather'
 

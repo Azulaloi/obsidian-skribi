@@ -1,4 +1,4 @@
-/* This is slightly modified from Eta */
+/* This is slightly modified from Eta. */
 
 export class Cacher<T> {
   constructor(readonly cache: Record<string, T>) {}

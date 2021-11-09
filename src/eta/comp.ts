@@ -1,9 +1,5 @@
-import * as Eta from "eta";
-import { PartialConfig } from "eta/dist/types/config"
-import { CallbackFn } from "eta/dist/types/file-handlers"
-import { TemplateFunctionScoped, scopedVars } from "src/types/types"
-import { dLog, getAsyncConstructor, promiseImpl } from "src/util/util"
-import { EtaHandler } from "./eta"
+import { TemplateFunctionScoped } from "src/types/types"
+import { getAsyncConstructor } from "src/util/util"
 import { parse } from "acorn"
 import { SkribiSyntaxError } from "./error";
 
@@ -19,8 +15,6 @@ export function compileWith(functionString: string, keys: string[], async?: bool
   }
   let func = `var {${a.substr(0, a.length-1)}} = scope\n` + functionString
   let constructor = (async) ? getAsyncConstructor() : Function 
-  // let compiled = new constructor('scope', func)
-
   var compiled = null
   try {
     let c = new constructor('scope', func)

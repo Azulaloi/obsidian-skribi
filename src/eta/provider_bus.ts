@@ -10,23 +10,17 @@ import { ProviderScriptloader } from "./providers/scriptloader";
 import { IProvider, Provider, ProviderPredicated } from "./provider_abs";
 
 const obsidianModule = require("obsidian");
-
 const MODULE_NAME_INTEGRATIONS: string = 'int';
 
-type Providerish = IProvider
-
-/* Handles all script function providers */
+/* Handles all skript context providers. */
 export class ProviderBus {
-
   handler: EtaHandler
   plugin: SkribosPlugin
 
   providers: Map<string, Provider> = new Map()
   providersPredicated: Map<string, ProviderPredicated> = new Map()
 
-  /* Has a reference so that it can be notified by update events */
-  scriptLoader: ProviderScriptloader;
-
+  scriptLoader: ProviderScriptloader; // Has a reference so that it can be notified by update events
   skBase: ProviderSK;
 
   private scopeStatic: Stringdex = {}
@@ -37,7 +31,6 @@ export class ProviderBus {
   constructor(handler: EtaHandler) {
     this.handler = handler
     this.plugin = handler.plugin
-
     this.scriptLoader = new ProviderScriptloader(this, 'js'); // assigned here so that we can register file events in handler
   }
 
@@ -115,7 +108,7 @@ export class ProviderBus {
     return Promise.allSettled(Object.values(proms))
   }
 
-  public getScopeKeys() {
+  public getScopeKeys(): string[] {
     return [...this.providers.keys(), MODULE_NAME_INTEGRATIONS, 'moment', 'obsidian']
   }
 

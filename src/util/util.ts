@@ -2,6 +2,7 @@ import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault 
 import { EBAR } from "../types/const";
 import { Stringdex } from "../types/types";
 
+/*
 declare global {
 	interface Element {
 		addClazz(this: Element, str: string | string[]): void;
@@ -14,6 +15,15 @@ Element.prototype.addClazz = function (str: string | string[]) {
 		this.addClass(...str)
 	} else this.addClass(str)
 };
+*/
+
+// I probably shouldn't be modifying native prototypes, so...
+export function addClazz(el: Element, ...str: string[]): void;
+export function addClazz(el: Element, str: string | string[]): void {
+	if (Array.isArray(str)) {
+		el.addClass(...str)
+	} else el.addClass(str)
+}
 
 export function ensureArray<T>(obj: T | T[]): Array<T> {
 	return Array.isArray(obj) ? obj : [obj]
@@ -187,6 +197,21 @@ export function average(...numbers: number[]) {
 export function linkDocs(page: string) {
 	// return `https://azulaloi.net/obsidian-skribi/${page}`
 	return `https://azulaloi.github.io/obsidian-skribi/${page}`
+}
+
+/* Creates a link that opens the Skribi Settings tab. */
+export function makeSettingsLink(elIn?: HTMLElement) {
+  let el = elIn ?? createDiv()
+	el.createSpan({text: "Open Skribi Settings", cls: 'skr-button'})
+	openSettingsOnClick(el)
+  return el
+}
+
+export function openSettingsOnClick(el: HTMLElement) {
+  el.addEventListener('click', (ev) => {
+    window.app.setting.open()
+    window.app.setting.openTabById('obsidian-skribi')
+  })
 }
 
 /* Prefixes string with plugin name. Makes reusing code across plugins easier. */

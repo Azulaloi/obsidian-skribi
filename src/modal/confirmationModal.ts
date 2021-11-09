@@ -11,6 +11,7 @@ interface confirmationModalValues {
   elements?: Element[]
 } 
 
+/* A simple modal with a confirm/cancel feature. */
 export class confirmationModal extends Modal {
   private resolve: (value: string) => void;
   private reject: (reason?: any) => void;
@@ -28,7 +29,7 @@ export class confirmationModal extends Modal {
 
   onOpen(){
     this.titleEl.setText(this.fields.title)
-    this.containerEl.addClazz(kls('confirmation-modal'), this.fields.class)
+    this.containerEl.addClass(kls('confirmation-modal'), this.fields.class)
     if (this.fields.desc) this.contentEl.createDiv({cls: kls('confirmation-modal-description'), text: this.fields.desc})
     this.contentEl.append(...this.fields?.elements ?? [])
 
@@ -55,6 +56,8 @@ export class confirmationModal extends Modal {
   }
 }
 
+/* Creates or modifies a link that will prompt for confirmation before opening the link. */
+/* I hate when things open the browser without asking... */
 export function makeExternalLink(linkIn: HTMLAnchorElement | string): HTMLAnchorElement {
 	const link = String.isString(linkIn) ? createEl('a', {attr: {href: linkIn}}) : linkIn
 

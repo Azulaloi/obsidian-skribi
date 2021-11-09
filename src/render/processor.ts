@@ -13,6 +13,7 @@ import { parseSkribi, preparseSkribi } from "./parse";
 import { renderRegent, renderError, renderState } from "./regent";
 import { scopeStyle, stripStyleFromString } from "./style/style";
 
+/* The core post processing chain. */
 export default class SkribiProcessor {
   plugin: SkribosPlugin
   eta: EtaHandler
@@ -39,7 +40,8 @@ export default class SkribiProcessor {
   /** Entry to the Skribi process chain. Called:
    * - By MarkdownView on each block of a markdown preview
    * - By MarkdownView on code blocks of our register language types
-   * - By renderSkribi to recurse nested skribis */
+   * - By renderSkribi to recurse nested skribis 
+	 * - By SkribiChild to reset itself. */
   async processEntry (
 		mode: ProcessorMode, // 0: codespan; 1: codeblock;
 		doc: HTMLElement,
@@ -48,30 +50,34 @@ export default class SkribiProcessor {
 		self?: boolean,
 		srcIn?: string
 	): Promise<Promise<SkribiResult>[] | null> {
-		let entryPacket = [mode, doc, ctx, depth, self, srcIn]
+		let entryPacket = [mode, doc, ctx, depth, self, srcIn] // Stores invocation data
+
+		/*- Depth Determination -*/
+
 		let nestExtant = isExtant(ctx.remainingNestLevel)
 		let nestLevel = nestExtant ? ctx.remainingNestLevel : null;
-		/* nestExtant means that we are inside of a natural transclusion */
+		// nestExtant means that we are inside of a natural transclusion
 
 		self = isExtant(self)
 		depth = self ? depth : null
-		/* self means that we have been called by renderSkribi, to look for codeblocks */
+		// self means that we have been called by renderSkribi, to look for codeblocks
 
 		let elHasDepth = isExtant(doc.getAttribute("depth"))
 		let elElHasDepth = isExtant(ctx.el.getAttribute("depth"))
 		let elDepth = elHasDepth ? parseInt(doc.getAttribute("depth")) : elElHasDepth ? parseInt(ctx.el.getAttribute("depth")) : null;
-		/* Used for passing depth to virtual elements (we may be in one even as we speak...)*/
+		// Used for passing depth to virtual elements (we may be in one even as we speak...)
 
-		/* determine our depth condition type */
+		// determine our depth condition type
 		let d = self ? depth : (elHasDepth || elElHasDepth) ? elDepth : nestExtant ? nestLevel : 0
 
-		if (!nestExtant && !(elHasDepth || elElHasDepth)) dLog("processor sees no depth")
+		if (!nestExtant && !(elHasDepth || elElHasDepth)) dLog("processor sees no depth");
 
 		if (elHasDepth) { 
 			dLog("elDepth", elDepth, "doc", doc, "el", ctx.el, "conEl", ctx.containerEl) 
 		} else {
 			dLog("processor: ", "doc", doc, "el", ctx.el, "conEl", ctx.containerEl, "nest", ctx.remainingNestLevel)
 		}
+		/*- End Depth Determination -*/
 
 
 		/* Dispatch render promises */
@@ -124,7 +130,6 @@ export default class SkribiProcessor {
 			return proms.concat(tproms)
 		} else {
 			/* Depth too high! */
-
 			elCodes.forEach(async (el) => {
 				preparseSkribi(el).then(async (src) => {
 					if (src != null) {
@@ -134,7 +139,6 @@ export default class SkribiProcessor {
 				})
 			})
 			dLog("processor hit limit"); 
-			
 			return Promise.resolve(null); // Postprocessor calls are not caught so we can't reject neatly.
 		}
 	}
@@ -144,6 +148,7 @@ export default class SkribiProcessor {
   /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
 	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
 		if (isExtant(this.plugin.eta.loader.initError)) {
+			// The template loader has errored and will not initialize, so continue rendering immediately.
 			return await this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
 		}
 		
@@ -258,9 +263,8 @@ export default class SkribiProcessor {
 					/* Template skribi's template does not exist (intentionally not caught until this point) */
 
 					let failed = this.eta.failedTemplates.has(id)
-
 					let msg = `Cannot read template '${id}'`
-					msg+= failed ? `\nTemplate exists, but failed to compile` : `\nNo such entry found`
+					msg += failed ? `\nTemplate exists, but failed to compile` : `\nNo such entry found`
 
 					let nerr = new SkribiError(msg)
 					if (failed)
@@ -288,7 +292,6 @@ export default class SkribiProcessor {
 			}
 
 			var regentClass = (err instanceof SkribiError) ? err.regentClass : REGENT_CLS.error
-
 			if (err?.evalError instanceof SkribiAbortError) {
 				regentClass = err.evalError._sk_abortPacket.cls
 			}

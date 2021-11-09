@@ -3,14 +3,16 @@ import { Stringdex } from "src/types/types";
 import { isExtant } from "src/util/util";
 import { ProviderBus } from "./provider_bus";
 
+/* Providers are modules that provide a set of values to the skript context. */
+
 export interface IProvider {
-  id: string
-  bus: ProviderBus
+  id: string;
+  bus: ProviderBus;
   functions: Map<string, any>;
-  createObject(): Stringdex;
-  init(): Promise<void>;                   // Called once, on bus load
-  unload(): void;                         // Called once, on bus unload
-  reload(): Promise<any>;                 // May be called multiple times
+  createObject(): Stringdex;    // Dispenses the values to be provided
+  init(): Promise<void>;    // Called once, on bus load
+  unload(): void;   // Called once, on bus unload
+  reload(): Promise<any>;   // May be called multiple times
 
   setDirty(): void;
   postDirty?(): void;
@@ -56,7 +58,7 @@ export abstract class Provider implements IProvider {
 }
 
 /** 
- * Predicated providers are responsible for modules that require certain conditions to function */
+ * Predicated providers are responsible for modules that require certain conditions to function. */
 export interface IProviderPredicated extends IProvider {
   predicateCheck(): boolean
   predicateError(): string

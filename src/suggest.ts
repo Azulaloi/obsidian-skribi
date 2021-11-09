@@ -2,6 +2,8 @@ import { Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSugg
 import SkribosPlugin from "./main";
 import { isExtant } from "./util/util";
 
+/** Suggests templates and properties when invoking a template. */
+// TODO: Don't suggest properties that have already been defined
 export default class TemplateSuggest extends EditorSuggest<string> {
   plugin: SkribosPlugin
 
@@ -55,8 +57,6 @@ export default class TemplateSuggest extends EditorSuggest<string> {
   renderSuggestion(value: string, el: HTMLElement): void {
     el.addClass("skribi-suggestion")
     el.createSpan({text: value})
-    // console.log(el.cloneNode(true))
-    // console.log(el.parentElement.parentElement.cloneNode(true))
   }
 
   selectSuggestion(value: string, evt: MouseEvent | KeyboardEvent): void {

@@ -22,13 +22,16 @@ export const enum Flags {
 	eval = 5
 }
 
+/* Separator for console logging. */
 export const EBAR = `\n---------------------------\n`
 
+/** Miscellaneous classes. */
 export const CLS = {
 	virtual: "skribi-render-virtual",
 	anim: "skribi-anims",
 }
 
+/** Classes for regent elements. */
 export const REGENT_CLS = {
 	regent: "skribi-regent", // Regent base
 	error: "skr-error", // Something threw somewhere

@@ -1,41 +1,25 @@
 import * as Eta from "eta";
-import { Notice, parseYaml, TAbstractFile, TFile } from "obsidian";
+import { parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
-import {  getFiles, isExtant, isFile, isInFolder, roundTo, vLog, vWarn, withoutKey } from "src/util/util";
+import {  getFiles, isExtant, isFile, isInFolder, makeSettingsLink, roundTo, vLog, vWarn, withoutKey } from "src/util/util";
 import { EtaHandler } from "./eta";
 import { Cacher } from "./cacher";
-import { FileMinder, Stringdex, TemplateFunctionScoped } from "src/types/types";
+import { FileMinder, TemplateCache, TemplateErrorCache } from "src/types/types";
 import { compileWith } from "./comp";
 import compileToString from "./mod";
-import { skInternalError, SkribiError } from "./error";
-import { appendFile } from "fs";
+import { skInternalError } from "./error";
 
-export interface TemplateCache {
-  source?: string,
-  function: TemplateFunctionScoped,
-  frontmatter?: Stringdex,
-  extension?: string // optional to support future methods of atypical (non-file) caching
-}
-
-export interface TemplateErrorCache {
-  source: string,
-  error: any,
-  extension?: string 
-}
-
-/* Responsible for the caching and management of templates. */
-// TODO: add system to auto-reload skribis when relevant template cache changes 
+/* Responsible for management of templates and the template cache. */
 export class TemplateLoader implements FileMinder {
   private handler: EtaHandler
   private plugin: SkribosPlugin
 
   templateCache: Cacher<TemplateCache> = new Cacher<TemplateCache>({})
-  // templateFailures: Map<string, string> = new Map();
   templateFailures: Cacher<TemplateErrorCache> = new Cacher<TemplateErrorCache>({})
   styleCache: Cacher<string> = new Cacher<string>({})
 
-  initError: any; // used to show error on await-regents
+  initError: any; // Stores errors thrown during loader init, to show error on await-regents
 
   constructor(handler: EtaHandler) {
     this.handler = handler
@@ -110,7 +94,6 @@ export class TemplateLoader implements FileMinder {
         // console.log(`compiled ${file.name} as template`)
       } catch(err) {
         // console.log(`${file.name} err`)
-        // this.templateFailures.set(file.basename, err ?? `Template failed to compile: Unknown Error`)
         this.templateFailures.define(file.basename, {error: err, source: read, extension: file.extension})
         console.warn(`Skribi: template '${file.basename}' failed to compile`, EBAR, err, EBAR, read)
         this.templateCache.remove(file.basename)
@@ -118,7 +101,6 @@ export class TemplateLoader implements FileMinder {
         return Promise.reject()
       }
   
-      // this.templateFailures.delete(file.basename)
       this.templateFailures.remove(file.basename)
       this.templateCache.define(file.basename, {
         source: read,
@@ -199,12 +181,13 @@ export class TemplateLoader implements FileMinder {
 
   public async reload(): Promise<any> {
     this.initError = null;
+
     if (this.directory.length <= 0) {
       // new Notice("Skribi: template directory not defined!"); 
       throw skInternalError({ 
         name: "TemplateLoader", message: "Template directory not defined!", err: null, 
         regentClass: "skr-waiting skr-template-init-error", 
-        el: makeSettingsLink()
+        el: makeSettingsLink(createDiv({cls: ['skribi-modal-error-message']}))
       })
     }
 
@@ -214,7 +197,7 @@ export class TemplateLoader implements FileMinder {
       throw skInternalError({
         name: "TemplateLoader", message: err?.message, err: err, 
         regentClass: "skr-waiting skr-template-init-error", 
-        el: makeSettingsLink()
+        el: makeSettingsLink(createDiv({cls: ['skribi-modal-error-message']}))
       })
     }
 
@@ -291,14 +274,4 @@ export class TemplateLoader implements FileMinder {
   isInDomain(file: TAbstractFile): boolean {
     return isInFolder(file, this.directory)
   }
-}
-
-function makeSettingsLink() {
-  let el = createDiv({cls: ['skribi-modal-error-message']})
-  el.createSpan({text: "Open Skribi Settings", cls: 'skr-button'})
-  el.addEventListener('click', (ev) => {
-    window.app.setting.open()
-    window.app.setting.openTabById('obsidian-skribi')
-  })
-  return el
 }

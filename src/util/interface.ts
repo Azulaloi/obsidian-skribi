@@ -42,7 +42,6 @@ export function makeLinesTable(fieldEl: HTMLElement, linesIn: string | string[],
   fieldEl.append(tab)
 }
 
-
 export function makeField(modalName: string, containerEl: HTMLElement, name: string, wrap?: boolean, startCollapsed?: boolean, cb?: (state: boolean) => any) {
   let fieldContainer = createDiv({"cls": `skribi-modal-${modalName}-field-container`})
   let fieldTitle = (!wrap) ? fieldContainer.createDiv({text: name, cls: `skribi-modal-${modalName}-field-title`}) : null

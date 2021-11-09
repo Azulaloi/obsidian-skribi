@@ -3,11 +3,12 @@ import { l } from "src/lang/babel";
 import { SkribiChild } from "src/render/child";
 import { Modes } from "src/types/const";
 import SkribosPlugin from "../main";
-import { average,  invokeMethodOf,  linkDocs, roundTo, vLog } from "../util/util";
+import { average, linkDocs, roundTo, vLog } from "../util/util";
 import { makeExternalLink } from "./confirmationModal";
 
 const maximumIterations = 10000
 
+/* A modal which renders skribis in bulk, for testing purposes. */
 export class TestModal extends Modal {
   private plugin: SkribosPlugin;
   private keypressRef: KeymapEventHandler;

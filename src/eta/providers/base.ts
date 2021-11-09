@@ -5,6 +5,7 @@ import { CLS, REGENT_CLS } from "src/types/const";
 import { Stringdex } from "src/types/types";
 import { SkribiAbortError } from "../error";
 
+/* Provides skript functions for the 'sk' object */
 export class ProviderSK extends Provider {
   async init() {
     return super.init()

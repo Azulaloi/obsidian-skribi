@@ -74,3 +74,16 @@ export type queuedTemplate = {
 	function: (el: HTMLElement, time: number) => Promise<SkribiResult>,
 	element: HTMLElement
 }
+
+export interface TemplateCache {
+  source?: string,
+  function: TemplateFunctionScoped,
+  frontmatter?: Stringdex,
+  extension?: string // optional to support future methods of atypical (non-file) caching
+}
+
+export interface TemplateErrorCache {
+  source: string,
+  error: any,
+  extension?: string 
+}

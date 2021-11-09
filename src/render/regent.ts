@@ -11,7 +11,7 @@ export interface RegentData {
 	// icon?: string
 }
 
-/** Replaces 'el'. */
+/** Render an error regent. Replaces 'el'. */
 export async function renderError(el: HTMLElement, e: RegentData) {
 	var hover = "";
 	var label = 'sk';

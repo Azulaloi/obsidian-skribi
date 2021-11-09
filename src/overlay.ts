@@ -1,6 +1,7 @@
 import * as CodeMirror from './codemirror/codemirror';
 import SkribosPlugin from "./main";
 
+// unused...
 export function registerMirror(plugin: SkribosPlugin) {
     plugin.app.workspace.on("codemirror", (cm) => cm.setOption("mode", "skribi"))
 

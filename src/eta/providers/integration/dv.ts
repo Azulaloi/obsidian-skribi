@@ -2,6 +2,7 @@ import { EventRef } from "obsidian";
 // import { DataviewInlineApi } from "obsidian-dataview/lib/api/inline-api";
 import { ProviderPredicated } from "src/eta/provider_abs";
 
+/* Integration module for Dataview (https://github.com/blacksmithgu/obsidian-dataview) */
 export class ProviderDataview extends ProviderPredicated {
   predicatePluginName = 'dataview'
   // dvp: DataviewPlugin = null
