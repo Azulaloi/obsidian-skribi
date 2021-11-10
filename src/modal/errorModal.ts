@@ -1,10 +1,11 @@
 import { Modal, App } from "obsidian";
-import { SkribiError, SkribiSyntaxError, SkribiEvalError, SkribiEtaSyntaxError } from "src/eta/error";
+import { SkribiError, SkribiSyntaxError, SkribiEvalError, SkribiEtaSyntaxError, SkribiImportError } from "src/eta/error";
 import { createRegent } from "src/render/regent";
 import { isExtant } from "src/util/util";
 import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/interface";
 import { REGENT_CLS } from "src/types/const";
-import { IndexModal } from "./indexModal";
+import { IndexTemplateModal } from "./indexTemplateModal";
+import acorn, { getLineInfo, parse } from "acorn";
 
 /* A modal that displays information about the various types of possible errors that may occur when rendering a skribi. 
  * Opened by error regents. */
@@ -18,10 +19,10 @@ export class ErrorModal extends Modal {
 
   /* TODO: make this more concise */
   /* TODO: also I should put most of this logic elsewhere so that the console logging can benefit from it */
-  onOpen(){
+  async onOpen(){
     var util = require('util')
     let err = this.error
-    this.containerEl.addClass("skribi-modal-error")
+    this.containerEl.addClass("skribi-modal", "skribi-modal-error")
 
     if (err instanceof SkribiError) {
       this.titleEl.innerText = (err?.name ?? "SkribiError") + ": " + err.message
@@ -167,7 +168,7 @@ export class ErrorModal extends Modal {
         let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
       } else if (err instanceof SkribiEtaSyntaxError) {
-        console.log(err.packet)
+        // console.log(err.packet)
         let invField = makeField("error", this.contentEl, "Details", true)
         if (err.packet?.loc) {
           makeLinesTable(invField.content, err.packet.loc.src, (ind: number, els: linesTableCB) => {
@@ -202,7 +203,41 @@ export class ErrorModal extends Modal {
         }
 
 
+      } else if (err instanceof SkribiImportError) {
+        /* Error thrown by scriptloader when trying to import a script */
 
+        let ifile = err._sk_importErrorPacket.file;
+        let ierr = err._sk_importErrorPacket.err;
+        let read = await this.app.vault.adapter.read(ifile.path)
+
+        let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
+        subErrorMessage.createSpan({text: `Import Error for '${ifile.name}': `, cls: 'sk-label'})
+        let s = subErrorMessage.createSpan({cls: 'sk-msg'})
+        s.setText(ierr?.message ?? "")
+
+        let errField = makeField("error", this.contentEl, (ierr?.name ?? "UnknownError") + " Stack", true, true)
+        makeLinesTable(errField.content, ierr.stack)
+        
+        let srcField = makeField("error", this.contentEl, "Script Source", true, isExtant(pos))
+
+        var pos = null;
+        if (ierr instanceof SyntaxError) {
+          /* Parse with acorn to get a better location */
+          try {
+            parse(read, {ecmaVersion: 2020})
+          } catch (parseError) {
+            if (parseError instanceof SyntaxError) {
+              srcField.title.append(createSpan({text: parseError.message, cls: 'skr-errsrcmsg'}))
+              //@ts-ignore (acorn parse error)
+              pos = {line: parseError.loc.line, col: parseError.loc.column}
+            }
+          }
+        } else {
+          match = (/at Object\.<anonymous> \([^\:]*\:[^\:]*\:(?<line>\d*)\:(?<ch>\d*)/.exec(ierr.stack))
+          pos = {line: match.groups.line, col: match.groups.ch}
+        }
+
+        makeLinesAndPoint(srcField.content, read, pos)
       } else {
         /* Generic SkribiError */
 
@@ -230,7 +265,7 @@ export class ErrorModal extends Modal {
           let span = subErrorMessage.createSpan({text: `View Template Index`, cls: 'skr-button'})
           span.addEventListener('click', (ev) => {
             ev.preventDefault()
-            let p = new IndexModal(this.app.plugins.plugins["obsidian-skribi"])
+            let p = new IndexTemplateModal(this.app.plugins.plugins["obsidian-skribi"])
             p.open()
           })
         } else if (err?._sk_errorPacket) {
@@ -309,3 +344,35 @@ export function makeErrorModalLink(el: HTMLElement, err: any): HTMLElement {
 	return el
 }
 
+export interface errorPosition {
+  offset?: number
+  line: number
+  col: number
+}
+
+export function makeLinesAndPoint(el: HTMLElement, read: string, pos?: errorPosition) {
+  makeLinesTable(el, read, (pos) ? (ind: number, els: linesTableCB) => {
+    if (ind == (pos.line-1)) {
+      let z = (pos.col === 0)
+      let text = els.con.textContent
+      let pre = z ? null : text.substring(0, pos.col-1)
+      let char = z ? text.substring(pos.col, pos.col+1) : text.substring(pos.col-1, pos.col)
+      let post = z ? text.substring(pos.col+1) : text.substring(pos.col)
+
+      let toHTML = z ? `` : `<span>${pre}</span>`
+      toHTML += `<span class="skr-err-ch">${char}</span><span>${post}</span>`
+      els.con.innerHTML = toHTML
+
+      els.row.addClass('skribi-line-errored')
+      let pstr = "^".padStart(pos.col)
+      let row = els.table.insertRow()
+      row.addClass("skribi-line-pointer")
+      let numCell = row.insertCell()
+      numCell.setText("@")
+      numCell.addClass("skr-numcell", "skr-pointer")
+      let conCell = row.insertCell()
+      conCell.setText(pstr)
+      conCell.addClass("skr-concell", "skr-pointer")
+    }
+  }: null)
+}

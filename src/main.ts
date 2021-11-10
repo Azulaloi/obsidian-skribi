@@ -11,9 +11,12 @@ import SkribiProcessor from './render/processor';
 import TemplateSuggest from './suggest';
 import { CLS } from './types/const';
 import { around } from 'monkey-around';
-import { IndexModal } from './modal/indexModal';
+import { IndexTemplateModal } from './modal/indexTemplateModal';
 import RenderModal from './modal/renderModal';
 import { PluginData, renderModalPreset } from './data/data';
+import { IndexScriptModal } from './modal/indexScriptModal';
+import { isExtant } from './util/util';
+import { parse } from 'eta';
 
 export default class SkribosPlugin extends Plugin {
 	data: PluginData
@@ -85,6 +88,41 @@ export default class SkribosPlugin extends Plugin {
 		this.registerEvent(this.app.workspace.on("skribi:plugin-unload", (id: string) => {
 			Array.from(this.children).forEach(child => child.pluginUpdated(id))
 		}))
+
+		this.app.workspace.onLayoutReady(() => {this.reloadModals()})
+	}
+	
+	async reloadModals() {
+		/* this is just to make things easier for me when hot reloading modals */
+		 
+		document.querySelectorAll("body div.skribi-modal.skribi-unloaded").forEach(async (v) => {
+			var mtype = null
+			v.classList.forEach((v) => {if (v.startsWith("skribi-modal-")) {mtype = v}});
+			if (mtype) {
+				console.log(v)
+
+				let parent = await this.findModalParent(v)
+				console.log(parent)
+
+				switch (mtype) {
+					case "skribi-modal-index-scripts": { 
+						parent?.close(); new IndexScriptModal(this).open(); break; 
+					}
+					case "skribi-modal-index-templates": {
+						parent?.close(); new IndexTemplateModal(this).open(); break; 
+					}
+					case "skribi-modal-error": { 
+						parent?.close(); break; 
+					}
+				}
+			}
+		})
+	}
+
+	async findModalParent(el: Element) {
+		return this.app.workspace.closeables.find((v) => {
+			return v.containerEl == el 
+		})
 	}
 
 	/** Register our commands. */
@@ -122,7 +160,11 @@ export default class SkribosPlugin extends Plugin {
 		}})
 
 		this.addCommand({id: "view-templates", name: "View Templates", callback: () => {
-			new IndexModal(this).open()
+			new IndexTemplateModal(this).open()
+		}})
+
+		this.addCommand({id: "view-scripts", name: "View Scripts", callback: () => {
+			new IndexScriptModal(this).open()
 		}})
 
 		this.addCommand({id: "render-template", name: "Render Template", callback: () => {
@@ -152,6 +194,7 @@ export default class SkribosPlugin extends Plugin {
 			child.collapse()
 		})
 		document.body.removeClass(CLS.anim)
+		document.querySelectorAll("body div.skribi-modal").forEach((v) => {v.addClass('skribi-unloaded')})
 	}
 
 	async initData() {

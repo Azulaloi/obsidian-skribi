@@ -1,3 +1,4 @@
+import { TFile } from "obsidian";
 import { EBAR, REGENT_CLS } from "src/types/const";
 
 /* SkribiErrors are for handling errors that are expected to potentially result during normal use. */
@@ -76,6 +77,14 @@ export class SkribiEtaSyntaxError extends SkribiError {
 export class SkribiEvalError extends SkribiError {
   _sk_function: Function // The unbound compiled function 
   evalError: Error // The caught causal error
+}
+
+export class SkribiImportError extends SkribiError {
+  name: string = "SkribiImportError"
+  _sk_importErrorPacket: {
+    err: any,
+    file: TFile
+  } = null
 }
 
 /* Logs an error to the console with appropriate error-specific formatting. */

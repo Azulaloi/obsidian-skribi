@@ -1,4 +1,5 @@
 import { setIcon } from "obsidian"
+import { isExtant } from "./util"
 
 export function makeLines(fieldEl: HTMLElement, linesIn: string | string[], 
   cb?: (ind: number, els: {lineEl: HTMLElement, numEl: HTMLElement, conEl: HTMLElement}) => any) 
@@ -19,8 +20,9 @@ export interface linesTableCB {
   table: HTMLTableElement, row: HTMLTableRowElement, 
   num: HTMLTableCellElement, con: HTMLTableCellElement
 }
-export function makeLinesTable(fieldEl: HTMLElement, linesIn: string | string[],
-  cb?: (ind: number, els: linesTableCB) => any)
+
+export function makeLinesTable(fieldEl?: HTMLElement, linesIn?: string | string[],
+  cb?: (ind: number, els: linesTableCB) => any): void | HTMLElement
 {
   let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
   let tab = createEl('table', {cls: "skr-lines-table"}) 
@@ -39,7 +41,10 @@ export function makeLinesTable(fieldEl: HTMLElement, linesIn: string | string[],
     
     if (cb) {cb(i, {table: tab, row: row, num: numCell, con: conCell})} 
   }
-  fieldEl.append(tab)
+  if (isExtant(fieldEl)) {
+    fieldEl.append(tab)
+  } 
+  return tab
 }
 
 export function makeField(modalName: string, containerEl: HTMLElement, name: string, wrap?: boolean, startCollapsed?: boolean, cb?: (state: boolean) => any) {

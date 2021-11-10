@@ -1,11 +1,15 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
 import { DynamicState, FileMinder, Stringdex } from "src/types/types";
+import { makeLinesTable, wrapCollapse } from "src/util/interface";
 import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util/util";
+import { SkribiError, SkribiImportError } from "../error";
 import { Provider } from "../provider_abs";
+
 
 /* Loads and provides JS files from the skript directory as modules. */
 export class ProviderScriptloader extends Provider implements FileMinder {
   loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
+  failedModules: Map<string, SkribiImportError> = new Map()
 
   async init() {
     return this.initLoad().then(() => super.init())
@@ -33,6 +37,8 @@ export class ProviderScriptloader extends Provider implements FileMinder {
         )
       }
     })
+
+    this.bus.plugin.app.workspace.trigger('skribi:script-index-modified')
   }
 
   createObject(ctx?: DynamicState): Stringdex {
@@ -66,11 +72,16 @@ export class ProviderScriptloader extends Provider implements FileMinder {
 
         const mod = require(path)
 
+        if (isExtant(mod)) {
+          this.failedModules.delete(f.basename)
+        }
+        
         return (isExtant(mod)) 
           ? Promise.resolve([f.basename, mod])
           : Promise.reject()
       } catch(e) {
         console.warn(e)
+        this.failedModules.set(f.basename, Object.assign(new SkribiImportError(`${e?.name ?? 'Error'} during script import`), {_sk_importErrorPacket: {err: e, file: f}}))
         return Promise.reject()
       }      
     })
