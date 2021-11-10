@@ -5,7 +5,7 @@ import { isExtant } from "src/util/util";
 import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/interface";
 import { REGENT_CLS } from "src/types/const";
 import { IndexTemplateModal } from "./indexTemplateModal";
-import acorn, { getLineInfo, parse } from "acorn";
+import acorn, { getLineInfo, parse, tokenizer } from "acorn";
 
 /* A modal that displays information about the various types of possible errors that may occur when rendering a skribi. 
  * Opened by error regents. */
@@ -28,46 +28,17 @@ export class ErrorModal extends Modal {
       this.titleEl.innerText = (err?.name ?? "SkribiError") + ": " + err.message
 
       if (err instanceof SkribiSyntaxError) {
-        let parseErrMsg = this.contentEl.createDiv({cls: 'skribi-modal-error-parseErrMsg'})
+        /* SyntaxError thrown by JS during function construction */
+        this.containerEl.setAttribute('skribi-error-type', 'JavascriptSyntaxError')
+
+        let parseErrMsg = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
         parseErrMsg.createSpan({text: 'SyntaxError: ', cls: 'sk-label'})
         parseErrMsg.createSpan({text: err.parseError.message, cls: 'sk-msg'})
   
         let compField = makeField("error", this.contentEl, "Compiled Function", true)
         let lines = err.packet.funcLines
         let unrelated = [0, 1, 2, lines.length-1, lines.length-2]
-        // console.log(getLineInfo(err.packet.funcLines.join("\n"), err.packet.pos))
-        // let len = err.packet.raisedAt - err.packet.pos
-        makeLinesTable(compField.content, lines, (ind: number, els: linesTableCB) => {
-          if (unrelated.contains(ind)) {
-            els.row.addClass('skribi-line-extraneous')
-          }
-  
-          if (ind == err.packet.loc.line-1) {
-            let text = els.con.textContent
-            let pre = text.substring(0, err.packet.loc.column-1)
-            let char = text.substring(err.packet.loc.column-1, err.packet.loc.column)
-            let post = text.substring(err.packet.loc.column)
-
-            // let pre = text.substring(0, err.packet.loc.column)
-            // let char = text.substring(err.packet.loc.column, )
-            // let post = text.substring(err.packet.loc.column + len)
-
-            // console.log(err.packet)
-            els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
-            // console.log([pre, char, post])
-
-            els.row.addClass('skribi-line-errored')
-            let pstr = "^".padStart(err.packet.loc.column)
-            let row = els.table.insertRow()
-            row.addClass("skribi-line-pointer")
-            let numCell = row.insertCell()
-            numCell.setText("@")
-            numCell.addClass("skr-numcell", "skr-pointer")
-            let conCell = row.insertCell()
-            conCell.setText(pstr)
-            conCell.addClass("skr-concell", "skr-pointer")
-          }
-        })
+        makeLinesAndPoint(compField.content, lines, {line: err.packet.loc.line, col: err.packet.loc.column}, {linesToMute: unrelated})
         
         if (err?._sk_invocation) {
           let srcField = makeField("error", this.contentEl, "Invocation String", true)
@@ -93,6 +64,9 @@ export class ErrorModal extends Modal {
         makeLinesTable(errField.content, err.stack)
 
       } else if (err instanceof SkribiEvalError) {
+        /* Error thrown when evaluating the template function */
+        this.containerEl.setAttribute('skribi-error-type', 'SkribiEvalError')
+
         let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
         subErrorMessage.createSpan({text: (err.evalError?.name ?? "UnknownError") + ": ", cls: 'sk-label'})
         subErrorMessage.createSpan({
@@ -107,45 +81,12 @@ export class ErrorModal extends Modal {
         if (err.evalError?.stack) {
           /* This should find the position trace from certain types of errors */
           match = (/eval at compileWith \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
-          // match = (/at Object.eval \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/).exec(err.evalError.stack)
-          // console.log(match)
         }
 
         let compField = makeField("error", this.contentEl, "Compiled Function", true, false)
         let lines = err._sk_function.toString().split(/\r\n|\n/)
         let unrelated = [0, 1, 2, 3, 4, lines.length-1, lines.length-2, lines.length-3]
-        makeLinesTable(compField.content, lines, isExtant(match) ? (ind: number, els: linesTableCB) => {
-          if (unrelated.contains(ind)) {
-            els.row.addClass('skribi-line-extraneous')
-          }
-
-          if (ind == match.groups.line-1) {
-            let text = els.con.textContent
-            let pre = text.substring(0, match.groups.ch-1)
-            let char = text.substring(match.groups.ch-1, match.groups.ch)
-            let post = text.substring(match.groups.ch)
-
-            // let tokens = [...tokenizer(lines[ind].substr(match.groups.ch-1), {"ecmaVersion": 2020})]
-            // console.log(tokens)
-
-            els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
-            // console.log([pre, char, post])
-
-            let tabs = text.match(/\t/g)
-            let tt = tabs?.length ?? 0
-
-            els.row.addClass('skribi-line-errored')
-            let pstr = ("^".padStart(tt+1, "	")).padStart(match.groups.ch)
-            let row = els.table.insertRow()
-            row.addClass("skribi-line-pointer")
-            let numCell = row.insertCell()
-            numCell.setText("@")
-            numCell.addClass("skr-numcell", "skr-pointer")
-            let conCell = row.insertCell()
-            conCell.setText(pstr)
-            conCell.addClass("skr-concell", "skr-pointer")
-          }
-        }: undefined)
+        makeLinesAndPoint(compField.content, lines, match && {line: match.groups.line, col: match.groups.ch}, {linesToMute: unrelated, parseToken: true})
 
         let invField = makeField("error", this.contentEl, "Invocation String", true)
         makeLinesTable(invField.content, err._sk_invocation)
@@ -168,43 +109,18 @@ export class ErrorModal extends Modal {
         let errField = makeField("error", this.contentEl, err.name + " Stack", true, true)
         makeLinesTable(errField.content, err.stack)
       } else if (err instanceof SkribiEtaSyntaxError) {
-        // console.log(err.packet)
+        /* Error thrown by Eta when trying to parse a template string */
+        this.containerEl.setAttribute('skribi-error-type', 'EtaSyntaxError')
+        
         let invField = makeField("error", this.contentEl, "Details", true)
         if (err.packet?.loc) {
-          makeLinesTable(invField.content, err.packet.loc.src, (ind: number, els: linesTableCB) => {
-            if (ind == err.packet.loc.line-1) {
-              let text = els.con.textContent
-              let pre = text.substring(0, err.packet.loc.col-1)
-              let char = text.substring(err.packet.loc.col-1, err.packet.loc.col)
-              let post = text.substring(err.packet.loc.col)
-  
-              // let pre = text.substring(0, err.packet.loc.column)
-              // let char = text.substring(err.packet.loc.column, )
-              // let post = text.substring(err.packet.loc.column + len)
-  
-              // console.log(err.packet)
-              els.con.innerHTML = `<span>${pre}</span><span class="skr-err-ch">${char}</span><span>${post}</span>`
-              // console.log([pre, char, post])
-  
-              els.row.addClass('skribi-line-errored')
-              let pstr = "^".padStart(err.packet.loc.column)
-              let row = els.table.insertRow()
-              row.addClass("skribi-line-pointer")
-              let numCell = row.insertCell()
-              numCell.setText("@")
-              numCell.addClass("skr-numcell", "skr-pointer")
-              let conCell = row.insertCell()
-              conCell.setText(pstr)
-              conCell.addClass("skr-concell", "skr-pointer")
-            }
-          })
+          makeLinesAndPoint(invField.content, err.packet.loc.src, {line: err.packet.loc.line, col: err.packet.loc.line})
         } else {
           makeLinesTable(invField.content, err.packet.stack)
         }
-
-
       } else if (err instanceof SkribiImportError) {
         /* Error thrown by scriptloader when trying to import a script */
+        this.containerEl.setAttribute('skribi-error-type', 'SkriptImportError')
 
         let ifile = err._sk_importErrorPacket.file;
         let ierr = err._sk_importErrorPacket.err;
@@ -240,6 +156,7 @@ export class ErrorModal extends Modal {
         makeLinesAndPoint(srcField.content, read, pos)
       } else {
         /* Generic SkribiError */
+        this.containerEl.setAttribute('skribi-error-type', 'SkribiError')
 
         if (err?._sk_templateFailure) {
           /* The source template failed to compile */
@@ -308,6 +225,7 @@ export class ErrorModal extends Modal {
       }
     } else {
       /* Non-skribi error, type unknown (may not be instanceof Error) */
+      this.containerEl.setAttribute('skribi-error-type', 'Error')
 
       let errField = makeField("error", this.contentEl, (err?.name ?? "Error") + ": " + (err?.msg ?? err?.message ?? "Unknown Error"), )
       makeLinesTable(errField.content, err?.stack ?? err ?? "")
@@ -350,21 +268,44 @@ export interface errorPosition {
   col: number
 }
 
-export function makeLinesAndPoint(el: HTMLElement, read: string, pos?: errorPosition) {
+export interface pointOptions {
+  linesToMute?: number[]
+  parseToken?: boolean
+}
+
+export function makeLinesAndPoint(el: HTMLElement, read: string | string[], pos: errorPosition, opt?: pointOptions) {
+  //@ts-ignore | Sanitize
+  pos = pos && {line: parseInt(pos.line), col: parseInt(pos.col)}
+  
   makeLinesTable(el, read, (pos) ? (ind: number, els: linesTableCB) => {
+    if (opt?.linesToMute?.contains(ind)) els.row.addClass('skribi-line-extraneous');
+
     if (ind == (pos.line-1)) {
+      els.row.addClass('skribi-line-errored')
       let z = (pos.col === 0)
       let text = els.con.textContent
-      let pre = z ? null : text.substring(0, pos.col-1)
-      let char = z ? text.substring(pos.col, pos.col+1) : text.substring(pos.col-1, pos.col)
-      let post = z ? text.substring(pos.col+1) : text.substring(pos.col)
+
+      let charEnd = opt?.parseToken 
+        ? pos.col + tokenizer(text.substr(pos.col-1), {"ecmaVersion": 2020}).getToken().end - 1
+        : pos.col
+
+      let pre = z ? `` : text.substring(0, pos.col-1)
+      let char = z ? text.substring(pos.col, charEnd+1) : text.substring(pos.col-1, charEnd)
+      let post = z ? text.substring(charEnd+1) : text.substring(charEnd)
 
       let toHTML = z ? `` : `<span>${pre}</span>`
       toHTML += `<span class="skr-err-ch">${char}</span><span>${post}</span>`
       els.con.innerHTML = toHTML
 
-      els.row.addClass('skribi-line-errored')
-      let pstr = "^".padStart(pos.col)
+      /*
+      let tabs = text.match(/\t/g)
+      let tt = tabs?.length ?? 0
+      let pstr = ("".padStart(tt, "	"))
+      pstr += ("^".padStart(pos.col-tt))      
+      */
+
+      let pstr = pre.replace(/[^\s]/g, " ") + "^"
+
       let row = els.table.insertRow()
       row.addClass("skribi-line-pointer")
       let numCell = row.insertCell()
