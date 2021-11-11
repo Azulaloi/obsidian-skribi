@@ -1,5 +1,5 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
-import { logError, SkribiAbortError, SkribiError, SkribiSyntaxError } from "src/eta/error";
+import { logError, SkribiAbortError, SkribiError, SkribiImportError, SkribiSyntaxError } from "src/eta/error";
 import { EtaHandler } from "src/eta/eta";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
@@ -289,9 +289,25 @@ export default class SkribiProcessor {
 					})
 					err = nerr
 				}
+			} else if (err?.evalError?.subErr instanceof SkribiImportError) {
+				/* Template function invoked a scriptloader module that failed to import */
+				/* err.evalError is the thrown ImportError */
+				
+				let util = require('util')
+			  console.log(util.inspect(err, 7))
+
+				
+				let nerr = new SkribiError(`Could not access scriptloader module from '${err.evalError.subErr._sk_importErrorPacket.file.name}', because it failed to import`)
+				nerr.stack = err.evalError.stack
+				Object.assign(nerr, {
+					_sk_scriptFailure: err?.evalError?.subErr,
+					_sk_function: err._sk_function
+				})
+				err = nerr
 			}
 
 			var regentClass = (err instanceof SkribiError) ? err.regentClass : REGENT_CLS.error
+			
 			if (err?.evalError instanceof SkribiAbortError) {
 				regentClass = err.evalError._sk_abortPacket.cls
 			}

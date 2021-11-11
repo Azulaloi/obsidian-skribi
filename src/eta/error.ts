@@ -15,6 +15,8 @@ export class SkribiError extends Error {
   };
   _sk_nullTemplate?: string // Flags that the error is from a non-extant template (mutually exclusive with _sk_template and _sk_templateFailure)
 
+  _sk_scriptFailure?: any;
+  
   _sk_errorPacket?: { // For packaging internal errors that might need to be displayed, exclusive with above _sk properties
     err: any;
     name: string;

@@ -1,6 +1,6 @@
 import { Modal, App } from "obsidian";
 import { SkribiError, SkribiSyntaxError, SkribiEvalError, SkribiEtaSyntaxError, SkribiImportError } from "src/eta/error";
-import { createRegent } from "src/render/regent";
+import { createRegent, renderError } from "src/render/regent";
 import { isExtant } from "src/util/util";
 import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/interface";
 import { REGENT_CLS } from "src/types/const";
@@ -134,7 +134,7 @@ export class ErrorModal extends Modal {
         let errField = makeField("error", this.contentEl, (ierr?.name ?? "UnknownError") + " Stack", true, true)
         makeLinesTable(errField.content, ierr.stack)
         
-        let srcField = makeField("error", this.contentEl, "Script Source", true, isExtant(pos))
+        let srcField = makeField("error", this.contentEl, "Script Source", true, !isExtant(pos))
 
         var pos = null;
         if (ierr instanceof SyntaxError) {
@@ -158,10 +158,38 @@ export class ErrorModal extends Modal {
         /* Generic SkribiError */
         this.containerEl.setAttribute('skribi-error-type', 'SkribiError')
 
-        if (err?._sk_templateFailure) {
+        if (err?._sk_scriptFailure) {
+          /* The template attempted to access a failed scriptloader module */
+          let terr = err._sk_scriptFailure as SkribiImportError
+          
+          let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
+          subErrorMessage.createSpan({text: `Import Error for '${terr._sk_importErrorPacket.file.name}': `, cls: 'sk-label'})
+          let s = subErrorMessage.createSpan({cls: 'sk-msg'})
+
+          let r = await renderError(createDiv(), terr)
+          s.append(r)
+
+          match = (/eval at compileWith \([^\n]*,(?: \<[^\:]*\:(?<line>\d*)\:(?<ch>\d*))\)\n/.exec(err.stack))
+          pos = match && {line: match.groups.line, col: match.groups.ch}
+
+          //@ts-ignore
+          let func = err?._sk_function
+          if (func) {
+            let lines = func.toString().split(/\r\n|\n/)
+            let invField = makeField("error", this.contentEl, "Compiled Function", true, !isExtant(pos))
+            makeLinesAndPoint(invField.content, lines, pos, {
+              linesToMute: [0, 1, 2, 3, 4, lines.length-1, lines.length-2, lines.length-3],
+              parseToken: true
+            })
+          }
+          
+          let stx = err.stack.split(/\r\n|\n/)
+          stx[0] = `SkribiError: Could not access scriptloader module from '${terr._sk_importErrorPacket.file.name}', because it failed to import`
+          err.stack = stx.join('\n')
+        } else if (err?._sk_templateFailure) {
           /* The source template failed to compile */
           let terr = err._sk_templateFailure
-
+  
           let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
           subErrorMessage.createSpan({text: `Compile Error for '${terr.id}': `, cls: 'sk-label'})
           let s = subErrorMessage.createSpan({cls: 'sk-msg'})
@@ -170,8 +198,8 @@ export class ErrorModal extends Modal {
             class: REGENT_CLS.error, 
             label: 'sk', 
             hover: (terr.error instanceof SkribiError) 
-              ? `${terr.error.name}: ${terr.error.message}`
-              : (terr.error.name ?? "Error") + ": " + (terr.error?.msg ?? terr.error?.message ?? "Unknown Error"),
+              ? `${terr.error?.name}: ${terr.error?.message}`
+              : (terr.error?.name ?? "Error") + ": " + (terr.error?.msg ?? terr.error?.message ?? "Unknown Error"),
             clear: true
           })
           makeErrorModalLink(r[0], terr.error)
@@ -198,16 +226,16 @@ export class ErrorModal extends Modal {
             }
           }
         }
-
+  
         if (err?.el) {
           this.contentEl.append(err.el)
         }
-
+  
         if (err?.tip) {
           this.contentEl.createDiv({cls: ['skribi-modal-error-message', 'skr-tip']})
           .createSpan({text: err.tip})
         }
-
+  
         if (err?._sk_invocation) {
           let invField = makeField("error", this.contentEl, "Invocation String", true)
           makeLinesTable(invField.content, err._sk_invocation)
@@ -222,6 +250,7 @@ export class ErrorModal extends Modal {
           let tempField = makeField("error", this.contentEl, "Template Source", true, false)
           makeLinesTable(tempField.content, err._sk_template)
         }
+      
       }
     } else {
       /* Non-skribi error, type unknown (may not be instanceof Error) */
@@ -242,12 +271,12 @@ export class ErrorModal extends Modal {
 
       if (!err?.stack) {
         let inspect = util.inspect(err, true, 7)
-        let subErrField = makeField("error", this.contentEl, (err.evalError?.name ?? "Unknown") + " Inspection", true, true)
+        let subErrField = makeField("error", this.contentEl, (err?.evalError?.name ?? "Unknown") + " Inspection", true, true)
         makeLinesTable(subErrField.content, inspect)
       }
     }
 
-    this.contentEl.createSpan({cls: 'skribi-modal-version-number', text: `SkribosPlugin ${this.app.plugins.plugins["obsidian-skribi"].manifest.version}`})
+    this.modalEl.createSpan({cls: 'skribi-modal-version-number', text: `SkribosPlugin ${this.app.plugins.plugins["obsidian-skribi"].manifest.version}`})
   }
 }
 

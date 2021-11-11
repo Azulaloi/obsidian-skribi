@@ -19,10 +19,16 @@ code.skribi-regent {
   border: 1px solid black;
   filter: drop-shadow(0 0 2px black);
   user-select: none;
+  border-radius: 4px;
+  padding: 2px 4px;
 }
 code.skribi-regent.has-link {
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  transform: scale(1);
+}
+code.skribi-regent.has-link:active {
+  transform: scale(0.95);
 }
 code.skribi-regent.has-link:hover {
   background-color: var(--interactive-hover);
@@ -310,6 +316,16 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
 /*--------------------------------------------------------------------------------------------
 /  Modals
 /-------------------------------------------------------------------------------------------*/
+.skribi-modal .modal-content {
+  padding-top: 0.3em;
+  padding-right: 0.8em;
+  padding-left: 0.8em;
+}
+.skribi-modal .modal {
+  padding: 30px 30px 10px 30px;
+  max-width: 80vw;
+}
+
 .skribi-modal-field-append {
   font-style: italic;
 }
@@ -320,6 +336,8 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
 }
 
 span.skribi-modal-version-number {
+  margin-top: 0.5em;
+  display: inline-block;
   font-style: italic;
   color: var(--text-faint);
   user-select: text;
@@ -388,6 +406,9 @@ div.skribi-modal-error-message {
   user-select: text;
   margin-bottom: 1em;
 }
+div.skribi-modal-error-message span.sk-msg .skribi-regent::after {
+  vertical-align: -0.2em;
+}
 div.skribi-modal-error-message span.skr-button {
   padding: 0.4em;
   background-color: var(--background-primary-alt);
@@ -417,13 +438,14 @@ div.skribi-modal-error-field-content {
   padding: 6px 6px;
   font-family: "Consolas";
   color: var(--text-muted);
-  white-space: pre-wrap;
+  white-space: pre;
   word-break: normal;
   font-size: 90%;
   text-indent: 0;
   width: 100%;
   cursor: text;
   user-select: text;
+  overflow-x: auto;
 }
 
 div.skribi-modal-error-field-line div.skribi-line-number {
@@ -456,6 +478,12 @@ div.skribi-modal-error-field-line:first-of-type div.skribi-line-number {
 div.skribi-modal-error-field-line:last-of-type div.skribi-line-number {
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
+}
+
+span.skr-collapsible-titletext span.skr-errsrcmsg {
+  color: var(--text-faint);
+  font-style: italic;
+  margin-left: 1em;
 }
 
 /*---------------

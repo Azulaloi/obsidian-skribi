@@ -57,6 +57,14 @@ export class ProviderScriptloader extends Provider implements FileMinder {
       })
     })
 
+    this.failedModules.forEach((err, key) => {
+      Object.defineProperty(exports, key, {
+        get: function() {
+          throw Object.assign(new Error(), {subErr: err})
+        }
+      })
+    })
+
     return exports
   }
 
