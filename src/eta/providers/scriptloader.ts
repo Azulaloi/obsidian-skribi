@@ -1,10 +1,9 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
+import { EBAR } from "src/types/const";
 import { DynamicState, FileMinder, Stringdex } from "src/types/types";
-import { makeLinesTable, wrapCollapse } from "src/util/interface";
 import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util/util";
-import { SkribiError, SkribiImportError } from "../error";
-import { Provider } from "../provider_abs";
-
+import { SkribiImportError } from "src/eta/error";
+import { Provider } from "src/eta/provider_abs";
 
 /* Loads and provides JS files from the skript directory as modules. */
 export class ProviderScriptloader extends Provider implements FileMinder {
@@ -84,11 +83,11 @@ export class ProviderScriptloader extends Provider implements FileMinder {
           this.failedModules.delete(f.basename)
         }
         
-        return (isExtant(mod)) 
+        return isExtant(mod) 
           ? Promise.resolve([f.basename, mod])
           : Promise.reject()
       } catch(e) {
-        console.warn(e)
+        console.warn(`Skribi: script '${f.name}' failed to load, the script index may contain more details`, EBAR, e)
         this.failedModules.set(f.basename, Object.assign(new SkribiImportError(`${e?.name ?? 'Error'} during script import`), {_sk_importErrorPacket: {err: e, file: f}}))
         return Promise.reject()
       }      
@@ -116,7 +115,7 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     return super.reload()
   }
 
-  postDirty(id?: string) {
+  postDirty(id?: string): void {
     Array.from(this.bus.plugin.children).forEach(child => child.scriptsUpdated(id))
   }
 

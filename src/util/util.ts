@@ -58,10 +58,8 @@ export function toArray(args: any | any[]): any[] {
 	return (Array.isArray(args) ? args : [args])
 }
 
-export function isInFolder(e: TAbstractFile, dir: string) {
-	let boo = (normalizePath((/.+\//g).exec(e.path)[0]) == normalizePath(dir))
-
-	return boo
+export function isInFolder(file: TAbstractFile, directory: string) {
+	return normalizePath(file.parent.path /* (/.+\//g).exec(e.path)[0] */) === normalizePath(directory)
 }
 
 export function isExtant(obj: any) {
@@ -89,8 +87,8 @@ export function vWarn(...args: any[]) {
 	}
 }
 
+/** Logs only if the devLogging setting is enabled. */
 export function dLog(...args: any[]) {
-	//@ts-ignore
 	if (window?.app.plugins.plugins["obsidian-skribi"]?.settings?.devLogging || false) {
 		console.log(...args)
 	}
