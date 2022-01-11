@@ -1,16 +1,16 @@
 # Skribi
 
-**Warning**: this plugin is not yet released, and may be subject to breaking changes (such as syntax alterations).
-
-View the full [Documentation](https://azulaloi.net/obsidian-skribi/)
+View the full [Documentation](https://azulaloi.net/obsidian-skribi/) for more detailed information about Skribi's features.
 
 Skribi implements live [Eta](https://eta.js.org/) templating in [Obsidian](https://obsidian.md/) in a manner (vaguely) akin to [Scribunto](https://www.mediawiki.org/wiki/Extension:Scribunto), the scripted template framework used by MediaWiki. Create a template, pass variables to it, and render the output in your notes.
 
 Skribi enables **non-destructive** templating: seamlessly integrate complex HTML into your notes, instanced from a single source, without HTML clutter or having to repeat yourself. You can even construct normally impossible element structures, such as rendering markdown inside of block elements - including Obsidian syntax media embedding. Inside a skribi, you have access to Eta's powerful templating tools and javascript, letting you imbue your template objects with dynamic behaviours.
 
-<img style="width: 60%;" src="https://i.imgur.com/t3i7WZg.png" />
+**Warning**: Some features of Skribi involve the evaluation of javascript within the Obsidian process, including the evaluation of javascript in markdown files. Loading a template, script, or markdown file from an untrusted source is a security risk.
 
 ## Functionality Outline
+
+<img style="width: 60%;" src="https://i.imgur.com/t3i7WZg.png" />
 
 Skribi recognizes inline code elements with curly brackets `{}` and codeblocks of type `skribi`. The contents are processed and the result is rendered in the place of the code element. The output is updated automatically as you make changes. 
 
