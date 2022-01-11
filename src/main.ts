@@ -1,5 +1,5 @@
 import './style/main.scss'
-import { CloseableComponent, MarkdownView, Modal, Plugin } from 'obsidian';
+import { CloseableComponent, Command, MarkdownView, Modal, Plugin } from 'obsidian';
 import { Handler } from './engine/handler';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { SkribiChild } from './render/child';
@@ -20,26 +20,27 @@ export default class SkribosPlugin extends Plugin {
 	data: PluginData
 	settings: SkribosSettings
 	
-	eta: Handler
+	handler: Handler
 	processor: SkribiProcessor
 	suggest: TemplateSuggest
 
 	varName: string = "sk"
 	initLoaded: boolean = false
 
-	children: SkribiChild[] = []
-	private childProto: any = SkribiChild // for dev memory querying 
-	private l = l // for dev testing from console
+	/** Array of all live skribi children. */
+	public children: SkribiChild[] = []
+
+	// private childProto: any = SkribiChild // for dev memory querying 
+	// private l = l // for dev testing from console
 
 	async onload() {
 		console.log('Skribi: Loading...');
 
-		// await this.loadSettings();
 		await this.initData();
 		this.addSettingTab(new SkribosSettingTab(this.app, this));
 		document.body.toggleClass(CLS.anim, this.settings.cssAnimations)
 
-		this.eta = new Handler(this)
+		this.handler = new Handler(this)
 		this.processor = new SkribiProcessor(this)
 
 		this.processor.registerProcessors()
@@ -86,8 +87,15 @@ export default class SkribosPlugin extends Plugin {
 			Array.from(this.children).forEach(child => child.pluginUpdated(id))
 		}))
 
-		// TODO: toggle this from build mode
-		this.app.workspace.onLayoutReady(() => this.reloadModals())
+		try {
+			// _isProd is replaced with boolean by rollup plugin
+			// in try-catch to avoid errors in case plugin is absent somehow
+
+			//@ts-ignore
+			if (!_isProd) {
+				this.app.workspace.onLayoutReady(() => this.reloadModals())
+			}
+		} catch {}
 	}
 	
 	/** Development utility to re-open skribi modals when hot reloading. */
@@ -129,7 +137,7 @@ export default class SkribosPlugin extends Plugin {
 				let x = new SuggestionModal(this);
 				new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
 				.then(result => {
-					if (this.eta.hasPartial(result)) {
+					if (this.handler.hasPartial(result)) {
 						let i = new InsertionModal(this, editor, result)
 						i.open();
 					}
@@ -138,7 +146,7 @@ export default class SkribosPlugin extends Plugin {
 
 		/* Reloads the scriptloader. */
 		this.addCommand({id: "reload-scripts", name: l['command.reloadScripts'], callback: () => {
-			this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
+			this.handler.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
 		}})
 		
 		/* Reloads all live skribis. */
@@ -175,7 +183,7 @@ export default class SkribosPlugin extends Plugin {
 			new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
 			.then(result => {
 				console.log(result)
-				if (this.eta.hasPartial(result)) {
+				if (this.handler.hasPartial(result)) {
 					let i = new RenderModal(this, result)
 					i.open();
 				}
@@ -184,35 +192,35 @@ export default class SkribosPlugin extends Plugin {
 
 		/* Registers the user-configured render modal presets as commands, which open the render modal with the parameters defined in the preset. */
 		for (let preset of Object.entries(this.data?.renderModalPresets ?? {}) as [string, renderModalPreset][]) {
-			this.addCommand({id: `render-preset_${preset[0]}`, name: `Render Preset - ${preset[1].name}`, callback: () => {
+			this.addCommand({id: `render-preset_${preset[0]}`, name: l._('command.renderPreset', preset[1].name), callback: () => {
 				new RenderModal(this, preset[1].key, preset[1].append).open()
 			}})
 		}
 	}
 	
-	onunload() {
-		this.eta.unload()
+	onunload(): void {
+		this.handler.unload()
 		console.log('Skribi: Unloading...', this.children);  
 		Array.from(this.children).forEach((child) => {child.collapse()})
 		document.body.removeClass(CLS.anim)
 		document.querySelectorAll("body div.skribi-modal").forEach(v => v.addClass('skribi-unloaded'))
 	}
 
-	async initData() {
+	async initData(): Promise<void> {
 		this.data = Object.assign({}, await this.loadData());
 		this.settings = this.data.settings = Object.assign({}, DEFAULT_SETTINGS, this.data.settings)
 		return this.writeData();
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
 	}
 
 	async writeData() {return this.saveData(this.data)}
-	async saveSettings() {return this.writeData();}
+	async saveSettings() {return this.writeData()}
 }
 
-function findPresetCommands(plugin: SkribosPlugin) {
+function findPresetCommands(plugin: SkribosPlugin): Command[] {
 	let commands = plugin.app.commands.listCommands()
 	let presetCommands = commands.filter((co) => co.id.startsWith('obsidian-skribi:render-preset_'))
 	return presetCommands

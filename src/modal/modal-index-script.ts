@@ -39,7 +39,7 @@ export class IndexScriptModal extends IndexModal {
     let recompButton = buttonsEl.createEl('button')
     recompButton.setText("Recompile All")
     recompButton.onClickEvent((ev) => {
-      this.plugin.eta.bus.scriptLoader.reload().then(() => {
+      this.plugin.handler.bus.scriptLoader.reload().then(() => {
         Array.from(this.plugin.children).forEach((child) => {
           child.rerender()
         })
@@ -59,8 +59,8 @@ export class IndexScriptModal extends IndexModal {
   async generateFields(el: HTMLElement) {
     el.empty();
 
-    var modules = this.plugin.eta.bus.scriptLoader.loadedModules
-    var failures = this.plugin.eta.bus.scriptLoader.failedModules
+    var modules = this.plugin.handler.bus.scriptLoader.loadedModules
+    var failures = this.plugin.handler.bus.scriptLoader.failedModules
     
     if (failures.size > 0) {
       let failuresField = makeField("index", el, "Errored Scripts", true, this.collapsedFields.failures, (state) => {this.collapsedFields.failures = state})

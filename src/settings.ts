@@ -37,7 +37,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					let previous = this.plugin.settings.templateFolder
 					this.saveSetting('templateFolder', value, () => {
-						if (previous !== value) this.plugin.eta.loader.directoryChanged();
+						if (previous !== value) this.plugin.handler.loader.directoryChanged();
 					})
 				}); text.inputEl.cols = 30; return text});
 
@@ -49,7 +49,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					let previous = this.plugin.settings.scriptFolder
 					this.saveSetting('scriptFolder', value, () => {
-						if (previous !== value) this.plugin.eta.bus.scriptLoader.directoryChanged();
+						if (previous !== value) this.plugin.handler.bus.scriptLoader.directoryChanged();
 					})
 				}); text.inputEl.cols = 30; return text});
 

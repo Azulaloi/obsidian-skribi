@@ -43,7 +43,7 @@ export class IndexTemplateModal extends IndexModal {
     let recompButton = buttonsEl.createEl('button')
     recompButton.setText("Recompile All")
     recompButton.onClickEvent((ev) => {
-      this.plugin.eta.recompileTemplates().then(() => {
+      this.plugin.handler.recompileTemplates().then(() => {
         Array.from(this.plugin.children).forEach((child) => {
           child.rerender()
         })
@@ -70,9 +70,9 @@ export class IndexTemplateModal extends IndexModal {
   generateFields(el: HTMLElement) {
     el.empty();
 
-    var templates = this.plugin.eta.loader.templateCache   
-    var failures = this.plugin.eta.loader.templateFailures
-    var styles = this.plugin.eta.loader.styleCache
+    var templates = this.plugin.handler.loader.templateCache   
+    var failures = this.plugin.handler.loader.templateFailures
+    var styles = this.plugin.handler.loader.styleCache
     
     let failuresLength = Object.keys(failures.cache).length
     if (failuresLength > 0) {

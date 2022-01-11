@@ -15,7 +15,7 @@ export class SuggestionModal extends FuzzySuggestModal<string> {
   }
 
   getItems() {
-      return this.plugin.eta.getCacheKeys()
+      return this.plugin.handler.getCacheKeys()
   }
 
   renderSuggestion(item: FuzzyMatch<string>, el: HTMLElement) {

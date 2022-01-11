@@ -32,17 +32,17 @@ export class ProviderSK extends Provider {
       },
       getTemplateSource: function(s: string): Promise<any> {
         return makeInitPromise(this.child, () => {
-          let has = this.ctx.plugin.eta.loader.styleCache.has(s)
+          let has = this.ctx.plugin.handler.loader.styleCache.has(s)
           if (!has) {console.warn(`Skribi: getTemplateSource()\n Could not find requested template '${s}'\n`, this.child._c)}
-          let c = this.ctx.plugin.eta.loader.templateCache.get(s)
+          let c = this.ctx.plugin.handler.loader.templateCache.get(s)
           if (has && !c?.source) {console.warn(`Skribi: getTemplateSource()\n Template '${s}' found, but has no cached source\n`, this.child._c)}
           return c?.source ?? null
         })
       },
       getStyle: function(s: string): Promise<any> {
         return makeInitPromise(this.child, () => {
-          if (!this.ctx.plugin.eta.loader.styleCache.has(s)) {console.warn(`Skribi: getStyle()\n Could not find requested style '${s}.css'\n`, this.child._c)}
-          return this.ctx.plugin.eta.loader.styleCache.get(s)
+          if (!this.ctx.plugin.handler.loader.styleCache.has(s)) {console.warn(`Skribi: getStyle()\n Could not find requested style '${s}.css'\n`, this.child._c)}
+          return this.ctx.plugin.handler.loader.styleCache.get(s)
         })
       },
       /**

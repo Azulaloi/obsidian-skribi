@@ -33,7 +33,7 @@ export class InsertionModal extends Modal {
   create() {
     let s = new Setting(this.contentEl)
     s.addDropdown((drop) => { drop
-      .addOptions(toDupeRecord(this.plugin.eta.getCacheKeys()))
+      .addOptions(toDupeRecord(this.plugin.handler.getCacheKeys()))
       .setValue(this.currentID)
       .onChange((v) => {
         this.currentID = v
@@ -69,8 +69,8 @@ export class InsertionModal extends Modal {
 
     var arr: AbstractTextComponent<any>[] = [];
 
-    if (this.plugin.eta.templates.get(id)?.frontmatter) {
-      let fm = this.plugin.eta.templates.get(id).frontmatter
+    if (this.plugin.handler.templates.get(id)?.frontmatter) {
+      let fm = this.plugin.handler.templates.get(id).frontmatter
       let pv = []
       for (let v of Object.keys(fm)) {
         if (v.charAt(0)=="_") {

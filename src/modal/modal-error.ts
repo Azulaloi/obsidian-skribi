@@ -124,7 +124,7 @@ export class ErrorModal extends Modal {
 
         let ifile = err._sk_importErrorPacket.file;
         let ierr = err._sk_importErrorPacket.err;
-        let read = await this.app.vault.adapter.read(ifile.path)
+        let read = await this.app.vault.read(ifile)
 
         let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
         subErrorMessage.createSpan({text: `Import Error for '${ifile.name}': `, cls: 'sk-label'})

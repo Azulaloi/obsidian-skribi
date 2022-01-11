@@ -38,7 +38,7 @@ export default class TemplateSuggest extends EditorSuggest<string> {
     if (has) {
       let ind = context.query.indexOf("|")
       let key = context.query.substr(0, ind).trim()
-      let tp = this.plugin.eta.templates.get(key)
+      let tp = this.plugin.handler.templates.get(key)
       if (tp?.frontmatter) {
         let pk = has?.[2]?.trim()
         // console.log(pk)
@@ -47,7 +47,7 @@ export default class TemplateSuggest extends EditorSuggest<string> {
         .map((v) => v.substr(1))
       }
     } else {
-      let keys = this.plugin.eta.getCacheKeys()
+      let keys = this.plugin.handler.getCacheKeys()
       // console.log('query:', context?.query)
       let ret = context?.query ? keys.filter(key => (key.startsWith(context.query) && !(key == context.query))) : keys
       // console.log(ret)

@@ -3,6 +3,7 @@ import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import scss from 'rollup-plugin-scss';
+import replace from '@rollup/plugin-replace';
 
 const isProd = (process.env.BUILD === 'production');
 
@@ -33,6 +34,12 @@ export default {
       output: 'styles.css', 
       sass: require('sass'), 
       watch: ['./src/style/main.scss', './src/style/regent.scss', './src/style/modal.scss'] // idk why * no work
+    }),
+    replace({
+      values: {
+        '_isProd': isProd.toString()
+      },
+      'preventAssignment': true
     })
   ]
 };

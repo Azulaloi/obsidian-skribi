@@ -19,7 +19,7 @@ export default class SkribiProcessor {
 
   constructor(plugin: SkribosPlugin) {
     this.plugin = plugin
-    this.eta = plugin.eta
+    this.eta = plugin.handler
   }
 
   /** Register our markdown processors. */
@@ -145,7 +145,7 @@ export default class SkribiProcessor {
 
   /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
 	private async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
-		if (isExtant(this.plugin.eta.loader.initError)) {
+		if (isExtant(this.plugin.handler.loader.initError)) {
 			// The template loader has errored and will not initialize, so continue rendering immediately.
 			return await this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
 		}
@@ -257,9 +257,9 @@ export default class SkribiProcessor {
 			 * This handles almost every type of error that a skribi function can throw, so it's a bit convoluted. */
 
 			if (con === undefined && !this.eta.hasPartial(id)) {
-				if (isExtant(this.plugin.eta.loader.initError)) {
+				if (isExtant(this.plugin.handler.loader.initError)) {
 					/* Loader failed to init */
-					err = this.plugin.eta.loader.initError
+					err = this.plugin.handler.loader.initError
 				} else {
 					/* Template skribi's template does not exist (intentionally not caught until this point) */
 
@@ -294,8 +294,8 @@ export default class SkribiProcessor {
 				/* Template function invoked a scriptloader module that failed to import */
 				/* err.evalError is the thrown ImportError */
 				
-				let util = require('util')
-			  console.log(util.inspect(err, 7))
+				// let util = require('util')
+			  // console.log(util.inspect(err, 7))
 
 				
 				let nerr = new SkribiError(`Could not access scriptloader module from '${err.evalError.subErr._sk_importErrorPacket.file.name}', because it failed to import`)
