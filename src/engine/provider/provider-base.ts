@@ -1,5 +1,5 @@
 import { EventRef, MarkdownRenderer } from "obsidian";
-import { Provider } from "src/eta/provider_abs";
+import { Provider } from "src/engine/provider/provider";
 import { createRegent } from "src/render/regent";
 import { CLS, REGENT_CLS } from "src/types/const";
 import { Stringdex } from "src/types/types";

@@ -1,7 +1,7 @@
 import { Plugin } from "obsidian";
 import { Stringdex } from "src/types/types";
 import { isExtant } from "src/util/util";
-import { ProviderBus } from "./provider_bus";
+import { ProviderBus } from "../provider-bus";
 
 /* Providers are modules that provide a set of values to the skript context. */
 

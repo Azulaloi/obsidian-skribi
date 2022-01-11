@@ -5,6 +5,11 @@
   "command.insert": "Insert Skribi",
   "command.reloadScripts": "Reload Scripts",
   "command.perfTest": "Test Performance",
+  "command.reloadSkribis": "Reload Skribis",
+  "command.viewTemplates": "View Templates",
+  "command.viewScripts": "View Scripts",
+  "command.renderTemplate": "Render Template",
+  
 
   "regent.loading.hover": "Evaluating...",
   "regent.stasis.hover": "Recursion limit reached!",

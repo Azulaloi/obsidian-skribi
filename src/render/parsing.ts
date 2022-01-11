@@ -1,6 +1,6 @@
 import { isExtant } from "src/util/util";
 
-/* Check if code block is that good good and if so what type of good good */
+/** Checks a codeblock for skribi invocation and invocation type */
 export async function preparseSkribi(el: HTMLElement, str?: string, flg?: any) {
 	let text = isExtant(str) ? str : el.textContent
 	if (text.length < 3) return;
@@ -17,7 +17,7 @@ export async function preparseSkribi(el: HTMLElement, str?: string, flg?: any) {
 	} else return
 }
 
-/* Parse variables in template invocations */
+/** Parse variables in template invocations */
 export async function parseSkribi(src: string): Promise<{
 	id: string,
 	args: any

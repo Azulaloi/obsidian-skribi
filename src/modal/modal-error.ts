@@ -1,11 +1,11 @@
 import { Modal, App } from "obsidian";
-import { SkribiError, SkribiSyntaxError, SkribiEvalError, SkribiEtaSyntaxError, SkribiImportError } from "src/eta/error";
+import { SkribiError, SkribiSyntaxError, SkribiEvalError, SkribiEtaSyntaxError, SkribiImportError } from "src/engine/error";
 import { createRegent, renderError } from "src/render/regent";
 import { isExtant } from "src/util/util";
 import { linesTableCB, makeField, makeLines, makeLinesTable } from "src/util/interface";
 import { REGENT_CLS } from "src/types/const";
-import { IndexTemplateModal } from "./indexTemplateModal";
-import acorn, { getLineInfo, parse, tokenizer } from "acorn";
+import { IndexTemplateModal } from "./modal-index-template";
+import { parse, tokenizer } from "acorn";
 
 /* A modal that displays information about the various types of possible errors that may occur when rendering a skribi. 
  * Opened by error regents. */
@@ -205,7 +205,7 @@ export class ErrorModal extends Modal {
           makeErrorModalLink(r[0], terr.error)
           s.append(r[0])
         } else if (err?._sk_nullTemplate) {
-          /* An undefined template was requested*/
+          /* An undefined template was requested */
           let subErrorMessage = this.contentEl.createDiv({cls: 'skribi-modal-error-message'})
           let span = subErrorMessage.createSpan({text: `View Template Index`, cls: 'skr-button'})
           span.addEventListener('click', (ev) => {

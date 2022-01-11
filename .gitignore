@@ -17,4 +17,5 @@ data.json
 /.vscode
 
 # notes
+/notes
 *.txt

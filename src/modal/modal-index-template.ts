@@ -3,8 +3,8 @@ import SkribosPlugin from "src/main";
 import { createRegent } from "src/render/regent";
 import { REGENT_CLS } from "src/types/const";
 import { makeField } from "src/util/interface";
-import { makeErrorModalLink } from "./errorModal";
-import { IndexModal } from "./indexModal";
+import { makeErrorModalLink } from "./modal-error";
+import { IndexModal } from "./modal-index";
 
 /* A modal that displays an index of all templates. */
 export class IndexTemplateModal extends IndexModal {

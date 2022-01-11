@@ -3,7 +3,7 @@ import { App } from "obsidian";
 import { DataviewApi } from "obsidian-dataview";
 import DataviewPlugin from "obsidian-dataview/lib/main";
 import SkribosPlugin from "src/main";
-import type WeatherAPI from "../../../obsidian-weather/src/api";
+// import type WeatherAPI from "../../../obsidian-weather/src/api";
 
 declare global {
   interface Window {
@@ -19,7 +19,8 @@ declare module 'obsidian' {
         [id: string]: any,
         "obsidian-skribi": SkribosPlugin,
         "obsidian-weather"?: {
-          API: WeatherAPI
+          // API: WeatherAPI
+          API: any
         },
         dataview?: {
           api?: DataviewApi;
@@ -50,7 +51,8 @@ declare module 'obsidian' {
     on(name: 'skribi:plugin-load', callback: (id: string) => any): EventRef; // triggered when an obsidian plugin is enabled
     on(name: 'skribi:plugin-unload', callback: (id: string) => any): EventRef; // triggered when an obsidian plugin is disabled
 	
-    closeables: any[]
+    /** Undocumented stack of closeable elements. Open modals are stored here. */
+    closeables: CloseableComponent[]
   }
 
   interface MetadataCache {

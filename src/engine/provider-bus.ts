@@ -2,19 +2,19 @@ import SkribosPlugin from "src/main";
 import { VAR_NAME } from "src/types/const";
 import { DynamicState, Stringdex } from "src/types/types";
 import { isFunc } from "src/util/util";
-import { EtaHandler } from "./eta";
-import { ProviderSK } from "./providers/base";
-import { ProviderDataview } from "./providers/integration/dv";
-import { ProviderWeather } from "./providers/integration/weather";
-import { ProviderScriptloader } from "./providers/scriptloader";
-import { IProvider, Provider, ProviderPredicated } from "./provider_abs";
+import { Handler } from "./handler";
+import { ProviderSK } from "./provider/provider-base";
+import { ProviderDataview } from "./provider/integration/provider-dataview";
+import { ProviderWeather } from "./provider/integration/provider-weather";
+import { ProviderScriptloader } from "./provider/provider-scriptloader";
+import { IProvider, Provider, ProviderPredicated } from "./provider/provider";
 
 const obsidianModule = require("obsidian");
 const MODULE_NAME_INTEGRATIONS: string = 'int';
 
 /* Handles all skript context providers. */
 export class ProviderBus {
-  handler: EtaHandler
+  handler: Handler
   plugin: SkribosPlugin
 
   providers: Map<string, Provider> = new Map()
@@ -28,7 +28,7 @@ export class ProviderBus {
   // Indicates that a provider has been added or removed, and the static scope should be regenerated.
   isStaticScopeDirty: boolean = false;
 
-  constructor(handler: EtaHandler) {
+  constructor(handler: Handler) {
     this.handler = handler
     this.plugin = handler.plugin
     this.scriptLoader = new ProviderScriptloader(this, 'js'); // assigned here so that we can register file events in handler

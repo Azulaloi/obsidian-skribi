@@ -1,28 +1,26 @@
 import './style/main.scss'
-import { MarkdownView, Plugin } from 'obsidian';
-import { EtaHandler } from './eta/eta';
+import { CloseableComponent, MarkdownView, Modal, Plugin } from 'obsidian';
+import { Handler } from './engine/handler';
 import { DEFAULT_SETTINGS, SkribosSettings, SkribosSettingTab } from './settings';
 import { SkribiChild } from './render/child';
-import { SuggestionModal } from './modal/suggestionModal';
-import { InsertionModal } from './modal/insertionModal';
-import { TestModal } from './modal/testModal';
+import { SuggestionModal } from './modal/modal-suggestion';
+import { InsertionModal } from './modal/modal-insertion';
+import { TestModal } from './modal/modal-test';
 import { l } from './lang/babel';
 import SkribiProcessor from './render/processor';
 import TemplateSuggest from './suggest';
 import { CLS } from './types/const';
 import { around } from 'monkey-around';
-import { IndexTemplateModal } from './modal/indexTemplateModal';
-import RenderModal from './modal/renderModal';
-import { PluginData, renderModalPreset } from './data/data';
-import { IndexScriptModal } from './modal/indexScriptModal';
-import { isExtant } from './util/util';
-import { parse } from 'eta';
+import { IndexTemplateModal } from './modal/modal-index-template';
+import RenderModal from './modal/modal-render';
+import { IndexScriptModal } from './modal/modal-index-script';
+import { Nullable, Stringdex } from './types/types';
 
 export default class SkribosPlugin extends Plugin {
 	data: PluginData
 	settings: SkribosSettings
 	
-	eta: EtaHandler
+	eta: Handler
 	processor: SkribiProcessor
 	suggest: TemplateSuggest
 
@@ -41,7 +39,7 @@ export default class SkribosPlugin extends Plugin {
 		this.addSettingTab(new SkribosSettingTab(this.app, this));
 		document.body.toggleClass(CLS.anim, this.settings.cssAnimations)
 
-		this.eta = new EtaHandler(this)
+		this.eta = new Handler(this)
 		this.processor = new SkribiProcessor(this)
 
 		this.processor.registerProcessors()
@@ -54,7 +52,6 @@ export default class SkribosPlugin extends Plugin {
 		this.registerExtensions(['eta'], 'markdown')
 		this.suggest = new TemplateSuggest(this)
 		this.registerEditorSuggest(this.suggest)
-		// registerMirror(this);
 
 		/* Rerender preview views */
 		this.app.workspace.onLayoutReady(() => {
@@ -89,22 +86,19 @@ export default class SkribosPlugin extends Plugin {
 			Array.from(this.children).forEach(child => child.pluginUpdated(id))
 		}))
 
-		this.app.workspace.onLayoutReady(() => {this.reloadModals()})
+		// TODO: toggle this from build mode
+		this.app.workspace.onLayoutReady(() => this.reloadModals())
 	}
 	
+	/** Development utility to re-open skribi modals when hot reloading. */
 	async reloadModals() {
-		/* this is just to make things easier for me when hot reloading modals */
-		 
-		document.querySelectorAll("body div.skribi-modal.skribi-unloaded").forEach(async (v) => {
-			var mtype = null
-			v.classList.forEach((v) => {if (v.startsWith("skribi-modal-")) {mtype = v}});
-			if (mtype) {
-				console.log(v)
+		document.querySelectorAll("body div.skribi-modal.skribi-unloaded").forEach(async (modalEl) => {
+			var modalType: Nullable<string> = /skribi-modal-\S*/.exec(modalEl.classList.value)?.[0]
+	
+			if (modalType) {
+				let parent = await this.findModalParent(modalEl)
 
-				let parent = await this.findModalParent(v)
-				console.log(parent)
-
-				switch (mtype) {
+				switch (modalType) {
 					case "skribi-modal-index-scripts": { 
 						parent?.close(); new IndexScriptModal(this).open(); break; 
 					}
@@ -119,14 +113,16 @@ export default class SkribosPlugin extends Plugin {
 		})
 	}
 
-	async findModalParent(el: Element) {
+	/** Locates the first closeable object (such as a modal) in the workspace closeable stack for which the provided element is a container. */
+	async findModalParent(el: Element): Promise<CloseableComponent> {
 		return this.app.workspace.closeables.find((v) => {
-			return v.containerEl == el 
+			return (v as Modal)?.containerEl == el 
 		})
 	}
 
 	/** Register our commands. */
-	defineCommands() {
+	defineCommands(): void {
+		/* Opens a fuzzy suggestion modal of available templates. On selection, opens a template insertion modal that will insert the template invocation string at the cursor. */
 		this.addCommand({id: "insert-skribi", name: l['command.insert'], 
 			editorCallback: (editor, view) => {
 				if (!this.initLoaded) return;
@@ -140,14 +136,17 @@ export default class SkribosPlugin extends Plugin {
 				}, (r) => {});
 			}})
 
+		/* Reloads the scriptloader. */
 		this.addCommand({id: "reload-scripts", name: l['command.reloadScripts'], callback: () => {
 			this.eta.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
 		}})
 		
-		this.addCommand({id: "reload-skribis", name: "Reload Skribis", callback: () => {
+		/* Reloads all live skribis. */
+		this.addCommand({id: "reload-skribis", name: l['command.reloadSkribis'], callback: () => {
 			Array.from(this.children).forEach(child => child.rerender(child?.templateKey))
 		}})
 
+		/* Opens the performance test modal, autofilling the string to evaluate from the clipboard. */
 		this.addCommand({id: "test-performance", name: l['command.perfTest'], callback: async () => {
 			let sel = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor?.getSelection()
 			let clip = await window.navigator.clipboard.readText();
@@ -159,15 +158,18 @@ export default class SkribosPlugin extends Plugin {
 			new TestModal(this, fill).open()
 		}})
 
-		this.addCommand({id: "view-templates", name: "View Templates", callback: () => {
+		/* Opens the template index modal. */
+		this.addCommand({id: "view-templates", name: l['command.viewTemplates'], callback: () => {
 			new IndexTemplateModal(this).open()
 		}})
 
-		this.addCommand({id: "view-scripts", name: "View Scripts", callback: () => {
+		/* Opens the script index modal. */
+		this.addCommand({id: "view-scripts", name: l['command.viewScripts'], callback: () => {
 			new IndexScriptModal(this).open()
 		}})
 
-		this.addCommand({id: "render-template", name: "Render Template", callback: () => {
+		/* Opens a fuzzy suggestion modal of available templates. On selection, opens a template rendering modal with the selected template. */
+		this.addCommand({id: "render-template", name: l['command.renderTemplate'], callback: () => {
 			if (!this.initLoaded) return;
 			let x = new SuggestionModal(this, true);
 			new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
@@ -180,6 +182,7 @@ export default class SkribosPlugin extends Plugin {
 			}, (r) => {});
 		}})
 
+		/* Registers the user-configured render modal presets as commands, which open the render modal with the parameters defined in the preset. */
 		for (let preset of Object.entries(this.data.renderModalPresets) as [string, renderModalPreset][]) {
 			this.addCommand({id: `render-preset_${preset[0]}`, name: `Render Preset - ${preset[1].name}`, callback: () => {
 				new RenderModal(this, preset[1].key, preset[1].append).open()
@@ -190,11 +193,9 @@ export default class SkribosPlugin extends Plugin {
 	onunload() {
 		this.eta.unload()
 		console.log('Skribi: Unloading...', this.children);  
-		Array.from(this.children).forEach((child) => {
-			child.collapse()
-		})
+		Array.from(this.children).forEach((child) => {child.collapse()})
 		document.body.removeClass(CLS.anim)
-		document.querySelectorAll("body div.skribi-modal").forEach((v) => {v.addClass('skribi-unloaded')})
+		document.querySelectorAll("body div.skribi-modal").forEach(v => v.addClass('skribi-unloaded'))
 	}
 
 	async initData() {
@@ -215,4 +216,17 @@ function findPresetCommands(plugin: SkribosPlugin) {
 	let commands = plugin.app.commands.listCommands()
 	let presetCommands = commands.filter((co) => co.id.startsWith('obsidian-skribi:render-preset_'))
 	return presetCommands
+}
+
+export type renderModalPreset = {
+  index: number // order in list
+  name: string
+  key: string
+  append: string
+  arguments?: Stringdex<string>
+}
+
+export interface PluginData {
+  settings: SkribosSettings;
+  renderModalPresets: Stringdex<renderModalPreset>
 }

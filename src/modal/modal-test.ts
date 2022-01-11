@@ -4,7 +4,7 @@ import { SkribiChild } from "src/render/child";
 import { Modes } from "src/types/const";
 import SkribosPlugin from "../main";
 import { average, linkDocs, roundTo, vLog } from "../util/util";
-import { makeExternalLink } from "./confirmationModal";
+import { makeExternalLink } from "./modal-confirmation";
 
 const maximumIterations = 10000
 

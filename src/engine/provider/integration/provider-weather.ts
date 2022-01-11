@@ -1,4 +1,4 @@
-import { ProviderPredicated } from "../../provider_abs";
+import { ProviderPredicated } from "../provider";
 // import type WeatherAPI from "../../../../../obsidian-weather/src/api";
 import { EventRef } from "obsidian";
 

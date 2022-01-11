@@ -5,21 +5,7 @@ import { dLog, isExtant, vLog } from "src/util/util";
 import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
 
-/* The beating heart of an individual skreeb. */
-
-interface SkChild {
-	scriptsUpdated: (id?: string) => void
-	sources: skChildSources
-}
-
-type skChildState = "pre" | "post" | "error"
-type skChildSources = {
-	templates: string[],
-	styles: string[],
-	integrations: string[],
-	scripts: string[]
-}
-
+/** The beating heart of an individual skreeb. */
 export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private plugin: SkribosPlugin
 
@@ -29,13 +15,19 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	private cbOnUnload: [Function, any][] = []
 	private cbOnPost: [Function, any][] = []
 
-	isPost: boolean = false // True when container has attached to document 
+	/** True when the container has attached to the document. */
+	isPost: boolean = false
 	state: skChildState = "pre"
 
-	templateKey?: string // The source template
-	source: string // The uncompiled source string of the skribi invocation
-	hash: number // Assigned when needed
+	/** The key of the template from which this skribi was invoked. Null if not a template skribi. */
+	templateKey?: string 
+	/** The uncompiled source string of this skribi's invocation. */
+	source: string
+	/** The hashed source string, used for style scoping. Null unless a style has been scoped to this skribi. */
+	hash?: number
+	/** When a source is modified, the  */
 	sources: skChildSources = {
+		/** When a source is modified, the  */
 		templates: [],
 		styles: [],
 		integrations: [],
@@ -47,8 +39,8 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		this.plugin = plugin
 	}
 
-	/* Provides the 'sk.child' object. */
-  public provideContext() {
+	/** Provides the 'sk.child' object for the evaluation context. */
+  public provideContext(): {} {
     return {
       el: this.containerEl,
       registerInterval: this.skRegisterInterval.bind(this),
@@ -61,70 +53,67 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
     }
   }
 
-	/* Called when a script was updated. Reloads if 'id' is in script sources or null. */
+	/** Rerenders if the provided script file name is either marked as a script source or is null.
+	 * @called by the scriptloader fileminder when a script file is modified. */
 	public scriptsUpdated(id?: string) {
-		if (this.plugin.settings.autoReload) {
-			if (!isExtant(id) || this.sources.scripts.contains(id)) this.rerender()
+		if (this.plugin.settings.autoReload && (!isExtant(id) || this.sources.scripts.contains(id))) {
+			this.rerender()
 		}
 	}
 
-	/* Called when a plugin loads or unloads. Reloads if 'id' is in plugin sources. */
-	public pluginUpdated(id: string, loading?: boolean) {
-		if (this.plugin.settings.autoReload) {
-			if (this.sources.integrations.contains(id)) {
-				if (loading) {
-					setTimeout(() => this.rerender(), 100)
-				} else this.rerender()
-			}
+	/** Rerenders if provided plugin id is marked as a plugin source. No effect if autoReload is disabled.
+	 * @called by the plugin listener when a plugin loads or unloads. 
+	 * @param isPluginLoading If true, delays rerender by 100ms to give the plugin time to load. */
+	public pluginUpdated(id: string, isPluginLoading?: boolean) {
+		if (this.plugin.settings.autoReload && this.sources.integrations.contains(id)) {
+			isPluginLoading ? setTimeout(() => this.rerender(), 100) : this.rerender()
 		}
 	}
 
-	/* Called when a template was updated. Reloads if 'id' is in template sources. */
+	/** Rerenders if provided file name is marked as a style source. No effect if autoReload is disabled.
+	 * @called by the template fileminder when a template file is modified. */
 	public templatesUpdated(id: string, newId?: string) {	
-		if (this.plugin.settings.autoReload) {
-			if ((this?.templateKey == id) || this.sources.templates.contains(id)) {
-				dLog("Child received template update notification that matched one of its sources", id, this)
-				this.rerender((id == this?.templateKey) ? id : null)
-			}
+		if (this.plugin.settings.autoReload && 
+			((this?.templateKey == id) || this.sources.templates.contains(id))) 
+			{
+			dLog("Child received template update notification that matched one of its sources", id, this)
+			this.rerender((id == this?.templateKey) ? id : null)
 		}
 	}
 
-	/* Called when a style template was updated. Reloads if 'id' is in style sources. */
-	public stylesUpdated(id: string) {
-		if (this.plugin.settings.autoReload) {
-			if ((this.sources.styles).contains(id)) {
-				dLog("Child received style update notification that matched one of its sources", id, this)
-				this.rerender()
-			}
+	/** Rerenders if provided file name is marked as a style source. No effect if autoReload is disabled.
+	 * @called by the template fileminder when a style file is modified. */
+	public stylesUpdated(id: string): void {
+		if (this.plugin.settings.autoReload && this.sources.styles.contains(id)) {
+			dLog("Child received style update notification that matched one of its sources", id, this)
+			this.rerender()
 		}
 	}
 
-	/* Add a style or template source to listen for modifications to. */
-	listenFor(type: "style" | "template", id: string) {
-		let l = (type == "style" ? this.sources.styles : type == "template" ? this.sources.templates : null)
-		
-		if (l) l.push(id) 
+	/** Marks a style or template file as a source, causing rerender to be invoked when that file is modified. */
+	public listenFor(type: "style" | "template", id: string): void {
+		const sourceArray = (type == "style" ? this.sources.styles : type == "template" ? this.sources.templates : null)
+		sourceArray?.push(id)
 	}
 
 	setPacket(packet: Stringdex) {
-		if (this.packet == null) {
-			this.packet = packet;
-		}
+		this.packet ??= packet
 	}
 
-	/* Reverts to a pre-invocation state, such as when plugin is unloaded. */
-	collapse() {
+	/** Reverts the container to its pre-rendering form, then unloads. 
+	 * @called when the plugin is unloaded. */
+	collapse(): void {
 		let pre = createEl('code', {text: this.source})
 		this.containerEl.replaceWith(pre)
 		this.unload()
 	}
 
-	/* Reinvoke child from processor entry point. Distinct from rerender, which reinvokes from renderSkribi(). */
+	/** Unloads and reinvoke from processor entry point. Distinct from rerender, which reinvokes from renderSkribi(). */
 	reset() {
 		let pre = createEl('code', {text: this.source})
 		this.containerEl.replaceWith(pre)
 		this.unload()
-		console.log(this._entryPacket)
+		// console.log(this._entryPacket)
 		// this._entryPacket[1] = this.containerEl.parentElement
 		this.plugin.processor.processEntry(...this._entryPacket)
 	}
@@ -136,7 +125,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		this.clear()
 	}
 
-	/* Clear responsibilities and retainers, prep for collection. */
+	/** Clear responsibilities and retainers, prep for collection. */
 	clear() {
 		vLog("clear", this.containerEl)
 		for (let i of this.intervals) window.clearInterval(i); // there might be cases where this doesn't get called properly (?)
@@ -154,20 +143,21 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	}
 
   /*-- Provider Functions --*/
+	/* These functions are exposed in the evaluation context. */
 
-	// Asynchronously adds a scoped style element to the container, from string str
-	// Will not resolve until post (when element is attached to document, which is required for scopeStyle())
-	// Returns reference to the created element
-	// TODO: if aborted before post, will promise persist in memory?
-	skAddStyle(str: string): Promise<HTMLStyleElement> {
-		let s = createEl('style')
-		s.innerHTML = str
-		this.containerEl.prepend(s)
+	/** Creates and attaches a scoped style element from a provided CSS-parsable string.
+	 * Will not resolve until the skribi has posted (completed synchronous evaluation and attached to the document).
+	 * @returns a promise for the attached style element. */
+	skAddStyle(styleContent: string): Promise<HTMLStyleElement> {
+		// TODO: check that the promise is collected if aborted before post
+		let styleEl = createEl('style')
+		styleEl.innerHTML = styleContent
+		this.containerEl.prepend(styleEl)
 
 		let p = () => {
 			return new Promise((resolve, reject) => {
 				this.skRegisterPost(() => {
-					resolve(scopeStyle(this, this.containerEl, s))})
+					resolve(scopeStyle(this, this.containerEl, styleEl))})
 			})
 		}
 
@@ -201,4 +191,23 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 
   // Assigned in renderSkribi()
   rerender(...args: any[]) {}
+}
+
+interface SkChild {
+	scriptsUpdated: (id?: string) => void
+	sources: skChildSources
+}
+
+type skChildState = "pre" | "post" | "error"
+
+/** Stores the sources for which a skribi should listen for modifications to. */
+type skChildSources = {
+	/** Template keys, not including the root template. */
+	templates: string[],
+	/** Style file names. */
+	styles: string[],
+	/** IDs of plugins to listen for load/unload events of. */
+	integrations: string[],
+	/** Script keys. */
+	scripts: string[]
 }

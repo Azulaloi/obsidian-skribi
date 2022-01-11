@@ -63,22 +63,5 @@ export function compileWith(functionString: string, keys: string[], async?: bool
     }
   }
 
-  
-  // console.log(compiled)
-  /*
-  var util = require('util');
-  var vm = require('vm');
-  let be = func //js_beautify(func)
-  var sandbox: any = {out: null, e: null, str: be, con: constructor};
-  var src = "try { out = new con('scope', str) } catch (err) {e = err}";
-  vm.runInNewContext(src , sandbox, 'myfile.vm');
-  // console.log(util.inspect(sandbox)); 
-  // console.log(sandbox?.['e'])
-  // console.log(sandbox)
-  if (sandbox?.['e']) throw (sandbox?.e?.msg + EBAR + be)//sandbox['e']
-  // console.log(sandbox['out'])
-  return sandbox['out']
-  */
-
   return compiled as TemplateFunctionScoped
 }

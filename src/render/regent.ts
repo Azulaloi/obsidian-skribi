@@ -1,6 +1,6 @@
-import { SkribiAbortError, SkribiError, SkribiEvalError, SkribiSyntaxError } from "src/eta/error"
-import { makeErrorModalLink } from "src/modal/errorModal"
-import {  REGENT_CLS } from "src/types/const"
+import { SkribiAbortError, SkribiError, SkribiEvalError, SkribiSyntaxError } from "src/engine/error"
+import { makeErrorModalLink } from "src/modal/modal-error"
+import { REGENT_CLS } from "src/types/const"
 
 export interface RegentData {
 	[index: string]: any,

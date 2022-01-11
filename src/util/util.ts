@@ -2,29 +2,6 @@ import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault 
 import { EBAR } from "../types/const";
 import { Stringdex } from "../types/types";
 
-/*
-declare global {
-	interface Element {
-		addClazz(this: Element, str: string | string[]): void;
-		addClazz(this: Element, ...str: string[]): void;
-	}
-}
-
-Element.prototype.addClazz = function (str: string | string[]) {
-	if (Array.isArray(str)) {
-		this.addClass(...str)
-	} else this.addClass(str)
-};
-*/
-
-// I probably shouldn't be modifying native prototypes, so...
-export function addClazz(el: Element, ...str: string[]): void;
-export function addClazz(el: Element, str: string | string[]): void {
-	if (Array.isArray(str)) {
-		el.addClass(...str)
-	} else el.addClass(str)
-}
-
 export function ensureArray<T>(obj: T | T[]): Array<T> {
 	return Array.isArray(obj) ? obj : [obj]
 }

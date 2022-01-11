@@ -2,28 +2,30 @@ import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
 import { EBAR } from "src/types/const";
 import { DynamicState, FileMinder, Stringdex } from "src/types/types";
 import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util/util";
-import { SkribiImportError } from "src/eta/error";
-import { Provider } from "src/eta/provider_abs";
+import { SkribiImportError } from "src/engine/error";
+import { Provider } from "src/engine/provider/provider";
 
-/* Loads and provides JS files from the skript directory as modules. */
+/** Loads and provides JS files from the skript directory as modules. */
 export class ProviderScriptloader extends Provider implements FileMinder {
   loadedModules: Map<string, {name?: string, properties: Stringdex}> = new Map()
   failedModules: Map<string, SkribiImportError> = new Map()
 
-  async init() {
+  public async init(): Promise<void> {
     return this.initLoad().then(() => super.init())
   }
 
-  async initLoad() {
+  private async initLoad(): Promise<void> {
     return this.loadAndSet(...getFiles(this.bus.plugin.app, this.bus.plugin.settings.scriptFolder))
   }
 
-  async loadAndSet(...file: TFile[]) {
+  /** Attempts to load files as script modules and adds them to the cache. */
+  private async loadAndSet(...file: TFile[]): Promise<void> {
     return this.readFiles(...file)
     .then((ret) => {/*vLog('Loading JS modules...', ret);*/ this.stashModule(ret); return Promise.resolve()});
   }
 
-  stashModule(modules: [string, Stringdex][]) {
+  /** Adds a script module to the cache. */
+  private stashModule(modules: [string, Stringdex][]): void {
     dLog('Scriptloader: stashModule', modules)
 
     modules.forEach((r) => {
@@ -40,7 +42,8 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     this.bus.plugin.app.workspace.trigger('skribi:script-index-modified')
   }
 
-  createObject(ctx?: DynamicState): Stringdex {
+  /** Creates the provision object. */
+  public createObject(ctx?: DynamicState): Stringdex {
     let exports = {}
     this.loadedModules.forEach((value, key) => {
       let single = (Object.keys(value.properties).length == 1) 
@@ -67,7 +70,8 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     return exports
   }
 
-  async readFiles(...files: TFile[]): Promise<[string, Stringdex][]> {
+  /** Reads files and attempts to load .js files as modules. Does not add them to the module cache. */
+  private async readFiles(...files: TFile[]): Promise<[string, Stringdex][]> {
     let filtered = filterFileExt(files, "js")
     const reads = filtered.map(async (f) => {
       try {
@@ -100,7 +104,8 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     })
   }
 
-  clearJS(...items: Array<TFile | string>): void {
+  /** Deletes modules by string name or file of origin. */
+  private clearJS(...items: Array<TFile | string>): void {
     let names = items.map((item) => {
       if (isFile(item)) return filterFileExt(item, 'js')[0].basename
       else if (String.isString(item)) return item 
@@ -109,13 +114,15 @@ export class ProviderScriptloader extends Provider implements FileMinder {
     for (let name of names) this.loadedModules.delete(name)
   }
 
-  async reload(): Promise<void> {
+  /** Clears all modules and reloads the scriptloader. */
+  public async reload(): Promise<void> {
     this.loadedModules.clear()
     await this.initLoad()
     return super.reload()
   }
 
-  postDirty(id?: string): void {
+  /** Notifies all live skribi children that a script with provided id was updated. */
+  public postDirty(id?: string): void {
     Array.from(this.bus.plugin.children).forEach(child => child.scriptsUpdated(id))
   }
 

@@ -1,31 +1,29 @@
 import { MarkdownPostProcessor, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
-import { logError, SkribiAbortError, SkribiError, SkribiImportError, SkribiSyntaxError } from "src/eta/error";
-import { EtaHandler } from "src/eta/eta";
+import { logError, SkribiAbortError, SkribiError, SkribiImportError } from "src/engine/error";
+import { Handler } from "src/engine/handler";
 import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
-import { makeErrorModalLink } from "src/modal/errorModal";
 import { Modes, Flags, EBAR, CLS, REGENT_CLS } from "src/types/const";
 import { ProcessorMode, queuedTemplate, SkContext, SkribiResult, Stringdex, TemplateFunctionScoped } from "src/types/types";
 import { isExtant, dLog, vLog, roundTo } from "src/util/util";
 import { SkribiChild } from "./child";
 import { embedMedia } from "./embed";
-import { parseSkribi, preparseSkribi } from "./parse";
+import { parseSkribi, preparseSkribi } from "./parsing";
 import { renderRegent, renderError, renderState } from "./regent";
 import { scopeStyle, stripStyleFromString } from "./style/style";
 
-/* The core post processing chain. */
+/** The processor is the render core. It handles the post-processing chain. */
 export default class SkribiProcessor {
   plugin: SkribosPlugin
-  eta: EtaHandler
+  eta: Handler
 
   constructor(plugin: SkribosPlugin) {
     this.plugin = plugin
     this.eta = plugin.eta
   }
 
-  /**
-   * Register our markdown processors. */
-  registerProcessors() {
+  /** Register our markdown processors. */
+  public registerProcessors(): void {
     const processCodeSpan: MarkdownPostProcessor = async(el, ctx) => {this.processEntry({srcType: Modes.general}, el, ctx)}
 		this.plugin.registerMarkdownPostProcessor((el, ctx) => processCodeSpan(el, ctx))
 
@@ -40,9 +38,9 @@ export default class SkribiProcessor {
   /** Entry to the Skribi process chain. Called:
    * - By MarkdownView on each block of a markdown preview
    * - By MarkdownView on code blocks of our register language types
-   * - By renderSkribi to recurse nested skribis 
-	 * - By SkribiChild to reset itself. */
-  async processEntry (
+   * - By SkribiProcessor.renderSkribi() to recurse nested skribis 
+	 * - By SkribiChild to reset itself */
+  public async processEntry (
 		mode: ProcessorMode, // 0: codespan; 1: codeblock;
 		doc: HTMLElement,
 		ctx: MarkdownPostProcessorContext,
@@ -146,7 +144,7 @@ export default class SkribiProcessor {
   private queuedTemplates: Array<queuedTemplate> = []
 
   /** Queues templates to process on initial template load completion, or processes them immediately if ready. */
-	async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
+	private async awaitTemplatesLoaded(args: {el: HTMLElement, src: any, mdCtx: MarkdownPostProcessorContext, skCtx: SkContext}): Promise<SkribiResult> {
 		if (isExtant(this.plugin.eta.loader.initError)) {
 			// The template loader has errored and will not initialize, so continue rendering immediately.
 			return await this.processSkribiTemplate(args.el, args.src, args.mdCtx, args.skCtx)
@@ -167,7 +165,7 @@ export default class SkribiProcessor {
 	}
 
   /** Called on template init load complete. Fires off all of the queued templates. */
-  templatesReady() {
+  public templatesReady(): void {
     let proms = this.queuedTemplates.map((queued) => {
 			let el = renderRegent(queued.element, {class: REGENT_CLS.eval, hover: l['regent.loading.hover']})
 			return queued.function(el, window.performance.now())
@@ -176,7 +174,7 @@ export default class SkribiProcessor {
   }
 
 	/** Parse variables and prep the template */
-	async processSkribiTemplate(
+	private async processSkribiTemplate(
 		el: HTMLElement, 
 		src: string, 
 		mdCtx: MarkdownPostProcessorContext, 
@@ -202,7 +200,7 @@ export default class SkribiProcessor {
 	}
 
   /** Wrap non-template skribis in tags as determined by their type flag */
-	async processSkribi(
+	private async processSkribi(
 		el: HTMLElement, 
 		src: string, 
 		mdCtx: MarkdownPostProcessorContext, 
@@ -221,7 +219,7 @@ export default class SkribiProcessor {
 	}
 
   /** Main skribi rendering function */
-	async renderSkribi(
+	private async renderSkribi(
 		el: HTMLElement, 
 		con: string | TemplateFunctionScoped, 
 		id: string, 
@@ -254,7 +252,10 @@ export default class SkribiProcessor {
 		let ctx = Object.assign({}, skCtx?.ctx || {}, {child: child.provideContext()})
 
 		let [rendered, packet]: [string, Stringdex] = await this.eta.renderAsync(con, ctx, file)
-		.catch((err) => { /* If the template function throws an error, it should bubble up to here. */
+		.catch((err) => { 
+			/* If the template function throws an error, it should bubble up to here. 
+			 * This handles almost every type of error that a skribi function can throw, so it's a bit convoluted. */
+
 			if (con === undefined && !this.eta.hasPartial(id)) {
 				if (isExtant(this.plugin.eta.loader.initError)) {
 					/* Loader failed to init */
@@ -349,7 +350,6 @@ export default class SkribiProcessor {
 			return Promise.resolve([null, null])
 		})
 		/* END ERROR HANDLING */
-		
 
 		/* RENDERING */
 		dLog("renderSkribi:", el, mdCtx, skCtx, id)
@@ -363,10 +363,6 @@ export default class SkribiProcessor {
 				? this.simpleRender(rendered, newElement) 
 				: MarkdownRenderer.renderMarkdown(rendered, newElement, mdCtx.sourcePath, null))
 			.then(() => {
-				/* this bit disabled because it kills other skribis rendering in the same block */
-				// if (el?.parentElement?.nodeName == "P") { // true when (mode == Mode.block)
-					// el.parentElement.replaceWith(el) // strip the superfluous P element
-				// }
 				newElement.setAttribute("skribi", (skCtx.flag == 1) ? 'template' : id)
 				if (skCtx.flag == 1) {newElement.setAttribute("skribi-template", id)}
 				newElement.removeClass(CLS.virtual)
@@ -374,7 +370,8 @@ export default class SkribiProcessor {
 
 				let shade;
 				if (this.plugin.settings.shadowMode) {
-					/* it seems that non-codeblock skribis do not survive this process */
+					/* it seems that non-codeblock skribis do not survive this process
+					 * so the shadowmode setting is hidden for now */
 					let nel = createDiv()
 					el?.parentElement.prepend(nel)
 					nel.setAttr('skribi-host', '')
@@ -430,7 +427,7 @@ export default class SkribiProcessor {
 
 	/* End of processor chain */
 
-	async simpleRender(content: string, el: HTMLElement) {
+	private async simpleRender(content: string, el: HTMLElement) {
 		el.innerHTML = content
 		console.log(el)
 		return Promise.resolve()

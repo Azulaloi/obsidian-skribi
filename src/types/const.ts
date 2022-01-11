@@ -28,6 +28,7 @@ export const EBAR = `\n---------------------------\n`
 /** Miscellaneous classes. */
 export const CLS = {
 	virtual: "skribi-render-virtual",
+	/** The anim class toggles Skribi CSS animations on when applied to the document body. */
 	anim: "skribi-anims",
 }
 

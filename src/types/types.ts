@@ -4,6 +4,13 @@ import { MarkdownPostProcessorContext, TAbstractFile, TFile } from "obsidian";
 import { SkribiChild } from "src/render/child";
 import { Modes, Flags } from "./const";
 
+export type Nullish = null | undefined
+export type Extant<K> = K extends Nullish ? never : K
+export type Nullable<K> = K | Nullish
+
+export type Stringdex<T = any> = {[index: string]: T}
+
+
 export type SkribiResult = SkribiResultRendered | SkribiResultQueued | void
 export type SkribiResultRendered = [Promise<HTMLDivElement>, SkribiChild]
 export type SkribiResultQueued = {msg: string, qi: number}
@@ -25,8 +32,6 @@ export interface ProcessorMode {
 export interface Template {
 	file: TFile
 }
-
-export declare type Stringdex<T = any> = {[index: string]: T}
 
 export interface ArgSet {[index: string]: string | string[]};
 

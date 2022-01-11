@@ -4,16 +4,18 @@ import { EtaConfig } from "eta/dist/types/config";
 import { normalizePath, TFile } from "obsidian";
 import { EBAR, VAR_NAME } from "src/types/const";
 import SkribosPlugin from "../main";
-import { FileMinder, scopedVars, Stringdex, TemplateFunctionScoped } from "../types/types";
+import { FileMinder, scopedVars, Stringdex, TemplateCache, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util/util";
-import { compileWith } from "./comp";
+import { compileWith } from "./compilation";
 import { SkribiEtaSyntaxError } from "./error";
-import { renderEta } from "./eval";
-import compileToString from "./mod";
-import { ProviderBus } from "./provider_bus";
-import { TemplateLoader } from "./templates";
+import { renderEta } from "./evaluation";
+import compileToString from "./compilation-eta";
+import { ProviderBus } from "./provider-bus";
+import { TemplateLoader } from "./template-manager";
 
-export class EtaHandler {
+/** The Handler is the engine core. 
+ * It initializes and manages the template loader and provider bus, and handles Eta render functions. */
+export class Handler {
   plugin: SkribosPlugin;
   bus: ProviderBus;
   loader: TemplateLoader;
@@ -22,7 +24,6 @@ export class EtaHandler {
 
   get templates() {return this.loader.templateCache}
   get failedTemplates() {return this.loader.templateFailures}
-  // get templateFrontmatters() {return this.loader.templateFrontmatters}
 
   constructor(plugin: SkribosPlugin) {
     this.plugin = plugin;
@@ -34,7 +35,7 @@ export class EtaHandler {
     else this.init()
   }
 
-  init() {
+  private init() {
     this.initLoad().then(() => {
       this.registerFileEvents()
     }).catch((err) => {
@@ -42,7 +43,7 @@ export class EtaHandler {
     })
   }
 
-  registerFileEvents() {
+  private registerFileEvents() {
     /* Because the FileMinder index does not change, we don't need the event refs */
 
     const minders: FileMinder[] = [this.bus.scriptLoader, this.loader]
@@ -79,7 +80,7 @@ export class EtaHandler {
     }
   }
 
-  async initLoad() {
+  private async initLoad(): Promise<any> {
     let {a: a, b: b} = await this.bus.preInit().then(() => {
       return {a: this.bus.init(), b: this.loader.init()}
     })
@@ -87,36 +88,35 @@ export class EtaHandler {
     return Promise.all([a, b])
   }
 
-  unload() {
+  public unload(): void {
     this.bus.unload()
   }
 
-  recompileTemplates() {
+  /** Reloads the template loader, thus recompiling all templates. */
+  public recompileTemplates(): Promise<any> {
     // If the bus scope changes, the templates must be recompiled. 
     // The bus scope should not change post-init unless an external source modifies the provider list.
     return this.loader.reload()
   }
 
-  getPartial(id: string) {
+  public getPartial(id: string): TemplateCache | null {
     return this.loader.templateCache.get(id)
   }
 
-  hasPartial(id: string) {
+  hasPartial(id: string): boolean {
     return isExtant(this.loader.templateCache.get(id))
   }
 
   getCacheKeys(): string[] {
-    //@ts-ignore
     return Object.keys(this.templates.cache)
   }
-
-  /**   
-  * Primary skribi render function. Renders asynchronously (TemplateFunction may or may not be async)
+   
+  /** Primary skribi render function. Renders asynchronously (TemplateFunction may or may not be async)
   * @param content String or scoped template function to render
   * @param ctxIn Context object to be added to `sk` object
   * @param file File in which the skribi is being rendered  
   * @returns [rendered string, returned packet (currently unused)] */
-  async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
+  public async renderAsync(content: string | TemplateFunctionScoped, ctxIn?: any, file?: TFile): Promise<[string, Stringdex]> {
     /* Used to pass data up to the render process from the skribi function */
     let packet: Stringdex = {};
     function up() {
@@ -192,7 +192,8 @@ export class EtaHandler {
     else return Promise.reject("Unknown error")
   }
 
-  /* Currently used by StyleExtender. TODO: more robust API (post release feature) */
+  /** A very simple render function. Currently used by StyleExtender. 
+   * TODO: more robust API (post release feature) */
   render(content: string, ctxIn?: any) {
     let context = ctxIn || {};
 

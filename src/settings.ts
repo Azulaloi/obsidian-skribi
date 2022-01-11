@@ -1,9 +1,8 @@
 import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, debounce } from "obsidian";
-import { renderModalPreset } from "./data/data";
 import { l } from "./lang/babel";
-import SkribosPlugin from "./main";
-import { confirmationModal, makeExternalLink } from "./modal/confirmationModal";
-import RenderModal from "./modal/renderModal";
+import SkribosPlugin, { renderModalPreset } from "./main";
+import { confirmationModal, makeExternalLink } from "./modal/modal-confirmation";
+import RenderModal from "./modal/modal-render";
 import { CLS } from "./types/const";
 import { wrapCollapse } from "./util/interface";
 import { hash, isExtant, isFunc, linkDocs } from "./util/util";
@@ -61,13 +60,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 		this.makeToggle(containerEl, "cssAnimations", l["setting.cssAnimations.name"], l["setting.cssAnimations.desc"], (val: boolean) => {
 			document.body.toggleClass(CLS.anim, val)
 		});
-
 		// this.makeToggle(containerEl, "shadowMode", "Shadow Mode", "Embed skribis in a shadow root", () => invokeMethodOf<SkribiChild>("rerender", ...this.plugin.children)) // hidden for now (this kills the skribichild)
 	
-
-
 		/* PRESETS */
-
 		let presetsDiv = containerEl.createDiv({cls: 'skribi-presets-list'});
 		let col = wrapCollapse(presetsDiv, this.collapsedEls.renderPresets, (state) => this.collapsedEls.renderPresets = state)
 		col.collapseEl.addClass('skribi-presets-settings')
@@ -113,19 +108,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 			div.createSpan({cls: "skribi-presets-label-3", text: "Arguments"})
 		});
 		let entries = Object.entries(this.plugin.data.renderModalPresets) as [string, renderModalPreset][]
-		// console.log(entries)
 		entries.sort((a, b) => a[1].index - b[1].index).forEach((preset, index) => {
 			this.createPresetEntry(presetsDiv, index, preset[0], preset[1])
 		})
-
-		/*
-		if (id) {
-			let f = containerEl.querySelector(`div.skr-collapsible.skribi-presets-settings > div.skr-collapsible-content textarea[id='${id}']`) as HTMLTextAreaElement
-			if (f) {
-				f.focus()
-				if (sel) f.setSelectionRange(sel[0], sel[1])
-			}
-		}*/
 	}
 
 	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string, cb?: (value: any) => void) {
@@ -155,28 +140,6 @@ export class SkribosSettingTab extends PluginSettingTab {
 	createPresetEntry(el: HTMLElement, index: number, uid: string, preset: renderModalPreset) {
 		let set = new Setting(el)
 		set.settingEl.addClass('skribi-preset-entry')
-
-		/*
-		set.addTextArea((text) => {
-			text.inputEl.setAttr('id', uid)
-			text.setValue(uid)
-			text.onChange((value) => {
-				console.log(value)
-				if (digits.contains(value.charAt(0))) {
-					text.inputEl.toggleClass('skr-invalid', true)
-					el.prepend(createSpan({text: "Preset name cannot begin with a numeral"}))
-				} else {
-					text.inputEl.toggleClass('skr-invalid', false)
-					let p = this.plugin.data.renderModalPresets[uid]
-					delete this.plugin.data.renderModalPresets[uid]
-					this.plugin.data.renderModalPresets[value] = p
-				  this.plugin.saveSettings().then(() => this.display(value, [text.inputEl.selectionStart, text.inputEl.selectionEnd]))
-				}
-			})
-			
-			text.inputEl.cols = 12;
-			text.inputEl.rows = 1;
-		}) */
 
 		/* Template Name */
 		set.addTextArea((text) => {
@@ -236,41 +199,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 			return b
 		})
 	}
-
-	/* unused */
-	/* propTextField(set: Setting, presetKey: string, val: [string, string])  {
-		set.addTextArea((text) => { 
-			// Property Key 	
-			var prevKey = val[0];
-
-			text.setValue(val[0])
-			text.onChange(async (value) => {
-				let p = this.plugin.data.renderModalPresets[presetKey].arguments
-				p[value] = p[prevKey]
-				delete p[prevKey]
-				this.plugin.data.renderModalPresets[presetKey].arguments = p
-				await this.plugin.saveSettings();
-				prevKey = this.plugin.data.renderModalPresets[presetKey].arguments[value]
-				this.display()
-			})
-			// text.inputEl.rows = 1;
-			text.inputEl.cols = 12;
-			text.inputEl.addClass("skr-preset-propkey")
-		})
-
-		// Property Value 
-		set.addTextArea((text) => {
-			text.setValue(val[1])
-			text.onChange(async (value) => {
-				this.plugin.data.renderModalPresets[presetKey].arguments[val[0]] = value
-				await this.plugin.saveSettings();
-				this.display()
-			})
-		})
-	} */
 }
-
-const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 export interface SkribosSettings {
 	[key: string] : boolean | string | string[] | number;

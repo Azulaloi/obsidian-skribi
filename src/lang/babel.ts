@@ -1,57 +1,58 @@
-import { Stringdex } from 'src/types/types'
+import type { Stringdex } from 'src/types/types'
 import { isExtant, vLog, vWarn } from 'src/util/util'
 import en from './locale/en.json'
 import en_gb from './locale/en_gb.json'
 
-// Doubt this will be used but I wanted to do it anyway
+/** A localized lexicon. */
+type LocLex = Partial<typeof en> & Stringdex<string>
 
-type locale = Partial<typeof en> & Stringdex<string>
-
-type l = {
+/** The global lexicon. */
+type Babel = {
   '_': (key: keyof typeof en, ...args: string[]) => string
 } & typeof en 
 /* NOTE: this is just cause VSC sometimes refuses to update the json definitions without having to restart and open all my terminals again */
 & Stringdex<string>
 
-const locales: Stringdex<locale> & {en: Stringdex<string> & typeof en} = {
-  en: en,
+/** The available local lexicons. */
+const LOCALES: Stringdex<LocLex> & {en: Stringdex<string> & typeof en} = {
+  'en': en,
   'en-gb': en_gb
 }
 
-function make(): l {
-  let out = {
-    '_': t
-  }
+/** Constructs the babel lexicon object. Keys defined in the lexicon for the current Obsidian locale are prioritized, defaulting to English if the key or local lex is not available. */
+function constructLexicon(): Babel {
+  const lex = {'_': t}
   
   for (let key of Object.keys(en)) {
     if (String.isString((en as Stringdex)[key])) {
-      Object.defineProperty(out, key, {
+      Object.defineProperty(lex, key, {
         get: function() {
-          return locale()?.[key] ?? (en as locale)[key]
+          return getLocalLex()?.[key] ?? (en as LocLex)[key]
         }
       })
     }
   }
 
   vLog('Locale definitions constructed')
-  return out as l
+  return lex as Babel
 }
 
-function locale(): locale {return locales?.[window.moment.locale()]}
+/** Returns the lexicon for the Obsidian locale, or null if no appropriate lexicon exists. */
+function getLocalLex(): LocLex | null {
+  return LOCALES?.[window.moment.locale()]
+}
 
-/* Pull localized strings from this. */
-export const l: l = make()
+/** The global lexicon. Values are pulled from the appropriate locale file, if available. */
+export const l: Babel = constructLexicon()
 
-/**
- * You can pull strings from this.
- * Pro: safely handles undefined keys
- * Contra: you won't get the property definition tooltips in VSC, which was the whole point of this design
- * @param key Lang file string key to return local version of
- * @param args Strings to insert into insertion tags (eg '%0')
- * @returns Localized string */
+/** Gets localized strings and replaces insertion tags (%i) in the string with provided values. 
+ * Necessary for strings with a variable that may change position in the string depending on the locale. 
+ * When using this method, you won't get the property definition tooltips in VSC.
+ * @param key string key to return local version of
+ * @param args strings to insert into insertion tags (ex: '%0' in the string will be replaced with the zeroth arg string) */
 function t(key: keyof typeof en, ...args: string[]): string {
   if (!isExtant((en as any)[key])) vWarn(`Babel received undefined key: ${key}`);
-  let str: string = l[key] ?? (en as locale)[key] ?? `$${key}` 
+  let str: string = l[key] ?? (en as LocLex)[key] ?? `$${key}` 
   return str.replace((/%(\d+)/g), (t, n) => (void 0 !== args[n] ? args[n] : t))
 }
 

@@ -3,16 +3,16 @@ import { parseYaml, TAbstractFile, TFile } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, VAR_NAME } from "src/types/const";
 import {  getFiles, isExtant, isFile, isInFolder, makeSettingsLink, roundTo, vLog, vWarn, withoutKey } from "src/util/util";
-import { EtaHandler } from "./eta";
+import { Handler } from "./handler";
 import { Cacher } from "./cacher";
 import { FileMinder, TemplateCache, TemplateErrorCache } from "src/types/types";
-import { compileWith } from "./comp";
-import compileToString from "./mod";
+import { compileWith } from "./compilation";
+import compileToString from "./compilation-eta";
 import { skInternalError } from "./error";
 
-/* Responsible for management of templates and the template cache. */
+/** Responsible for management of templates and the template cache. */
 export class TemplateLoader implements FileMinder {
-  private handler: EtaHandler
+  private handler: Handler
   private plugin: SkribosPlugin
 
   templateCache: Cacher<TemplateCache> = new Cacher<TemplateCache>({})
@@ -21,7 +21,7 @@ export class TemplateLoader implements FileMinder {
 
   initError: any; // Stores errors thrown during loader init, to show error on await-regents
 
-  constructor(handler: EtaHandler) {
+  constructor(handler: Handler) {
     this.handler = handler
     this.plugin = handler.plugin
   }
@@ -149,15 +149,13 @@ export class TemplateLoader implements FileMinder {
     return Promise.resolve()
   }
 
-  /* Deletes cache entries by string name or file of origin */
-  deletePartial(...items: Array<TFile | string>): void {
-    for (let item of items) {
-      let name = isFile(item) ? item.basename : item
-      this.templateCache.remove(name)
-    }
+  /** Deletes cached entries by string name or file of origin. */
+  private deletePartial(...items: Array<TFile | string>): void {
+    this.deletePartialByName(...items.map(i => isFile(i) ? i.name : i))
   }
 
-  deletePartialByName(...items: Array<string>) {
+  /** Deletes cached templates by string name. */
+  private deletePartialByName(...items: Array<string>): void {
     for (let item of items) {
       let split = (/(?<name>[^]+)\.(?<extension>[^]+)$/g).exec(item)
       if (!(Object.keys(split?.groups)?.length ?? 0 > 0)) {
@@ -179,6 +177,7 @@ export class TemplateLoader implements FileMinder {
     }
   }
 
+  /** Reloads the template loader, recompiling all templates. */
   public async reload(): Promise<any> {
     this.initError = null;
 
@@ -207,11 +206,10 @@ export class TemplateLoader implements FileMinder {
     return Promise.resolve("") 
   }
 
-  resetChildren() {
+  /** Resets all live skribi children. */
+  private resetChildren(): void {
     Array.from(this.plugin.children).forEach((child) => {
       if (child?.templateKey) {
-        /* both of these options work but I made reset() cause I thought it didn't and now I wanna use it */
-        //child.rerender(child.templateKey)
         child.reset() 
       } 
     })
@@ -226,13 +224,6 @@ export class TemplateLoader implements FileMinder {
     vLog(`File '${file.name}' in template directory modified, updating...`)
     this.definePartials(file)
   }
-
-  // fileDeleted(file: TAbstractFile | string): void { // never actually called as string I just wrote it to handle it for some reason
-  //   let isf = isFile(file)
-  //   if ((!isf && !(String.isString(file) && this.templateCache.get(file)))) return;
-  //   vLog(`File '${isf ? (file as TFile).name : file}' removed from template directory, unloading...`)
-  //   this.deletePartial(file as (TFile | string))
-  // }
 
   fileDeleted(file: TAbstractFile): void {
     if (!isFile(file)) return;

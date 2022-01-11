@@ -2,10 +2,11 @@ import { Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSugg
 import SkribosPlugin from "./main";
 import { isExtant } from "./util/util";
 
-/** Suggests templates and properties when invoking a template. */
 // TODO: Don't suggest properties that have already been defined
+
+/** Suggests templates and properties when invoking a template. */
 export default class TemplateSuggest extends EditorSuggest<string> {
-  plugin: SkribosPlugin
+  private plugin: SkribosPlugin
 
   constructor(plugin: SkribosPlugin) {
     super(plugin.app)

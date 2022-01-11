@@ -1,4 +1,6 @@
-/* This is slightly modified from Eta. */
+// TODO: try and remember why I'm using this instead of a map...
+
+// This is slightly modified from Eta.
 
 export class Cacher<T> {
   constructor(readonly cache: Record<string, T>) {}

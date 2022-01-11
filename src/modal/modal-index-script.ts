@@ -2,7 +2,7 @@ import { EventRef } from "obsidian";
 import SkribosPlugin from "src/main";
 import { renderError } from "src/render/regent";
 import { makeField } from "src/util/interface";
-import { IndexModal } from "./indexModal";
+import { IndexModal } from "./modal-index";
 
 /* A modal that displays an index of all scripts. */
 export class IndexScriptModal extends IndexModal {
@@ -51,8 +51,6 @@ export class IndexScriptModal extends IndexModal {
     this.generateFields(this.fieldsDiv)
     this.contentEl.createSpan({cls: 'skribi-modal-version-number', text: `SkribosPlugin ${this.app.plugins.plugins["obsidian-skribi"].manifest.version}`})
   }
-
-
 
   onClose() {
     this.plugin.app.workspace.offref(this.listenerRef)
