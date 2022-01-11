@@ -9,7 +9,7 @@
   "command.viewTemplates": "View Templates",
   "command.viewScripts": "View Scripts",
   "command.renderTemplate": "Render Template",
-  
+  "command.renderPreset": "Render Preset - %0",
 
   "regent.loading.hover": "Evaluating...",
   "regent.stasis.hover": "Recursion limit reached!",
@@ -32,6 +32,14 @@
   "setting.templateSuggest.desc": "Displays a suggestion popover when invoking a template that prompts with template names and value keys.",
   "setting.cssAnimations.name": "CSS Animations",
   "setting.cssAnimations.desc": "Toggles CSS animations, such as the spinning loading symbol.",
+  "setting.presets.name": "Render Presets",
+  "setting.presets.newTooltip": "New Preset",
+  "setting.presets.defaultPreset": "Preset %0",
+  "setting.presets.labelName": "Name",
+  "setting.presets.labelTemplate": "Template",
+  "setting.presets.labelArguments": "Arguments",
+  "setting.presets.deleteTooltip": "Delete Preset",
+  "setting.presets.deleteConfirm": "Delete Preset?",
 
   "modal.insert.title": "Insert Skribi Template",
   "modal.insert.append": "Append",

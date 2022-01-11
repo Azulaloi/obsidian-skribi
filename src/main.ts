@@ -183,7 +183,7 @@ export default class SkribosPlugin extends Plugin {
 		}})
 
 		/* Registers the user-configured render modal presets as commands, which open the render modal with the parameters defined in the preset. */
-		for (let preset of Object.entries(this.data.renderModalPresets) as [string, renderModalPreset][]) {
+		for (let preset of Object.entries(this.data?.renderModalPresets ?? {}) as [string, renderModalPreset][]) {
 			this.addCommand({id: `render-preset_${preset[0]}`, name: `Render Preset - ${preset[1].name}`, callback: () => {
 				new RenderModal(this, preset[1].key, preset[1].append).open()
 			}})
@@ -228,5 +228,5 @@ export type renderModalPreset = {
 
 export interface PluginData {
   settings: SkribosSettings;
-  renderModalPresets: Stringdex<renderModalPreset>
+  renderModalPresets?: Stringdex<renderModalPreset>
 }

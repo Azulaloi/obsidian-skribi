@@ -8,7 +8,7 @@ type LocLex = Partial<typeof en> & Stringdex<string>
 
 /** The global lexicon. */
 type Babel = {
-  '_': (key: keyof typeof en, ...args: string[]) => string
+  '_': (key: keyof typeof en | string, ...args: string[]) => string
 } & typeof en 
 /* NOTE: this is just cause VSC sometimes refuses to update the json definitions without having to restart and open all my terminals again */
 & Stringdex<string>

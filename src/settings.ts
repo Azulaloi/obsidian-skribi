@@ -67,15 +67,17 @@ export class SkribosSettingTab extends PluginSettingTab {
 		let col = wrapCollapse(presetsDiv, this.collapsedEls.renderPresets, (state) => this.collapsedEls.renderPresets = state)
 		col.collapseEl.addClass('skribi-presets-settings')
 		let keyField = new Setting(col.collapseTitleEl)
-			.setName('Render Presets')
+			.setName(l['setting.presets.name'])
 			.addButton((button) => { button
 				.setButtonText("+")
-				.setTooltip("New Preset")
+				.setTooltip(l['setting.presets.newTooltip'])
 				.onClick(() => {
+					this.plugin.data.renderModalPresets ??= {}
+
 					let i = (Object.keys(this.plugin.data.renderModalPresets).length + 1)
 					let newPreset = {
 						index: i,
-						name: `Preset ${i}`,
+						name: l._('setting.presets.defaultPreset', i.toString()),
 						key: "",
 						append: ""	
 					}
@@ -84,7 +86,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 						let t = window.performance.now().toString()
 						let s = (t.length > 12) ? t.substring(t.length - 8) : t
 						let x = hash(s)
-						if (isExtant(this.plugin.data.renderModalPresets[x])) {
+						if (isExtant(this.plugin.data?.renderModalPresets?.[x])) {
 							if (iter > 10) {throw "Could not generate ID, aborting"}
 							return getUniqueKey(iter++)
 						} else return x
@@ -93,21 +95,22 @@ export class SkribosSettingTab extends PluginSettingTab {
 					let newKey = getUniqueKey(0)
 					this.plugin.data.renderModalPresets[newKey] = newPreset
 					this.plugin.saveSettings().then(() =>	{
-						this.plugin.addCommand({id: `render-preset_${newKey}`, name: `Render Preset - ${newPreset.name}`, callback: () => {
+						this.plugin.addCommand({id: `render-preset_${newKey}`, name: l._('command.renderPreset', newPreset.name), callback: () => {
 							new RenderModal(this.plugin, this.plugin.data.renderModalPresets[newKey].key, this.plugin.data.renderModalPresets[newKey].append).open()
 						}})
 						this.display(newKey)
 					})
 				})
-			})
+			});
+
 		keyField.settingEl.prepend(col.collapseIndicator)
 
 		presetsDiv.createDiv({cls: 'skribi-presets-list-label'}, (div) => {
-			div.createSpan({cls: "skribi-presets-label-1", text: "Name"})
-			div.createSpan({cls: "skribi-presets-label-2", text: "Template"})
-			div.createSpan({cls: "skribi-presets-label-3", text: "Arguments"})
+			div.createSpan({cls: "skribi-presets-label-1", text: l['setting.presets.labelName']})
+			div.createSpan({cls: "skribi-presets-label-2", text: l['setting.presets.labelTemplate']})
+			div.createSpan({cls: "skribi-presets-label-3", text: l['setting.presets.labelArguments']})
 		});
-		let entries = Object.entries(this.plugin.data.renderModalPresets) as [string, renderModalPreset][]
+		let entries = Object.entries(this.plugin.data?.renderModalPresets ?? {}) as [string, renderModalPreset][]
 		entries.sort((a, b) => a[1].index - b[1].index).forEach((preset, index) => {
 			this.createPresetEntry(presetsDiv, index, preset[0], preset[1])
 		})
@@ -148,7 +151,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 				this.plugin.data.renderModalPresets[uid].name = val
 				this.saveData(() => {
 					this.app.commands.removeCommand(`obsidian-skribi:render-preset_${uid}`)
-					this.plugin.addCommand({id: `render-preset_${uid}`, name: `Render Preset - ${val}`, callback: () => {
+					this.plugin.addCommand({id: `render-preset_${uid}`, name: l._('command.renderPreset', val), callback: () => {
 						new RenderModal(this.plugin, this.plugin.data.renderModalPresets[uid].key, this.plugin.data.renderModalPresets[uid].append).open()
 					}})
 				})
@@ -180,9 +183,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 
 		set.addButton((button) => { let b = button
 			.setButtonText("X")
-			.setTooltip("Delete Rule")
+			.setTooltip(l['setting.presets.deleteTooltip'])
 			.onClick(async () => {
-				let p = new confirmationModal(this.app, {title: "Delete Rule?"});
+				let p = new confirmationModal(this.app, {title: l['setting.presets.deleteConfirm']});
 				new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => 
 					p.openAndGetValue(resolve, reject))
 						.then(ar =>  {
