@@ -1,7 +1,7 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
 import { SkContext, Stringdex } from "src/types/types";
-import { dLog, isExtant, vLog } from "src/util/util";
+import { dLog, hash, isExtant, vLog } from "src/util/util";
 import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
 
@@ -25,9 +25,11 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	source: string
 	/** The hashed source string, used for style scoping. Null unless a style has been scoped to this skribi. */
 	hash?: number
+	// _hash?: number
+	// get hash() {return this._hash ??= hash(this.source)}
+
 	/** When a source is modified, the  */
 	sources: skChildSources = {
-		/** When a source is modified, the  */
 		templates: [],
 		styles: [],
 		integrations: [],
@@ -139,7 +141,10 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	onPost() {
 		this.isPost = true
 		this.state = "post"
-		for (let cb of this.cbOnPost) cb[0](cb[1]);
+		for (let cb of this.cbOnPost) {
+			// TODO: ensure proper sync for onPosts
+			cb[0](cb[1])
+		};
 	}
 
   /*-- Provider Functions --*/
@@ -148,7 +153,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 	/** Creates and attaches a scoped style element from a provided CSS-parsable string.
 	 * Will not resolve until the skribi has posted (completed synchronous evaluation and attached to the document).
 	 * @returns a promise for the attached style element. */
-	skAddStyle(styleContent: string): Promise<HTMLStyleElement> {
+	skAddStyle(styleContent: string, scope: boolean = true): Promise<HTMLStyleElement> {
 		// TODO: check that the promise is collected if aborted before post
 		let styleEl = createEl('style')
 		styleEl.innerHTML = styleContent
@@ -157,7 +162,7 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		let p = () => {
 			return new Promise((resolve, reject) => {
 				this.skRegisterPost(() => {
-					resolve(scopeStyle(this, this.containerEl, styleEl))})
+					resolve(scope ? scopeStyle(this, this.containerEl, styleEl) : styleEl)})
 			})
 		}
 

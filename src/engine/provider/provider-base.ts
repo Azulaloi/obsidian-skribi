@@ -48,10 +48,10 @@ export class ProviderSK extends Provider {
       /**
        * @param styleSnip The ID of a .css file that is expected to be present in the style cache
        * @returns A promise for the scoped style (resolves on post) */
-      includeStyle: async function(styleSnip: string) { //TODO: fails on initload for non-templates
+      includeStyle: async function(styleSnip: string, scope: boolean = true) { //TODO: fails on initload for non-templates
         return makeInitPromise(this.child, async () => {
           this.child._c.listenFor("style", styleSnip)
-          return this.child.addStyle(await this.getStyle(styleSnip))
+          return this.child.addStyle(await this.getStyle(styleSnip), scope)
         })
       },
       // util: require('util'),

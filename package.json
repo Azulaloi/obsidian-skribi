@@ -6,7 +6,8 @@
   "scripts": {
     "install-deps": "npm install",
     "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js --environment BUILD:production"
+    "build": "rollup --config rollup.config.js --environment BUILD:production",
+    "docs": "cd docs && mkdocs serve"
   },
   "keywords": [],
   "author": "Azulaloi",

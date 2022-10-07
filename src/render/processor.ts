@@ -28,7 +28,9 @@ export default class SkribiProcessor {
 		this.plugin.registerMarkdownPostProcessor((el, ctx) => processCodeSpan(el, ctx))
 
     const processCodeBlock = async (mode: ProcessorMode, str: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => { this.processEntry(mode, el, ctx, null, null, str.trimEnd()) }
-    ([["normal", "", Flags.none], ["raw", "-raw", Flags.raw], ["literal", "-lit", Flags.literal], ["interpolate", "-int", Flags.interp], ["evaluate", "-eval", Flags.eval]])
+    ([["normal", "", Flags.none], ["raw", "-raw", Flags.raw], ["literal", "-lit", Flags.literal], ["interpolate", "-int", Flags.interp], ["evaluate", "-eval", Flags.eval], 
+			// ["invocation", "-inv", Flags.template]
+		])
 		.forEach((v) => {
 			this.plugin.registerMarkdownCodeBlockProcessor(`skribi${v[1]}`, processCodeBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
 			this.plugin.registerMarkdownCodeBlockProcessor(`sk${v[1]}`, processCodeBlock.bind(this, {srcType: Modes.block, flag: v[2]}))
@@ -403,14 +405,19 @@ export default class SkribiProcessor {
 
 			child.setPacket(packet)
 			mdCtx.addChild(child)
+			// console.log("a", child, this.plugin.children.length)
 			this.plugin.children.push(child)
-			
+			// console.log("b", child, this.plugin.children.length)
+
 			render.then((e): Promise<any> => {
+				// console.log("c", child, this.plugin.children.length)
+
 				child.onPost()
+				// console.log("d", child, this.plugin.children.length)
 
 				// TODO: only restrict depth for transclusions
 				if (isExtant(mdCtx.remainingNestLevel) && (mdCtx.remainingNestLevel > 0) || !isExtant(mdCtx.remainingNestLevel)) {
-					return embedMedia(e, mdCtx.sourcePath, this.plugin, skCtx.depth) 
+					return embedMedia(e, mdCtx.sourcePath, this.plugin, skCtx.depth)
 				} else return Promise.resolve()
 			})
 			.then((x) => {

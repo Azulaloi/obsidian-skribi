@@ -19,3 +19,5 @@ Preset commands have the name "Skribi: Render Preset - *Preset Name*" and the id
 Saved hotkeys will persist if Skribi is disabled or the preset name is changed, but will be lost is the preset is deleted.
 
 Render presets are listed in the Skribi Settings tab. To add a new entry, press the `+` button. An entry can be deleted with the entry's `x` button. The first field is the preset name, which is visible in the command name. The second field is the template key. The third field is the arguments, which should start with a pipe `|` and be written in the same format as a normal template invocation.
+
+Like any other skribi templates in render modals will be reloaded if one of their sources is updated, without needing to re-open the modal (so long as Auto Reload is enabled).

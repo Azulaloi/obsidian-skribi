@@ -94,7 +94,7 @@ export async function embedMedia (
                 if (n.childNodes.length > 0) { let d = createDiv(); d.append(n); return d;} else return n;}));
 
               ps.append(...mke); //ps.setAttribute("depth", d.toString())
-                            
+              
               return embedMedia(ps, srcPath, plugin, d-1, true)
           })
         }

@@ -1,12 +1,13 @@
+Skribi command IDs are prefixed by `obsidian-skribi`.
+
+## View Indices
+
+- **View Templates** (`view-templates`): Opens the <a href='../misc/index_modal#template-index'>Template Index Modal</a>, which displays a list of loaded templates and stylesheets.
+- **View Scripts** (`view-scripts`): Opens the <a href='../misc/index_modal#script-index'>Script Index Modal</a>, which displays a list of loaded script files.
+
 ## Insert Skribi
 
 Opens a prompt to insert a template. Will prompt you for variables, as defined in the [Template Metadata](../syntax/template_metadata).
-
-## View Templates
-
-Opens a modal that displays your loaded templates. Clicking an entry will open the template file in the editor (currently only works for `.md` files). Templates that failed to compile will have an error indicator displayed that you can click to open an error modal with more information. 
-
-The list will automatically refresh whenever the template cache is updated (so you can leave this open while you edit templates in an external editor, and see them move to/from the error list immediately). You can also force a refresh with the refresh index button (just in case).
 
 ## Render Template / Render Preset
 
@@ -14,11 +15,11 @@ Opens a modal and renders a template within. See [Render Modal](../misc/render_m
 
 ## Reload Skribis
 
-Causes all extant skribis to rerender themselves. Skribis will automatically rerender themselves if the loaded scripts or source template is modified, but maybe there's a use to doing it manually?
+Causes all extant skribis to rerender themselves. Though skribis will automatically rerender themselves if any of their source assets (template, script, stylesheet) are updated, this command is provided just in case.
 
 ## Reload Scripts
 
-Reloads scripts from the script directory. Scripts should automatically reload but I'll leave this in for now just in case.
+Reloads scripts from the script directory. Scripts should automatically reload, but this command is provided just in case.
 
 ## Performance Test
 
