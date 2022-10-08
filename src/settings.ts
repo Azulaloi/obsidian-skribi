@@ -3,8 +3,8 @@ import { l } from "./lang/babel";
 import SkribosPlugin, { renderModalPreset } from "./main";
 import { confirmationModal, makeExternalLink } from "./modal/modal-confirmation";
 import RenderModal from "./modal/modal-render";
-import { CLS } from "./types/const";
-import { wrapCollapse } from "./util/interface";
+import { CLS, PartialState } from "./types/const";
+import { Collapsible, wrapCollapse } from "./util/interface";
 import { hash, isExtant, isFunc, linkDocs } from "./util/util";
 
 export class SkribosSettingTab extends PluginSettingTab {
@@ -19,8 +19,18 @@ export class SkribosSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	saveSetting = debounce(async (setting: keyof SkribosSettings, value: string | number | boolean, cb?: Function, ...args: any[]) => {
+		// console.log("saving: " + setting + " = " + value)
+		this.plugin.settings[setting] = value;
+		this.plugin.saveSettings().then(() => {if (isExtant(cb) && isFunc(cb)) cb(...args || null)})
+	}, 2000, true)
+
+	saveData = debounce(async (cb?: Function, ...args: any[]) => {
+		this.plugin.saveSettings().then(() => {if (isExtant(cb) && isFunc(cb)) cb(...args || null)})
+	}, 1000, true)
+
 	display(id?: string, sel?: [number, number]): void {
-		let {containerEl} = this;
+		let {containerEl} = this; // not sure what this is doing or why I did it
  
 		containerEl.addClass("skribi-settings");
 		containerEl.empty();
@@ -28,6 +38,8 @@ export class SkribosSettingTab extends PluginSettingTab {
 		
     let desc = containerEl.createDiv({cls: 'skribi-modal-desc', attr: {style: "margin-bottom: 1em;"}})
     makeExternalLink(desc.createEl('a', {text: l['documentation'], attr: {'href': linkDocs('settings')}}))
+
+		//TODO: add buttons to open the various indices 
 
 		new Setting(containerEl)
 			.setName(l["setting.templateDirectory.name"])
@@ -62,7 +74,25 @@ export class SkribosSettingTab extends PluginSettingTab {
 		});
 		// this.makeToggle(containerEl, "shadowMode", "Shadow Mode", "Embed skribis in a shadow root", () => invokeMethodOf<SkribiChild>("rerender", ...this.plugin.children)) // hidden for now (this kills the skribichild)
 	
-		/* PRESETS */
+		this.composePresetList(containerEl)
+	}
+
+	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string, cb?: (value: any) => void) {
+		return new Setting(el)
+		.setName(name)
+		.setDesc(desc)
+		.addToggle((toggle: ToggleComponent) => { toggle
+			.setValue(!!this.plugin.settings[setting])
+			.onChange(async (value) => {
+				this.plugin.settings[setting] = value;
+				await this.plugin.saveSettings();
+				if (cb) cb(value);
+			})
+		})
+	}
+
+	//TODO: move this to a preset index modal? maybe
+	private composePresetList(containerEl: HTMLElement ) {
 		let presetsDiv = containerEl.createDiv({cls: 'skribi-presets-list'});
 		let col = wrapCollapse(presetsDiv, this.collapsedEls.renderPresets, (state) => this.collapsedEls.renderPresets = state)
 		col.collapseEl.addClass('skribi-presets-settings')
@@ -72,6 +102,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 				.setButtonText("+")
 				.setTooltip(l['setting.presets.newTooltip'])
 				.onClick(() => {
+					/* Create a new, blank preset and display it */
 					this.plugin.data.renderModalPresets ??= {}
 
 					let i = (Object.keys(this.plugin.data.renderModalPresets).length + 1)
@@ -105,46 +136,29 @@ export class SkribosSettingTab extends PluginSettingTab {
 
 		keyField.settingEl.prepend(col.collapseIndicator)
 
-		presetsDiv.createDiv({cls: 'skribi-presets-list-label'}, (div) => {
-			div.createSpan({cls: "skribi-presets-label-1", text: l['setting.presets.labelName']})
-			div.createSpan({cls: "skribi-presets-label-2", text: l['setting.presets.labelTemplate']})
-			div.createSpan({cls: "skribi-presets-label-3", text: l['setting.presets.labelArguments']})
+		presetsDiv.createDiv({cls: 'skribi-presets-list-header'}, (div) => {
+			div.createSpan({text: l['setting.presets.labelName']})
+			div.createSpan({text: l['setting.presets.labelTemplate']})
+			div.createSpan({text: l['setting.presets.labelArguments']})
 		});
 		let entries = Object.entries(this.plugin.data?.renderModalPresets ?? {}) as [string, renderModalPreset][]
 		entries.sort((a, b) => a[1].index - b[1].index).forEach((preset, index) => {
-			this.createPresetEntry(presetsDiv, index, preset[0], preset[1])
+			this.createPresetEntry(presetsDiv, index, preset[0], preset[1], col)
 		})
 	}
 
-	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string, cb?: (value: any) => void) {
-		return new Setting(el)
-		.setName(name)
-		.setDesc(desc)
-		.addToggle((toggle: ToggleComponent) => { toggle
-			.setValue(!!this.plugin.settings[setting])
-			.onChange(async (value) => {
-				this.plugin.settings[setting] = value;
-				await this.plugin.saveSettings();
-				if (cb) cb(value);
-			})
-		})
-	}
-
-	saveSetting = debounce(async (setting: keyof SkribosSettings, value: string | number | boolean, cb?: Function, ...args: any[]) => {
-		// console.log("saving: " + setting + " = " + value)
-		this.plugin.settings[setting] = value;
-		this.plugin.saveSettings().then(() => {if (isExtant(cb) && isFunc(cb)) cb(...args || null)})
-	}, 2000, true)
-
-	saveData = debounce(async (cb?: Function, ...args: any[]) => {
-		this.plugin.saveSettings().then(() => {if (isExtant(cb) && isFunc(cb)) cb(...args || null)})
-	}, 1000, true)
-
-	createPresetEntry(el: HTMLElement, index: number, uid: string, preset: renderModalPreset) {
-		let set = new Setting(el)
+	// TODO: add a test/render button that just executes the preset
+	createPresetEntry(el: HTMLElement, index: number, uid: string, preset: renderModalPreset, col: Collapsible) {
+		const set = new Setting(el)
 		set.settingEl.addClass('skribi-preset-entry')
 
-		/* Template Name */
+		const observer = new ResizeObserver((entries) => {
+			/* Alert the list's collapsible container that the content size has changed 
+			If there are more than one entries, the collapsible is toggling, so don't interfere */
+			entries.length > 1 || col.updateSize()
+		})
+
+		/* Preset key */
 		set.addTextArea((text) => {
 			text.setValue(preset?.name ?? this.plugin.data.renderModalPresets[uid].name)
 			text.onChange(val => {
@@ -156,22 +170,44 @@ export class SkribosSettingTab extends PluginSettingTab {
 					}})
 				})
 			})
-			text.inputEl.cols = 12;
 			text.inputEl.rows = 1;
+			addMinHeightListener(text.inputEl)
+			observer.observe(text.inputEl)
 		})
 
-		/* Template Key */
+		//TODO: add a PopoverSuggest for the template key
+		//TODO: recheck key validity when templatecache is updated?
+		//TODO: localize the invalid key info text
+
+		/* Template key */
 		set.addTextArea((text) => {
 			text.setValue(preset?.key ?? this.plugin.data.renderModalPresets[uid].key)
 			text.onChange(val => {
+				if (val.length > 0) {
+					let state = this.plugin.handler.checkTemplate(val)
+					if (state == PartialState.LOADED) {
+						text.inputEl.removeClass("skr-absent", "skr-failed")
+						text.inputEl.title = ""
+					} else if (state == PartialState.FAILED) {
+						text.inputEl.toggleClass("skr-failed", true)
+						text.inputEl.removeClass("skr-absent")
+						text.inputEl.title = `Template "${val}" failed to compile! This preset will not function. Check the Template Index for details.`
+					} else if (state == PartialState.ABSENT) {
+						text.inputEl.toggleClass("skr-absent", true)
+						text.inputEl.removeClass("skr-failed")
+						text.inputEl.title = `No such template "${val}" could be found.`
+					}
+				}
+
 				this.plugin.data.renderModalPresets[uid].key = val
 				this.saveData()
 			})
-			text.inputEl.cols = 12;
 			text.inputEl.rows = 1;
+			addMinHeightListener(text.inputEl)
+			observer.observe(text.inputEl)
 		})
 
-		/* Append */
+		/* Arguments */
 		set.addTextArea((text) => {
 			text.setValue(preset?.append ?? this.plugin.data.renderModalPresets[uid].append)
 			text.onChange(val => {
@@ -179,13 +215,16 @@ export class SkribosSettingTab extends PluginSettingTab {
 				this.saveData()
 			})
 			text.inputEl.rows = 1;
+			addMinHeightListener(text.inputEl)
+			observer.observe(text.inputEl)
 		})
 
+		/* Button to delete preset */
 		set.addButton((button) => { let b = button
 			.setButtonText("X")
 			.setTooltip(l['setting.presets.deleteTooltip'])
 			.onClick(async () => {
-				let p = new confirmationModal(this.app, {title: l['setting.presets.deleteConfirm']});
+				let p = new confirmationModal(this.app, {title: l['setting.presets.deleteConfirm'], class: "skribi-aposema"});
 				new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => 
 					p.openAndGetValue(resolve, reject))
 						.then(ar =>  {
@@ -198,7 +237,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 							}
 					});
 			})
-			b.buttonEl.addClass("skribi-preset-delete")
+			b.buttonEl.addClass("skribi-aposema")
 			return b
 		})
 	}
@@ -233,4 +272,13 @@ export const DEFAULT_SETTINGS: SkribosSettings = {
 	
 	reflectStyleTagText: true,
 	shadowMode: false,
+}
+
+function addMinHeightListener(el: HTMLTextAreaElement): void {
+	el.addEventListener("mouseover", (e) => {
+		if (!el.hasAttribute("style")) {
+			// not sure where the extra 2 pixels come from, but this is what works
+			el.setAttribute("style", `min-height: ${el.clientHeight + 2}px;`)
+		}
+	}, {"once": true});
 }

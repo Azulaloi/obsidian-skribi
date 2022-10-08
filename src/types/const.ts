@@ -47,3 +47,12 @@ export const REGENT_CLS = {
 	syntax_eta: "skr-syntax-eta", // For eta syntax errors
 	syntax_js: "skr-syntax-js" // For JS syntax errors
 }
+
+export const enum PartialState {
+	/** Partial is not present. */
+	ABSENT = -1,
+	/** Present, but failed to compile. */
+	FAILED = 0,
+	/** Present and ready. */
+	LOADED = 1
+}

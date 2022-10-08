@@ -313,6 +313,124 @@ body.skribi-anims code.skribi-regent.skr-depth::after {
   animation: skribiRotation 1s linear 0s infinite;
 }
 
+/*---------------
+/  Render Presets
+/----------------*/
+.skribi-settings .skr-collapsible {
+  margin-bottom: 2em;
+}
+
+.skr-collapsible.skribi-presets-settings {
+  border-left: var(--text-accent) solid;
+  border-left-width: 2px;
+  border-radius: 12px;
+}
+.skr-collapsible.skribi-presets-settings .skr-collapse-indicator {
+  display: flex;
+}
+.skr-collapsible.skribi-presets-settings .skr-collapsible-titlebar {
+  border: none;
+}
+.skr-collapsible.skribi-presets-settings .skr-collapsible-titlebar .setting-item {
+  padding: 12px 0 12px 0;
+  overflow-y: auto;
+  max-height: unset;
+  padding: 0px;
+  border: none;
+  flex: 1 1;
+}
+
+div.skribi-presets-list {
+  width: 100%;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+}
+div.skribi-presets-list .skribi-presets-list-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding-left: 2em;
+  padding-right: 2em;
+  border-top: 1px solid gray;
+  padding-top: 1em;
+  margin-bottom: 0px;
+}
+div.skribi-presets-list .skribi-presets-list-header span {
+  font-size: 0.9em;
+  text-align: center;
+  margin: 0px 8px;
+}
+div.skribi-presets-list .skribi-presets-list-header span:nth-child(1) {
+  flex: 0.2;
+}
+div.skribi-presets-list .skribi-presets-list-header span:nth-child(2) {
+  flex: 0.2;
+}
+div.skribi-presets-list .skribi-presets-list-header span:nth-child(3) {
+  flex: 0.55;
+}
+div.skribi-presets-list .skr-collapsible {
+  border-left: 2px solid var(--text-accent);
+  border-radius: 8px;
+  margin-left: 2em;
+}
+div.skribi-presets-list .skr-collapsible .skr-collapsible-titlebar {
+  border: none;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry {
+  overflow-y: auto;
+  max-height: unset;
+  display: inline-block;
+  width: 98%;
+  padding: 6px 0px;
+  margin: 6px 0px;
+  margin-left: 1.5em;
+  border: none;
+  border-top: 0px;
+  border-left: 2px solid var(--text-accent);
+  border-radius: 8px;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-info {
+  display: none;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 0px 8px;
+  align-items: baseline;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > textarea {
+  padding: 4px 10px;
+  margin: 0px 8px;
+  max-width: 100%;
+  resize: vertical;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > textarea:nth-child(1) {
+  flex: 0.2;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > textarea:nth-child(2) {
+  flex: 0.2;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > textarea:nth-child(3) {
+  flex: 0.55;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > textarea.skr-absent {
+  text-decoration: 1px red wavy underline;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > textarea.skr-failed {
+  text-decoration: 1px orange wavy underline;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > button {
+  padding: 4px 10px;
+  text-align: center;
+  margin: 0px 4px;
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item, div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control {
+  max-height: unset;
+  overflow-y: visible;
+}
+
 /*--------------------------------------------------------------------------------------------
 /  Modals
 /-------------------------------------------------------------------------------------------*/
@@ -388,6 +506,15 @@ span.skribi-modal-version-number {
 }
 .skribi-confirmation-modal .skribi-confirm-modal-buttons button:hover {
   background-color: var(--interactive-hover);
+}
+
+.skribi-confirmation-modal.skribi-aposema .skribi-modal-button-confirm,
+button.skribi-aposema {
+  background-color: var(--background-modifier-error) !important;
+}
+.skribi-confirmation-modal.skribi-aposema .skribi-modal-button-confirm:hover,
+button.skribi-aposema:hover {
+  background-color: var(--background-modifier-error-hover) !important;
 }
 
 /*---------------
@@ -629,7 +756,7 @@ table.skr-lines-table td.skr-concell {
   padding-left: 1em;
 }
 table.skr-lines-table td.skr-concell span.skr-err-ch {
-  border-bottom: 2px dotted red;
+  border-bottom: 2px dotted var(--text-error);
 }
 table.skr-lines-table col.skr-table-colnum {
   width: 25px;
@@ -638,7 +765,7 @@ table.skr-lines-table tr.skribi-line-extraneous {
   color: #323232;
 }
 table.skr-lines-table tr.skribi-line-errored td.skr-numcell {
-  background-color: red;
+  background-color: var(--background-modifier-error);
   color: black;
 }
 table.skr-lines-table tr.skribi-line-pointer {
@@ -738,120 +865,6 @@ div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator svg
 div.skribi-modal-index .skr-collapsible.is-collapsed .skr-collapse-indicator svg, div.skribi-modal-index-templates .skr-collapsible.is-collapsed .skr-collapse-indicator svg,
 div.skribi-settings .skr-collapsible.is-collapsed .skr-collapse-indicator svg {
   transform: rotate(-90deg);
-}
-
-/*---------------
-/  Render Presets
-/----------------*/
-.skribi-settings .skr-collapsible {
-  margin-bottom: 2em;
-}
-
-.skr-collapsible.skribi-presets-settings {
-  border-left: var(--text-accent) solid;
-  border-left-width: 2px;
-  border-radius: 12px;
-}
-.skr-collapsible.skribi-presets-settings .skr-collapse-indicator {
-  display: flex;
-}
-.skr-collapsible.skribi-presets-settings .skr-collapsible-titlebar {
-  border: none;
-}
-.skr-collapsible.skribi-presets-settings .skr-collapsible-titlebar .setting-item {
-  padding: 12px 0 12px 0;
-  overflow-y: auto;
-  max-height: unset;
-  padding: 0px;
-  border: none;
-  flex: 1 1;
-}
-
-div.skribi-presets-list {
-  width: 100%;
-  padding-top: 0.4em;
-  padding-bottom: 0.4em;
-}
-div.skribi-presets-list .skribi-presets-list-label {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding-left: 3em;
-  padding-right: 8em;
-  border-top: 1px solid gray;
-  padding-top: 1em;
-  margin-bottom: 0px;
-}
-div.skribi-presets-list .skribi-presets-list-label span {
-  font-size: 0.9em;
-  text-align: center;
-}
-div.skribi-presets-list .skribi-presets-list-label span.skribi-presets-label-1 {
-  flex: 0.55;
-}
-div.skribi-presets-list .skribi-presets-list-label span.skribi-presets-label-2 {
-  flex: 0.55;
-}
-div.skribi-presets-list .skribi-presets-list-label span.skribi-presets-label-3 {
-  flex: 1;
-}
-div.skribi-presets-list .setting-item-control {
-  justify-content: space-evenly;
-}
-div.skribi-presets-list .skr-collapsible {
-  border-left: 2px solid var(--text-accent);
-  border-radius: 8px;
-  margin-left: 2em;
-}
-div.skribi-presets-list .skr-collapsible .skr-collapsible-titlebar {
-  border: none;
-}
-
-.skr-collapsible-titlebar .setting-item.skribi-preset-key {
-  padding: 0px;
-  border: none;
-  display: inline-block;
-}
-.skr-collapsible-titlebar .setting-item.skribi-preset-key .setting-item-info {
-  display: none;
-}
-.setting-item.skribi-preset-entry {
-  padding: 12px 0 12px 0;
-  overflow-y: auto;
-  max-height: unset;
-  padding: 0px;
-  border: none;
-  display: inline-block;
-  width: 100%;
-  --azse-entrycol: var(--text-accent);
-  padding: 2px;
-  margin: 12px 0px;
-  margin-left: 1.5em;
-  border-top: 0px;
-  border-left: 2px solid var(--azse-entrycol);
-  border-radius: 8px;
-}
-.setting-item.skribi-preset-entry .setting-item-info {
-  display: none;
-}
-.setting-item.skribi-preset-entry .setting-item, .setting-item.skribi-preset-entry .setting-item-control {
-  max-height: unset;
-  overflow-y: visible;
-}
-.setting-item.skribi-preset-entry textarea {
-  padding: 4px 10px;
-  margin: 0px 4px;
-  height: 2.5em;
-  max-height: 2.5em;
-}
-.setting-item.skribi-preset-entry textarea.skr-invalid {
-  text-decoration: 1px red wavy underline;
-}
-.setting-item.skribi-preset-entry button {
-  background-color: darkred !important;
-  padding: 4px 10px;
-  text-align: center;
-  margin-left: 2px;
 }
 
 /*--------------------------------------------------------------------------------------------

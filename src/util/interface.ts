@@ -92,6 +92,7 @@ export class Collapsible {
   collapseContentEl: HTMLElement;
   collapseTitleTextEl: HTMLElement;
   collapseIndicator: HTMLSpanElement;
+  updateSize: () => void;
   
   constructor(el: HTMLElement, startCollapsed?: boolean, cb?: (state: boolean) => any) {
     this.collapseEl = createDiv({cls: COL_CLS.COLLAPSIBLE})
@@ -123,5 +124,10 @@ export class Collapsible {
       if ((!this.collapseContentEl.hasAttribute("style")) )
         this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
     });
+
+    this.updateSize = () => {
+      console.log(this, "updating size...")
+      this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
+    }
   }
 }

@@ -33,7 +33,11 @@ export default {
     scss({
       output: 'styles.css', 
       sass: require('sass'), 
-      watch: ['./src/style/main.scss', './src/style/regent.scss', './src/style/modal.scss'] // idk why * no work
+      watch: ['./src/style/main.scss', 
+      './src/style/regent.scss', 
+      './src/style/modal.scss',
+      './src/style/modal-presets.scss',
+      './src/style/sk.scss'] // idk why * no work
     }),
     replace({
       values: {

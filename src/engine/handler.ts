@@ -2,7 +2,7 @@ import * as Eta from "eta";
 import { TemplateFunction } from "eta/dist/types/compile";
 import { EtaConfig } from "eta/dist/types/config";
 import { normalizePath, TFile } from "obsidian";
-import { EBAR, VAR_NAME } from "src/types/const";
+import { EBAR, PartialState, VAR_NAME } from "src/types/const";
 import SkribosPlugin from "../main";
 import { FileMinder, scopedVars, Stringdex, TemplateCache, TemplateFunctionScoped } from "../types/types";
 import { isExtant } from "../util/util";
@@ -99,15 +99,25 @@ export class Handler {
     return this.loader.reload()
   }
 
+  //TODO: make the terminology of partial/template consistent and indicative of nature (md/eta, js, css)
+
   public getPartial(id: string): TemplateCache | null {
     return this.loader.templateCache.get(id)
   }
 
-  hasPartial(id: string): boolean {
+  /** Returns true if a template is present in the cache.
+   * Templates that failed to compile will not be present in the cache.
+   * @param id template key to check for */
+  public hasPartial(id: string): boolean {
     return isExtant(this.loader.templateCache.get(id))
   }
 
-  getCacheKeys(): string[] {
+  /** Checks the state of a template. */
+  public checkTemplate(id: string): PartialState {
+    return this.hasPartial(id) ? PartialState.LOADED : this.loader.templateFailures.has(id) ? PartialState.FAILED : PartialState.ABSENT
+  }
+
+  public getCacheKeys(): string[] {
     return Object.keys(this.templates.cache)
   }
    

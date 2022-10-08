@@ -159,7 +159,7 @@ export function invokeMethodWith<T extends object>(objects: T | T[], key: Functi
 		try {
 			(o[key] as unknown as Function)(...args)
 		} catch(err) {
-			console.warn(`invokeMethodWith: caught error! \n Key: '${key}' called on:`, o, EBAR, err)
+			console.warn(`invokeMethodWith: caught error! \n Key: '${String(key)}' called on:`, o, EBAR, err)
 		}
 	}
 }
