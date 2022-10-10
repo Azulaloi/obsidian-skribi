@@ -351,7 +351,7 @@ div.skribi-presets-list .skribi-presets-list-header {
   justify-content: space-evenly;
   align-items: center;
   padding-left: 2em;
-  padding-right: 2em;
+  padding-right: 6em;
   border-top: 1px solid gray;
   padding-top: 1em;
   margin-bottom: 0px;
@@ -425,6 +425,10 @@ div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control 
   padding: 4px 10px;
   text-align: center;
   margin: 0px 4px;
+  background-color: var(--interactive-normal);
+}
+div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control > button:hover {
+  background-color: var(--interactive-hover);
 }
 div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item, div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item-control {
   max-height: unset;

@@ -202,7 +202,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 			observer.observe(text.inputEl)
 		})
 
-		//TODO: recheck key validity when templatecache is updated?
+		//TODO: recheck key validity when templatecache is updated? definitely overkill
 
 		/* This is seperate so that it can be called from the PopoverSuggest */
 		const onchange = (val: string, text: TextAreaComponent) => {
@@ -248,9 +248,19 @@ export class SkribosSettingTab extends PluginSettingTab {
 			observer.observe(text.inputEl)
 		})
 
+		/* Button to open preset */
+		set.addButton((button) => {let b = button
+			.setTooltip(l['setting.presets.renderTooltip'])
+			.onClick(async () => {
+				new RenderModal(this.plugin, this.plugin.data.renderModalPresets[uid].key, this.plugin.data.renderModalPresets[uid].append).open()
+			})
+			.setIcon('run-command')
+			return b
+		})
+
 		/* Button to delete preset */
 		set.addButton((button) => { let b = button
-			.setButtonText("X")
+			.setIcon('trash')
 			.setTooltip(l['setting.presets.deleteTooltip'])
 			.onClick(async () => {
 				let p = new confirmationModal(this.app, {title: l['setting.presets.deleteConfirm'], class: "skribi-aposema"});
@@ -269,6 +279,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 			b.buttonEl.addClass("skribi-aposema")
 			return b
 		})
+
 	}
 }
 

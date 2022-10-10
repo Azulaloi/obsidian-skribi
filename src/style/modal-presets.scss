@@ -43,7 +43,7 @@ div.skribi-presets-list {
     justify-content: space-evenly;
     align-items: center;
     padding-left: 2em;
-    padding-right: 2em;
+    padding-right: 6em;
 
     border-top: 1px solid gray;
     padding-top: 1em;
@@ -115,6 +115,8 @@ div.skribi-presets-list {
         padding: 4px 10px;
         text-align: center;
         margin: 0px 4px;
+        background-color: var(--interactive-normal);
+        &:hover {background-color: var(--interactive-hover)}
       }
     }
   
