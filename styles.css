@@ -765,7 +765,7 @@ table.skr-lines-table tr.skribi-line-extraneous {
   color: #323232;
 }
 table.skr-lines-table tr.skribi-line-errored td.skr-numcell {
-  background-color: var(--background-modifier-error);
+  background-color: var(--text-error);
   color: black;
 }
 table.skr-lines-table tr.skribi-line-pointer {

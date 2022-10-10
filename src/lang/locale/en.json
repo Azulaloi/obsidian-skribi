@@ -40,6 +40,8 @@
   "setting.presets.labelArguments": "Arguments",
   "setting.presets.deleteTooltip": "Delete Preset",
   "setting.presets.deleteConfirm": "Delete Preset?",
+  "setting.presets.templateFailedTooltip": "Template \"%0\" failed to compile! This preset will not function. Check the Template Index for details.",
+  "setting.presets.templateAbsentTooltip": "No such template \"%0\" could be found.",
 
   "modal.insert.title": "Insert Skribi Template",
   "modal.insert.append": "Append",

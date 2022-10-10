@@ -121,12 +121,14 @@ export class Collapsible {
   
     /* Calculate max height before first collapse */
     this.collapseTitleEl.addEventListener("mouseover", () => {
+    // TODO: in error modals, this will sometimes cause a visible shift
+    // test with the "no such template" error - hovering over the invocation string field looks like the bottom margin shrinks
+
       if ((!this.collapseContentEl.hasAttribute("style")) )
         this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
-    });
+    }); 
 
     this.updateSize = () => {
-      console.log(this, "updating size...")
       this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
     }
   }

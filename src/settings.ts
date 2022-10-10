@@ -3,6 +3,7 @@ import { l } from "./lang/babel";
 import SkribosPlugin, { renderModalPreset } from "./main";
 import { confirmationModal, makeExternalLink } from "./modal/modal-confirmation";
 import RenderModal from "./modal/modal-render";
+import { TemplateSuggestAlt } from "./suggest";
 import { CLS, PartialState } from "./types/const";
 import { Collapsible, wrapCollapse } from "./util/interface";
 import { hash, isExtant, isFunc, linkDocs } from "./util/util";
@@ -175,34 +176,36 @@ export class SkribosSettingTab extends PluginSettingTab {
 			observer.observe(text.inputEl)
 		})
 
-		//TODO: add a PopoverSuggest for the template key
 		//TODO: recheck key validity when templatecache is updated?
-		//TODO: localize the invalid key info text
+
+		/* This is seperate so that it can be called from the PopoverSuggest */
+		const onchange = (val: string, text: TextAreaComponent) => {
+			if (val.length > 0) {
+				let state = this.plugin.handler.checkTemplate(val)
+				if (state == PartialState.LOADED) {
+					text.inputEl.removeClass("skr-absent", "skr-failed")
+					text.inputEl.title = ""
+				} else if (state == PartialState.FAILED) {
+					text.inputEl.toggleClass("skr-failed", true)
+					text.inputEl.removeClass("skr-absent")
+					text.inputEl.title = l._('setting.presets.templateFailedTooltip', val)
+				} else if (state == PartialState.ABSENT) {
+					text.inputEl.toggleClass("skr-absent", true)
+					text.inputEl.removeClass("skr-failed")
+					text.inputEl.title = l._('setting.presets.templateAbsentTooltip', val)
+				}
+			}
+
+			this.plugin.data.renderModalPresets[uid].key = val
+			this.saveData()
+		}
 
 		/* Template key */
 		set.addTextArea((text) => {
 			text.setValue(preset?.key ?? this.plugin.data.renderModalPresets[uid].key)
-			text.onChange(val => {
-				if (val.length > 0) {
-					let state = this.plugin.handler.checkTemplate(val)
-					if (state == PartialState.LOADED) {
-						text.inputEl.removeClass("skr-absent", "skr-failed")
-						text.inputEl.title = ""
-					} else if (state == PartialState.FAILED) {
-						text.inputEl.toggleClass("skr-failed", true)
-						text.inputEl.removeClass("skr-absent")
-						text.inputEl.title = `Template "${val}" failed to compile! This preset will not function. Check the Template Index for details.`
-					} else if (state == PartialState.ABSENT) {
-						text.inputEl.toggleClass("skr-absent", true)
-						text.inputEl.removeClass("skr-failed")
-						text.inputEl.title = `No such template "${val}" could be found.`
-					}
-				}
-
-				this.plugin.data.renderModalPresets[uid].key = val
-				this.saveData()
-			})
-			text.inputEl.rows = 1;
+			text.onChange(val => onchange(val, text))
+			new TemplateSuggestAlt(this.plugin, text, onchange)
+			text.inputEl.rows = 1
 			addMinHeightListener(text.inputEl)
 			observer.observe(text.inputEl)
 		})

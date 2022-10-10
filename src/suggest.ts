@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, TFile } from "obsidian";
+import { AbstractTextComponent, Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, PopoverSuggest, Scope, TextAreaComponent, TFile } from "obsidian";
 import SkribosPlugin from "./main";
 import { isExtant } from "./util/util";
 
@@ -79,5 +79,72 @@ export default class TemplateSuggest extends EditorSuggest<string> {
         ch: ch
       }, this.context.end)
     }
+  }
+}
+
+export class TemplateSuggestAlt extends PopoverSuggest<string> {
+  private readonly plugin: SkribosPlugin
+  private readonly textComponent: AbstractTextComponent<HTMLTextAreaElement>
+  private readonly inputEl: HTMLTextAreaElement
+  private readonly cb: (val: string, text: TextAreaComponent) => void
+
+  constructor(
+    plugin: SkribosPlugin, 
+    textComponent: AbstractTextComponent<HTMLTextAreaElement>, 
+    cb: (val: string, text: TextAreaComponent) => void, 
+    scope?: Scope
+  ) {
+    super(plugin.app, scope)
+    this.plugin = plugin
+    this.textComponent = textComponent
+    this.inputEl = textComponent.inputEl
+    this.cb = cb
+
+		this.inputEl.addEventListener('focus', e => {
+			this.display()
+		})
+
+    this.inputEl.addEventListener('blur', e => {
+      this.undisplay()
+    })
+
+    this.inputEl.addEventListener('input', e => {
+      if (!this.isOpen) this.display();
+      this.updateSuggestions(this.inputEl.value)
+		})
+  }
+  
+  display(): void {
+    let rect = this.inputEl.getBoundingClientRect()
+    this.suggestEl.style.width = rect.width + "px" 
+    this.suggestEl.style.display = "block"
+    this.reposition(rect)
+    this.open()
+    this.updateSuggestions(this.inputEl.value)
+  }
+
+  undisplay(): void {
+    this.suggestEl.style.display = "none"
+    this.close()
+  }
+
+  updateSuggestions(value: string) {
+    let keys = this.plugin.handler.getCacheKeys()
+    let res = keys.filter((v, i , a) => {
+      return v.startsWith(value) && (v != value)
+    })
+    this.suggestions.setSuggestions(res)
+    if (res.length == 0) {this.undisplay()}
+  }
+
+  renderSuggestion(value: string, el: HTMLElement): void {
+    // el.addClass("skribi-suggestion")
+    el.createSpan({text: value})
+  }
+
+  selectSuggestion(value: string, evt: MouseEvent | KeyboardEvent): void {
+    this.textComponent.setValue(value)
+    this.cb(value, this.textComponent)
+    this.undisplay()
   }
 }

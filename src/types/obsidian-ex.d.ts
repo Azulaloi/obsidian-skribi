@@ -98,4 +98,13 @@ declare module 'obsidian' {
   interface MarkdownSubView {
     type: "preview" | "source"
   }
+
+  interface PopoverSuggest<T> {
+    suggestions: {
+      setSuggestions(items: T[]): void
+    }
+    suggestEl: HTMLElement
+    reposition(rect: DOMRect): void
+    isOpen: boolean
+  }
 }
