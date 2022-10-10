@@ -1,6 +1,6 @@
-import { App, Modal } from "obsidian"
+import { App, Modal, Setting } from "obsidian"
 import { l } from "src/lang/babel";
-import { kls } from "src/util/util";
+import { kls, linkDocs } from "src/util/util";
 
 interface confirmationModalValues {
   title: string
@@ -80,4 +80,13 @@ export function makeExternalLink(linkIn: HTMLAnchorElement | string): HTMLAnchor
   })
 
 	return link
+}
+
+export function addDocsButton(el: HTMLElement, val: string): HTMLAnchorElement {
+	return makeExternalLink(el.createEl('a', {
+		text: "?",
+		title: l['documentation.specific'],
+		cls: 'skr-doc-link', 
+		attr: {'href': linkDocs(val)}
+	}))
 }

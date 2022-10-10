@@ -42,12 +42,16 @@ function getLocalLex(): LocLex | null {
   return LOCALES?.[window.moment.locale()]
 }
 
-/** The global lexicon. Values are pulled from the appropriate locale file, if available. */
+/** The global lexicon. Values are pulled from the appropriate locale file, if available. Will default to the EN value if no local value is present.
+ * 
+ * Note that pulling from a key `l[key]` will give "undefined" for valueless keys, rather than the key iself. To resort to the key instead, use `l._(key)`. */
 export const l: Babel = constructLexicon()
 
 /** Gets localized strings and replaces insertion tags (%i) in the string with provided values. 
  * Necessary for strings with a variable that may change position in the string depending on the locale. 
  * When using this method, you won't get the property definition tooltips in VSC.
+ * 
+ * Also, when no value is found, this function returns the lex key rather than an unhelpful "undefined".
  * @param key string key to return local version of
  * @param args strings to insert into insertion tags (ex: '%0' in the string will be replaced with the zeroth arg string) */
 function t(key: keyof typeof en, ...args: string[]): string {

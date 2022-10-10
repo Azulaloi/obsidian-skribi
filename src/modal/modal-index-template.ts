@@ -1,8 +1,10 @@
 import { EventRef, Modal, Setting } from "obsidian";
+import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
 import { createRegent } from "src/render/regent";
 import { REGENT_CLS } from "src/types/const";
 import { makeField } from "src/util/interface";
+import { addDocsButton } from "./modal-confirmation";
 import { makeErrorModalLink } from "./modal-error";
 import { IndexModal } from "./modal-index";
 
@@ -11,7 +13,7 @@ export class IndexTemplateModal extends IndexModal {
   listenerRef: EventRef
   templateLoadRef: EventRef
 
-  title: string = "Skribi Template Index"
+  title: string = l['modal.index.template.title']
 
   collapsedFields: {
     templates: boolean
@@ -27,6 +29,7 @@ export class IndexTemplateModal extends IndexModal {
     super(plugin)
     this.containerEl.addClass("skribi-modal", "skribi-modal-index-templates")
     this.titleEl.setText(this.title)
+    addDocsButton(this.titleEl, "misc/index_modal/#template-index")
 
     this.listenerRef = this.plugin.app.workspace.on('skribi:template-index-modified', () => this.regen())  
   }
@@ -35,13 +38,13 @@ export class IndexTemplateModal extends IndexModal {
     let buttonsEl = this.contentEl.createDiv({cls: "skribi-modal-index-buttons"})
 
     let refreshButton = buttonsEl.createEl('button')
-    refreshButton.setText("Refresh Index")
+    refreshButton.setText(l['modal.index.gen.refresh'])
     refreshButton.onClickEvent((ev) => {
       this.regen()
     })
 
     let recompButton = buttonsEl.createEl('button')
-    recompButton.setText("Recompile All")
+    recompButton.setText(l['modal.index.gen.recomp'])
     recompButton.onClickEvent((ev) => {
       this.plugin.handler.recompileTemplates().then(() => {
         Array.from(this.plugin.children).forEach((child) => {
@@ -73,11 +76,11 @@ export class IndexTemplateModal extends IndexModal {
     var templates = this.plugin.handler.loader.templateCache   
     var failures = this.plugin.handler.loader.templateFailures
     var styles = this.plugin.handler.loader.styleCache
-    
+  
+    /* List Failed Templates */
     let failuresLength = Object.keys(failures.cache).length
     if (failuresLength > 0) {
-      let failuresField = makeField("index", el, "Errored Templates", true, this.collapsedFields.failures, (state) => {this.collapsedFields.failures = state})
-      failuresField.title.textContent += ` (${failuresLength} Total)`
+      let failuresField = makeField("index", el, l._('modal.index.template.listErrored', failuresLength.toString()), true, this.collapsedFields.failures, (state) => {this.collapsedFields.failures = state})
       failuresField.content.addClass('skribi-index-list')
   
       //@ts-ignore
@@ -108,8 +111,8 @@ export class IndexTemplateModal extends IndexModal {
       }
     }
 
-    let templatesField = makeField("index", el, "Templates", true, this.collapsedFields.templates, (state) => {this.collapsedFields.templates = state;console.log(state, this.collapsedFields.templates);})
-    templatesField.title.textContent += ` (${Object.keys(templates.cache).length} Total)`
+    /* List Compiled Templates */
+    let templatesField = makeField("index", el, l._('modal.index.template.listCompiled', Object.keys(templates.cache).length.toString()), true, this.collapsedFields.templates, (state) => {this.collapsedFields.templates = state;console.log(state, this.collapsedFields.templates);})
     //@ts-ignore
     for (let entry of Object.entries(templates.cache).reverse() as [string, TemplateCache][]) {
       let field = createDiv({cls: 'skribi-index-entry'})
@@ -123,16 +126,14 @@ export class IndexTemplateModal extends IndexModal {
         })
       } else {
         label.addClass('skribi-index-entry-label-nolink')
-      }
-
-      
+      } 
       templatesField.content.append(field)
     }
-
+    
+    /* List Style Snippets*/
     let stylesLength = Object.keys(styles.cache).length
     if (stylesLength > 0) {
-      let stylesField = makeField("index", el, "Style Snippets", true, this.collapsedFields.styles, (state) => {this.collapsedFields.styles = state})
-      stylesField.title.textContent += ` (${stylesLength} Total)`
+      let stylesField = makeField("index", el, l._('modal.index.template.listStyle', stylesLength.toString()), true, this.collapsedFields.styles, (state) => {this.collapsedFields.styles = state})
   
       //@ts-ignore
       for (let entry of Object.keys(styles.cache)) {

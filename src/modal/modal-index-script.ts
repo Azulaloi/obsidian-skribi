@@ -1,14 +1,16 @@
 import { EventRef } from "obsidian";
+import { l } from "src/lang/babel";
 import SkribosPlugin from "src/main";
 import { renderError } from "src/render/regent";
 import { makeField } from "src/util/interface";
+import { addDocsButton } from "./modal-confirmation";
 import { IndexModal } from "./modal-index";
 
 /* A modal that displays an index of all scripts. */
 export class IndexScriptModal extends IndexModal {
   listenerRef: EventRef
   
-  title: string = "Skribi Skript Index"
+  title: string = l['modal.index.script.title']
 
   collapsedFields: {
     scripts: boolean
@@ -22,6 +24,7 @@ export class IndexScriptModal extends IndexModal {
     super(plugin)
     this.containerEl.addClass("skribi-modal", "skribi-modal-index-scripts")
     this.titleEl.setText(this.title)
+    addDocsButton(this.titleEl, "misc/index_modal/#script-index")
 
     //@ts-ignore
     this.listenerRef = this.plugin.app.workspace.on('skribi:script-index-modified', () => this.regen())  
@@ -31,13 +34,13 @@ export class IndexScriptModal extends IndexModal {
     let buttonsEl = this.contentEl.createDiv({cls: "skribi-modal-index-buttons"})
 
     let refreshButton = buttonsEl.createEl('button')
-    refreshButton.setText("Refresh Index")
+    refreshButton.setText(l['modal.index.gen.refresh'])
     refreshButton.onClickEvent((ev) => {
       this.regen()
     })
 
     let recompButton = buttonsEl.createEl('button')
-    recompButton.setText("Recompile All")
+    recompButton.setText(l['modal.index.gen.recomp'])
     recompButton.onClickEvent((ev) => {
       this.plugin.handler.bus.scriptLoader.reload().then(() => {
         Array.from(this.plugin.children).forEach((child) => {
@@ -63,8 +66,7 @@ export class IndexScriptModal extends IndexModal {
     var failures = this.plugin.handler.bus.scriptLoader.failedModules
     
     if (failures.size > 0) {
-      let failuresField = makeField("index", el, "Errored Scripts", true, this.collapsedFields.failures, (state) => {this.collapsedFields.failures = state})
-      failuresField.title.textContent += ` (${failures.size} Total)`
+      let failuresField = makeField("index", el, l._('modal.index.script.listErrored', failures.size.toString()), true, this.collapsedFields.failures, (state) => {this.collapsedFields.failures = state})
       failuresField.content.addClass('skribi-index-list')
   
       for (let entry of failures.entries()) {
@@ -80,8 +82,7 @@ export class IndexScriptModal extends IndexModal {
       }
     }
 
-    let modulesField = makeField("index", el, "Scripts", true, this.collapsedFields.scripts, (state) => {this.collapsedFields.scripts = state;})
-    modulesField.title.textContent += ` (${modules.size} Total)`
+    let modulesField = makeField("index", el, l._('modal.index.script.listCompiled', modules.size.toString()), true, this.collapsedFields.scripts, (state) => {this.collapsedFields.scripts = state;})
     for (let entry of modules.entries()) {
       let field = createDiv({cls: 'skribi-index-entry'})
       field.createDiv({text: 'js', cls: ['skribi-index-entry-extension', `skribi-index-entry-extension-js`]})

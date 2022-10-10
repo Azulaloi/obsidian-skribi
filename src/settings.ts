@@ -1,7 +1,9 @@
 import { PluginSettingTab, App, Setting, TextAreaComponent, ToggleComponent, debounce } from "obsidian";
 import { l } from "./lang/babel";
 import SkribosPlugin, { renderModalPreset } from "./main";
-import { confirmationModal, makeExternalLink } from "./modal/modal-confirmation";
+import { addDocsButton, confirmationModal, makeExternalLink } from "./modal/modal-confirmation";
+import { IndexScriptModal } from "./modal/modal-index-script";
+import { IndexTemplateModal } from "./modal/modal-index-template";
 import RenderModal from "./modal/modal-render";
 import { TemplateSuggestAlt } from "./suggest";
 import { CLS, PartialState } from "./types/const";
@@ -39,10 +41,27 @@ export class SkribosSettingTab extends PluginSettingTab {
 		
     let desc = containerEl.createDiv({cls: 'skribi-modal-desc', attr: {style: "margin-bottom: 1em;"}})
     makeExternalLink(desc.createEl('a', {text: l['documentation'], attr: {'href': linkDocs('settings')}}))
+		desc.createEl('br'), desc.createEl('br')
 
-		//TODO: add buttons to open the various indices 
+		/* Index Buttons */
 
-		new Setting(containerEl)
+		const ist = desc.createSpan({text: `Template Index`, cls: 'skr-button'})
+		ist.addEventListener('click', (ev) => {
+			ev.preventDefault()
+			let p = new IndexTemplateModal(this.app.plugins.plugins["obsidian-skribi"])
+			p.open()
+		})
+
+		const iss = desc.createSpan({text: `Script Index`, cls: 'skr-button'})
+		iss.addEventListener('click', (ev) => {
+			ev.preventDefault()
+			let p = new IndexScriptModal(this.app.plugins.plugins["obsidian-skribi"])
+			p.open()
+		})
+
+		/* Settings*/
+
+		const tdir = new Setting(containerEl)
 			.setName(l["setting.templateDirectory.name"])
 			.setDesc(l["setting.templateDirectory.desc"])
 			.addTextArea((text: TextAreaComponent) => {text
@@ -53,8 +72,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 						if (previous !== value) this.plugin.handler.loader.directoryChanged();
 					})
 				}); text.inputEl.cols = 30; return text});
+		// addDocsButton(tdir.nameEl, "settings/#template-directory")
 
-		new Setting(containerEl)
+		const sdir = new Setting(containerEl)
 			.setName(l["setting.scriptDirectory.name"])
 			.setDesc(l["setting.scriptDirectory.desc"])
 			.addTextArea((text: TextAreaComponent) => {text
@@ -65,6 +85,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 						if (previous !== value) this.plugin.handler.bus.scriptLoader.directoryChanged();
 					})
 				}); text.inputEl.cols = 30; return text});
+		// addDocsButton(sdir.nameEl, "settings/#script-folder")
 
 		this.makeToggle(containerEl, "autoReload", l["setting.autoReload.name"], l["setting.autoReload.desc"])
 		this.makeToggle(containerEl, "errorLogging", l["setting.errorLog.name"], l["setting.errorLog.desc"])
@@ -76,10 +97,11 @@ export class SkribosSettingTab extends PluginSettingTab {
 		// this.makeToggle(containerEl, "shadowMode", "Shadow Mode", "Embed skribis in a shadow root", () => invokeMethodOf<SkribiChild>("rerender", ...this.plugin.children)) // hidden for now (this kills the skribichild)
 	
 		this.composePresetList(containerEl)
+		this.containerEl.createSpan({cls: 'skribi-modal-version-number', text: `SkribosPlugin ${this.app.plugins.plugins["obsidian-skribi"].manifest.version}`})
 	}
 
-	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string, cb?: (value: any) => void) {
-		return new Setting(el)
+	private makeToggle(el: HTMLElement, setting: keyof SkribosSettings, name: string, desc: string, cb?: (value: any) => void, docAddress?: string) {
+		const set = new Setting(el)
 		.setName(name)
 		.setDesc(desc)
 		.addToggle((toggle: ToggleComponent) => { toggle
@@ -90,6 +112,9 @@ export class SkribosSettingTab extends PluginSettingTab {
 				if (cb) cb(value);
 			})
 		})
+
+		if (isExtant(docAddress)) addDocsButton(set.nameEl, docAddress);
+		return set 
 	}
 
 	//TODO: move this to a preset index modal? maybe
@@ -136,6 +161,7 @@ export class SkribosSettingTab extends PluginSettingTab {
 			});
 
 		keyField.settingEl.prepend(col.collapseIndicator)
+		addDocsButton(keyField.nameEl, "misc/render_modal")
 
 		presetsDiv.createDiv({cls: 'skribi-presets-list-header'}, (div) => {
 			div.createSpan({text: l['setting.presets.labelName']})

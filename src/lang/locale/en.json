@@ -1,6 +1,7 @@
 {
   "test": "test",
   "documentation": "Documentation",
+  "documentation.specific": "See Docs (External Link)",
 
   "command.insert": "Insert Skribi",
   "command.reloadScripts": "Reload Scripts",
@@ -68,5 +69,15 @@
   "modal.perf.resultsBlockCount.single": "%0 block",
   "modal.perf.resultsBlockCount.plural": "%0 blocks",
   "modal.perf.autofill.selection": "Selection",
-  "modal.perf.autofill.clipboard": "Clipboard"
+  "modal.perf.autofill.clipboard": "Clipboard",
+
+  "modal.index.gen.refresh": "Refresh Index",
+  "modal.index.gen.recomp": "Recompile All",
+  "modal.index.template.title": "Skribi Template Index",
+  "modal.index.template.listErrored": "Errored Templates (%0 Total)",
+  "modal.index.template.listCompiled": "Templates (%0 Total)",
+  "modal.index.template.listStyle": "Style Snippets (%0 Total)",
+  "modal.index.script.title": "Skribi Skript Index",
+  "modal.index.script.listErrored": "Errored Scripts (%0 Total)",
+  "modal.index.script.listCompiled": "Scripts (%0 Total)"
 }

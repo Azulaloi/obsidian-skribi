@@ -129,28 +129,25 @@ div.skribi-modal-error-message {
 
   margin-bottom: 1em;
 
+
+}
+
+div.skribi-modal-error-message,
+div.skribi-settings {
   span.skr-button {
-
     padding: 0.4em;
-
-    background-color: var(--background-primary-alt);
+    background-color: var(--interactive-normal);
     border: 2px solid black;
     border-radius: 0.2em;
     filter: drop-shadow(0 0 2px black);
-  
     user-select: none;
-  
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.05s ease;;
     display: inline-block;
+    margin: auto 1em;
 
-    &:active {
-      transform: scale(0.96);
-    }
-
-    &:hover {
-      background-color: var(--interactive-hover);
-    }
+    &:active {transform: scale(0.96)}
+    &:hover {background-color: var(--interactive-hover);}
   }
 }
 
@@ -562,3 +559,27 @@ div.skribi-settings {
   }
 }
 
+.skribi-settings a.skr-doc-link {
+  font-family: 'Consolas';
+  font-size: 0.8em;
+  // color: gray;
+  vertical-align: middle;
+  margin: auto 0px auto 1em;
+
+  //line-height: 1em;
+
+  // &::before { content: '['; }
+  // &::after { content: ']'; }
+}
+
+div.skribi-modal-index-templates,
+div.skribi-modal-index-scripts {
+  div.modal-title a.skr-doc-link {
+    position: fixed;
+    font-family: 'Consolas';
+    font-size: 0.5em;
+    vertical-align: middle;
+    line-height: 2em;
+    margin: auto 0px auto 1em;
+  }
+}

@@ -1,4 +1,6 @@
-import { App, MarkdownView, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { App, MarkdownView, normalizePath, Setting, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
+import { l } from "src/lang/babel";
+import { makeExternalLink } from "src/modal/modal-confirmation";
 import { EBAR } from "../types/const";
 import { Stringdex } from "../types/types";
 

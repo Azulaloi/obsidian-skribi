@@ -219,7 +219,7 @@ export default class SkribosPlugin extends Plugin {
 	async writeData() {return this.saveData(this.data)}
 	async saveSettings() {return this.writeData()}
 
-	// TODO: Move this somewhere appropriatess
+	// TODO: Move this to a proper API if I make one
 	renderModal(key: string, append: string) {
 		return new RenderModal(this, key, append)
 	}

@@ -536,9 +536,11 @@ div.skribi-modal-error-message {
 div.skribi-modal-error-message span.sk-msg .skribi-regent::after {
   vertical-align: -0.2em;
 }
-div.skribi-modal-error-message span.skr-button {
+
+div.skribi-modal-error-message span.skr-button,
+div.skribi-settings span.skr-button {
   padding: 0.4em;
-  background-color: var(--background-primary-alt);
+  background-color: var(--interactive-normal);
   border: 2px solid black;
   border-radius: 0.2em;
   filter: drop-shadow(0 0 2px black);
@@ -546,11 +548,14 @@ div.skribi-modal-error-message span.skr-button {
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.05s ease;
   display: inline-block;
+  margin: auto 1em;
 }
-div.skribi-modal-error-message span.skr-button:active {
+div.skribi-modal-error-message span.skr-button:active,
+div.skribi-settings span.skr-button:active {
   transform: scale(0.96);
 }
-div.skribi-modal-error-message span.skr-button:hover {
+div.skribi-modal-error-message span.skr-button:hover,
+div.skribi-settings span.skr-button:hover {
   background-color: var(--interactive-hover);
 }
 
@@ -865,6 +870,23 @@ div.skribi-modal-error .skr-collapsible.is-collapsed .skr-collapse-indicator svg
 div.skribi-modal-index .skr-collapsible.is-collapsed .skr-collapse-indicator svg, div.skribi-modal-index-templates .skr-collapsible.is-collapsed .skr-collapse-indicator svg,
 div.skribi-settings .skr-collapsible.is-collapsed .skr-collapse-indicator svg {
   transform: rotate(-90deg);
+}
+
+.skribi-settings a.skr-doc-link {
+  font-family: "Consolas";
+  font-size: 0.8em;
+  vertical-align: middle;
+  margin: auto 0px auto 1em;
+}
+
+div.skribi-modal-index-templates div.modal-title a.skr-doc-link,
+div.skribi-modal-index-scripts div.modal-title a.skr-doc-link {
+  position: fixed;
+  font-family: "Consolas";
+  font-size: 0.5em;
+  vertical-align: middle;
+  line-height: 2em;
+  margin: auto 0px auto 1em;
 }
 
 /*--------------------------------------------------------------------------------------------

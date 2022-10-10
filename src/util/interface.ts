@@ -1,4 +1,5 @@
 import { setIcon } from "obsidian"
+import { IndexTemplateModal } from "src/modal/modal-index-template"
 import { isExtant } from "./util"
 
 export function makeLines(fieldEl: HTMLElement, linesIn: string | string[], 
@@ -47,6 +48,7 @@ export function makeLinesTable(fieldEl?: HTMLElement, linesIn?: string | string[
   return tab
 }
 
+/** Creates a collapsible field. */
 export function makeField(modalName: string, containerEl: HTMLElement, name: string, wrap?: boolean, startCollapsed?: boolean, cb?: (state: boolean) => any) {
   let fieldContainer = createDiv({"cls": `skribi-modal-${modalName}-field-container`})
   let fieldTitle = (!wrap) ? fieldContainer.createDiv({text: name, cls: `skribi-modal-${modalName}-field-title`}) : null
@@ -110,7 +112,7 @@ export class Collapsible {
 
     this.collapseTitleEl.addEventListener("click", (event: MouseEvent) => {
       let t = event.target as HTMLElement
-      if (!(t.nodeName === "BUTTON")) {
+      if (!((t.nodeName === "BUTTON") || (t.nodeName === "A"))) {
         let b = this.collapseEl.hasClass(COL_CLS.COLLAPSIBLE_IS_COLLAPSED)
         let h = b ? (el.clientHeight + (el.clientHeight * 0.2)) : 0
         this.collapseContentEl.setAttribute("style", `max-height: ${h}px;`);
