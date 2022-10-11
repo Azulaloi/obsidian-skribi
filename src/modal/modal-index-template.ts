@@ -8,7 +8,7 @@ import { addDocsButton } from "./modal-confirmation";
 import { makeErrorModalLink } from "./modal-error";
 import { IndexModal } from "./modal-index";
 
-/* A modal that displays an index of all templates. */
+/** A modal that displays an index of all templates. */
 export class IndexTemplateModal extends IndexModal {
   listenerRef: EventRef
   templateLoadRef: EventRef
@@ -112,7 +112,15 @@ export class IndexTemplateModal extends IndexModal {
     }
 
     /* List Compiled Templates */
-    let templatesField = makeField("index", el, l._('modal.index.template.listCompiled', Object.keys(templates.cache).length.toString()), true, this.collapsedFields.templates, (state) => {this.collapsedFields.templates = state;console.log(state, this.collapsedFields.templates);})
+    let templatesField = makeField(
+      "index", 
+      el,
+      l._('modal.index.template.listCompiled', Object.keys(templates.cache).length.toString()), 
+      true, 
+      this.collapsedFields.templates, 
+      (state) => {this.collapsedFields.templates = state}
+    )
+    
     //@ts-ignore
     for (let entry of Object.entries(templates.cache).reverse() as [string, TemplateCache][]) {
       let field = createDiv({cls: 'skribi-index-entry'})

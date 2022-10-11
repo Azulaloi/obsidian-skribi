@@ -3,7 +3,6 @@ import { App } from "obsidian";
 import { DataviewApi } from "obsidian-dataview";
 import DataviewPlugin from "obsidian-dataview/lib/main";
 import SkribosPlugin from "src/main";
-// import type WeatherAPI from "../../../obsidian-weather/src/api";
 
 declare global {
   interface Window {
@@ -19,7 +18,6 @@ declare module 'obsidian' {
         [id: string]: any,
         "obsidian-skribi": SkribosPlugin,
         "obsidian-weather"?: {
-          // API: WeatherAPI
           API: any
         },
         dataview?: {
@@ -41,13 +39,14 @@ declare module 'obsidian' {
   }
 
   interface Workspace {
+    // These were from my weather plugin, used for integration provider testing
 		on(name: 'az-weather:api-ready', callback: () => any, ctx?: any): EventRef;
 		on(name: 'az-weather:api-unload', callback: () => any, ctx?: any): EventRef;
 		on(name: 'az-weather:api-tick', callback: () => any, ctx?: any): EventRef;
 
     on(name: 'skribi:template-init-complete', callback: () => any, ctx?: string): EventRef; // triggered when the initial template cache load is complete
-    on(name: 'skribi:template-index-modified', callback: () => any): EventRef; // trigged when any file events occur within the template directory
-    on(name: 'skribi:script-index-modified', callback: () => any): EventRef;
+    on(name: 'skribi:template-index-modified', callback: () => any): EventRef; // triggered when any file events occur within the template directory
+    on(name: 'skribi:script-index-modified', callback: () => any): EventRef; // triggered when any file events occur within the script directory
     on(name: 'skribi:plugin-load', callback: (id: string) => any): EventRef; // triggered when an obsidian plugin is enabled
     on(name: 'skribi:plugin-unload', callback: (id: string) => any): EventRef; // triggered when an obsidian plugin is disabled
 	
@@ -81,7 +80,7 @@ declare module 'obsidian' {
 
   interface MarkdownPreviewView {
     loaded: boolean;
-		getFile(): TFile; 							// returns file
+		getFile(): TFile; // returns file
     renderer: MarkdownPreviewRenderer;
     clear(): void;
   }

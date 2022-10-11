@@ -82,6 +82,7 @@ export default class TemplateSuggest extends EditorSuggest<string> {
   }
 }
 
+/** A non-editor suggestor that suggests template keys. Used in the preset list in the settings tab. */
 export class TemplateSuggestAlt extends PopoverSuggest<string> {
   private readonly plugin: SkribosPlugin
   private readonly textComponent: AbstractTextComponent<HTMLTextAreaElement>
@@ -138,7 +139,6 @@ export class TemplateSuggestAlt extends PopoverSuggest<string> {
   }
 
   renderSuggestion(value: string, el: HTMLElement): void {
-    // el.addClass("skribi-suggestion")
     el.createSpan({text: value})
   }
 

@@ -174,7 +174,6 @@ export class SkribosSettingTab extends PluginSettingTab {
 		})
 	}
 
-	// TODO: add a test/render button that just executes the preset
 	createPresetEntry(el: HTMLElement, index: number, uid: string, preset: renderModalPreset, col: Collapsible) {
 		const set = new Setting(el)
 		set.settingEl.addClass('skribi-preset-entry')

@@ -15,6 +15,7 @@ import { IndexTemplateModal } from './modal/modal-index-template';
 import RenderModal from './modal/modal-render';
 import { IndexScriptModal } from './modal/modal-index-script';
 import { Nullable, Stringdex } from './types/types';
+import { vLog } from './util/util';
 
 export default class SkribosPlugin extends Plugin {
 	data: PluginData
@@ -63,7 +64,7 @@ export default class SkribosPlugin extends Plugin {
 			})
 		})
 
-		/* Register plugin status listeners (to listen for integration predicates) */
+		/** Register plugin status listeners (to listen for integration provider predicates) */
 		const patchPluginLoad = around(this.app.plugins, {
 			enablePlugin(old) {
 				return function (x: any) {
@@ -89,7 +90,7 @@ export default class SkribosPlugin extends Plugin {
 
 		try {
 			// _isProd is replaced with boolean by rollup plugin
-			// in try-catch to avoid errors in case plugin is absent somehow
+			// in try-catch to avoid errors in case said plugin is absent somehow
 
 			//@ts-ignore
 			if (!_isProd) {
@@ -121,7 +122,8 @@ export default class SkribosPlugin extends Plugin {
 		})
 	}
 
-	/** Locates the first closeable object (such as a modal) in the workspace closeable stack for which the provided element is a container. */
+	/** Locates the first closeable object (such as a modal) in the workspace closeable stack for which the provided element is a container. 
+	 * Used by the modal hot-reloading feature. */
 	async findModalParent(el: Element): Promise<CloseableComponent> {
 		return this.app.workspace.closeables.find((v) => {
 			return (v as Modal)?.containerEl == el 
@@ -146,7 +148,7 @@ export default class SkribosPlugin extends Plugin {
 
 		/* Reloads the scriptloader. */
 		this.addCommand({id: "reload-scripts", name: l['command.reloadScripts'], callback: () => {
-			this.handler.bus.scriptLoader.reload().then(() => console.log("Skribi: Reloaded Scripts"));
+			this.handler.bus.scriptLoader.reload().then(() => vLog("Reloaded Scripts"));
 		}})
 		
 		/* Reloads all live skribis. */
@@ -182,7 +184,6 @@ export default class SkribosPlugin extends Plugin {
 			let x = new SuggestionModal(this, true);
 			new Promise((resolve: (value: string) => void, reject: (reason?: any) => void) => x.openAndGetValue(resolve, reject))
 			.then(result => {
-				console.log(result)
 				if (this.handler.hasPartial(result)) {
 					let i = new RenderModal(this, result)
 					i.open();

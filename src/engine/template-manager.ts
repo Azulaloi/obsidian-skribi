@@ -95,7 +95,7 @@ export class TemplateLoader implements FileMinder {
       } catch(err) {
         // console.log(`${file.name} err`)
         this.templateFailures.define(file.basename, {error: err, source: read, extension: file.extension})
-        console.warn(`Skribi: template '${file.basename}' failed to compile, the template index may contain more details`, EBAR, err, EBAR, read)
+        vWarn(`Skribi: template '${file.basename}' failed to compile, the template index may contain more details`, EBAR, err, EBAR, read)
         this.templateCache.remove(file.basename)
         failureCount++
         return Promise.reject()

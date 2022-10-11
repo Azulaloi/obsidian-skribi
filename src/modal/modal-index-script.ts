@@ -6,7 +6,7 @@ import { makeField } from "src/util/interface";
 import { addDocsButton } from "./modal-confirmation";
 import { IndexModal } from "./modal-index";
 
-/* A modal that displays an index of all scripts. */
+/** A modal that displays an index of all scripts. */
 export class IndexScriptModal extends IndexModal {
   listenerRef: EventRef
   

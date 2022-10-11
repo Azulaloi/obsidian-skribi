@@ -37,6 +37,7 @@ export default {
       './src/style/regent.scss', 
       './src/style/modal.scss',
       './src/style/modal-presets.scss',
+      './src/style/modal-table.scss',
       './src/style/sk.scss'] // idk why * no work
     }),
     replace({

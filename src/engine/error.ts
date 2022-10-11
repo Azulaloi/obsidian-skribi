@@ -2,6 +2,7 @@ import { TFile } from "obsidian";
 import { EBAR, REGENT_CLS } from "src/types/const";
 
 /* SkribiErrors are for handling errors that are expected to potentially result during normal use. */
+/* These are mostly for the use of the error modal in `modal-error.ts` */
 
 /* Generic SkribiError */
 export class SkribiError extends Error {

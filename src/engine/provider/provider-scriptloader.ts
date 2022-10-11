@@ -1,7 +1,7 @@
 import { FileSystemAdapter, TAbstractFile, TFile } from "obsidian";
 import { EBAR } from "src/types/const";
 import { DynamicState, FileMinder, Stringdex } from "src/types/types";
-import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, withoutKey } from "src/util/util";
+import { dLog, filterFileExt, getFiles, isExtant, isFile, isInFolder, vLog, vWarn, withoutKey } from "src/util/util";
 import { SkribiImportError } from "src/engine/error";
 import { Provider } from "src/engine/provider/provider";
 
@@ -91,7 +91,7 @@ export class ProviderScriptloader extends Provider implements FileMinder {
           ? Promise.resolve([f.basename, mod])
           : Promise.reject()
       } catch(e) {
-        console.warn(`Skribi: script '${f.name}' failed to load, the script index may contain more details`, EBAR, e)
+        vWarn(`Skribi: script '${f.name}' failed to load, the script index may contain more details`, EBAR, e)
         this.failedModules.set(f.basename, Object.assign(new SkribiImportError(`${e?.name ?? 'Error'} during script import`), {_sk_importErrorPacket: {err: e, file: f}}))
         return Promise.reject()
       }      

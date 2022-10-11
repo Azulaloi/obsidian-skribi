@@ -4,7 +4,7 @@ import SkribosPlugin from "../main";
 import { fieldPrompt, promptTypes } from "../types/types";
 import { isExtant, toDupeRecord } from "../util/util";
 
-/* A modal that prompts for values of, and inserts an invocation for, a template. */
+/** A modal that prompts for values of, and inserts an invocation for, a template. */
 export class InsertionModal extends Modal {
   private plugin: SkribosPlugin;
   private editor: Editor;

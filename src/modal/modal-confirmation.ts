@@ -11,7 +11,7 @@ interface confirmationModalValues {
   elements?: Element[]
 } 
 
-/* A simple modal with a confirm/cancel feature. */
+/** A simple modal with a confirm/cancel feature. */
 export class confirmationModal extends Modal {
   private resolve: (value: string) => void;
   private reject: (reason?: any) => void;

@@ -15,7 +15,7 @@ export class ProviderSK extends Provider {
     return {
       render: function(str: string) {
         let e = createDiv({cls: CLS.virtual});
-        console.log(this)
+        //console.log(this)
         MarkdownRenderer.renderMarkdown(str, e, this.ctx?.file?.path ?? "", null);
         return e.innerHTML
       },
@@ -71,7 +71,7 @@ function makeInitPromise(child: eventPossessor, cb: Function) {
 
 function makeEventPromise(child: eventPossessor, eventConstructor: eventConstructor, eventName: string, cb: Function) {
   return new Promise((resolve, reject) => {
-    console.log("makeEventPromise", this)
+    //console.log("makeEventPromise", this)
     let x = eventConstructor.on(eventName, () => {
       eventConstructor.offref(x)
       resolve(cb())

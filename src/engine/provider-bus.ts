@@ -12,7 +12,7 @@ import { IProvider, Provider, ProviderPredicated } from "./provider/provider";
 const obsidianModule = require("obsidian");
 const MODULE_NAME_INTEGRATIONS: string = 'int';
 
-/* Handles all skript context providers. */
+/** Handles all skript context providers. */
 export class ProviderBus {
   handler: Handler
   plugin: SkribosPlugin
@@ -34,7 +34,7 @@ export class ProviderBus {
     this.scriptLoader = new ProviderScriptloader(this, 'js'); // assigned here so that we can register file events in handler
   }
 
-  /* Construct all providers but do not initialize them yet, so that we can compile and cache templates ASAP */
+  /** Construct all providers but do not initialize them yet, so that we can compile and cache templates ASAP */
   async preInit() {
     this.addTo(this.providers, this.scriptLoader)
     this.addTo(this.providersPredicated, new ProviderDataview(this, 'dv'))
@@ -55,39 +55,38 @@ export class ProviderBus {
     providers.set(provider.id, provider)
   }
 
-  /**
-   * Integration point for other plugins to add a provider 
-   * @param provider Provider implementation to add */
+  /** Integration point for other plugins to add a provider.
+   * @param provider `Provider` implementation to add */
   public addProvider = (provider: Provider) => {
     this.providers.set(provider.id, provider)
     this.isStaticScopeDirty = true
     this.handler.recompileTemplates()
   }
   
-  /**
-   * Integration point for other plugins to add a predicated provider
-   * @param provider ProviderPredicated implementation to add */
+  /** Integration point for other plugins to add a predicated provider.
+   * @param provider `ProviderPredicated` implementation to add */
   addProviderPredicated = (provider: ProviderPredicated) => {
     this.providersPredicated.set(provider.id, provider)
   }
 
+  /** Unloads all providers. */
   unload() {
     this.execOnProviders('unload')
   }
 
-  /* Invoked by providers to indicate their provision must be regenerated */
+  /** Invoked by providers to indicate their provision must be regenerated. */
   providerNotificationDirty(provider: Provider, isDirty: boolean, ...data: any[]) {
     if (isDirty) this.refreshProvider(provider, ...data)
   }
 
-  /* Regenerate the provision of a single provider, and pass data to its post function */
+  /** Regenerate the provision of a single provider, and pass data to its post function. */
   refreshProvider(provider: Provider, ...data: any[]) {
     provider.setDirty(false)
     Object.assign(this.scopeStatic, {[provider.id]: provider.createObject()})
     provider.postDirty(...data)
   }
 
-  /* Clean dirty providers by regenerating their provision */
+  /** Clean dirty providers by regenerating their provision. */
   refreshProviders(...providers: Provider[]) {
     let proxy: any = {};
 
@@ -101,23 +100,23 @@ export class ProviderBus {
     providers.forEach(provider => provider.postDirty())
   }
 
-  /* Reloads all providers */
+  /** Reload all providers. */
   async reloadProviders() {
     let proms = this.execOnProviders('reload')
 
     return Promise.allSettled(Object.values(proms))
   }
 
+  /** Gets the current scope object keys. Used for scoping template functions. */
   public getScopeKeys(): string[] {
     return [...this.providers.keys(), MODULE_NAME_INTEGRATIONS, 'moment', 'obsidian']
   }
 
-  /* Retrieves providers object */
+  /** Prepares and retrieves the composite providers scope object. */
   public getScope(ctx?: DynamicState, refresh?: boolean) {
     let dirties = Object.values(this.providers).filter((p: Provider) => {return p.isDirty})
-    if (dirties) this.refreshProviders(...dirties)
-
-    if (this.isStaticScopeDirty) this.createStaticScope()
+    if (dirties) this.refreshProviders(...dirties);
+    if (this.isStaticScopeDirty) this.createStaticScope();
 
     return Object.assign({}, this.scopeStatic, {
       [MODULE_NAME_INTEGRATIONS]: this.createPredicatedScope(ctx || null),
@@ -125,7 +124,7 @@ export class ProviderBus {
     })
   }
 
-  /* Creates scope object. Should not be used to get the scope. */
+  /** Creates scope object. Should not be used to get the scope. */
   private createStaticScope() {
     let spaces: {[key: string]: any} = {};
     
@@ -139,7 +138,7 @@ export class ProviderBus {
     return this.scopeStatic
   }
 
-  /* Predicated providers */
+  /** Creates scope objects from predicated providers. */
   createPredicatedScope(ctx?: DynamicState) {
     let spaces: {[key: string]: any} = {};
    
@@ -157,12 +156,12 @@ export class ProviderBus {
     return spaces
   }
 
-  /* Get the base provider scope */
+  /** Get the base provider scope. */
   getScopeSK() {
     return this.skBase.createObject()
   }
 
-  /* Invoke function on all providers and return array of results */
+  /** Invoke function on all providers and return array of results. */
   execOnProviders(func: (keyof IProvider)): Stringdex {
     let rets: Stringdex = {};
 
@@ -175,7 +174,7 @@ export class ProviderBus {
 
     return rets
 	}
-}
+}``
 
 export interface ProviderBus {
   execOnProviders(func: 'reload'): {[index: string]: Promise<void>}

@@ -1,4 +1,7 @@
 @charset "UTF-8";
+/*---------------
+/  Regents
+/----------------*/
 :root {
   --skribi-error-col: red;
   --skribi-wait-col: rgb(111, 126, 214);
@@ -39,6 +42,9 @@ code.skribi-regent svg {
   vertical-align: -0.3em;
 }
 
+/*---------------
+/  Regent - Error
+/----------------*/
 code.skribi-regent.skr-error {
   color: red;
   padding-right: 0px;
@@ -56,6 +62,9 @@ code.skribi-regent.skr-error::after {
   margin-left: 0.2em;
 }
 
+/*---------------
+/  Regent - Syntax Error
+/----------------*/
 code.skribi-regent.skr-syntax-eta, code.skribi-regent.skr-syntax-js {
   color: gray;
   padding-right: 0px;
@@ -85,6 +94,9 @@ code.skribi-regent.skr-syntax-js::after {
   vertical-align: -0.08em;
 }
 
+/*---------------
+/  Regent - Abort
+/----------------*/
 code.skribi-regent.skr-abort {
   color: orangered;
   padding-right: 0px;
@@ -102,6 +114,9 @@ code.skribi-regent.skr-abort::after {
   margin-left: 0.2em;
 }
 
+/*---------------
+/  Regent - Stasis
+/----------------*/
 code.skribi-regent.skr-stasis {
   color: lightblue;
   padding-right: 0px;
@@ -124,10 +139,16 @@ code.skr-stasis:not(.skribi-regent) {
   color: var(--skribi-stasis-col);
 }
 
+/*---------------
+/  Regent - Self
+/----------------*/
 code.skribi-regent.skr-self {
   color: var(--skribi-self-col);
 }
 
+/*---------------
+/  Regent - Evaluate
+/----------------*/
 @keyframes skribiWiggle {
   0% {
     transform: rotate(10deg) translateX(0px);
@@ -244,6 +265,9 @@ body.skribi-anims code.skribi-regent.skr-evaluating::after {
   animation: 3.8s linear 0s infinite skribiWiggleAlt;
 }
 
+/*---------------
+/  Regent - Waiting
+/----------------*/
 @keyframes skribiRotation {
   0% {
     transform: rotate(0deg);
@@ -288,6 +312,9 @@ code.skribi-regent.skr-waiting.skr-template-init-error::after {
   margin-left: 0.2em;
 }
 
+/*---------------
+/  Regent - Depth
+/----------------*/
 code.skribi-regent.skr-depth {
   color: #a191e9;
   padding-right: 0px;
@@ -435,6 +462,62 @@ div.skribi-presets-list .setting-item.skribi-preset-entry .setting-item, div.skr
   overflow-y: visible;
 }
 
+/*---------------
+/  Table Line Display
+/----------------*/
+div.skribi-modal table.skr-lines-table {
+  border-spacing: 0px;
+}
+div.skribi-modal table.skr-lines-table td.skr-numcell {
+  height: 100%;
+  width: 22px;
+  padding: 0 3px 0 5px;
+  vertical-align: top;
+  text-align: right;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+  color: #999;
+  background-color: #444;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
+}
+div.skribi-modal table.skr-lines-table td.skr-concell {
+  padding-left: 1em;
+}
+div.skribi-modal table.skr-lines-table td.skr-concell span.skr-err-ch {
+  border-bottom: 2px dotted var(--text-error);
+}
+div.skribi-modal table.skr-lines-table col.skr-table-colnum {
+  width: 25px;
+}
+div.skribi-modal table.skr-lines-table tr.skribi-line-extraneous {
+  color: #323232;
+}
+div.skribi-modal table.skr-lines-table tr.skribi-line-errored td.skr-numcell {
+  background-color: var(--text-error);
+  color: black;
+}
+div.skribi-modal table.skr-lines-table tr.skribi-line-pointer {
+  background-color: #222;
+}
+div.skribi-modal table.skr-lines-table tr.skribi-line-pointer td.skr-numcell {
+  background-color: #222;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+}
+div.skribi-modal table.skr-lines-table tr:first-of-type td.skr-numcell {
+  border-top-left-radius: 0.4em;
+  border-top-right-radius: 0.4em;
+}
+div.skribi-modal table.skr-lines-table tr:last-of-type td.skr-numcell {
+  border-bottom-right-radius: 0.4em;
+  border-bottom-left-radius: 0.4em;
+}
+div.skribi-modal table.skr-lines-table tr:last-of-type td.skr-numcell.skr-pointer {
+  border-bottom-right-radius: 0em;
+}
+
 /*--------------------------------------------------------------------------------------------
 /  Modals
 /-------------------------------------------------------------------------------------------*/
@@ -565,7 +648,6 @@ div.skribi-settings span.skr-button:hover {
 
 div.skribi-modal-error-field-container {
   margin-top: 1em;
-  margin-bottom: 1em;
 }
 
 div.skribi-modal-error-field-content {
@@ -742,62 +824,6 @@ div.skribi-modal-index-field-content {
 }
 
 /*---------------
-/  Table
-/----------------*/
-table.skr-lines-table {
-  border-spacing: 0px;
-}
-table.skr-lines-table td.skr-numcell {
-  height: 100%;
-  width: 22px;
-  padding: 0 3px 0 5px;
-  vertical-align: top;
-  text-align: right;
-  white-space: nowrap;
-  cursor: default;
-  user-select: none;
-  color: #999;
-  background-color: #444;
-  border-top: 1px solid #444;
-  border-bottom: 1px solid #444;
-}
-table.skr-lines-table td.skr-concell {
-  padding-left: 1em;
-}
-table.skr-lines-table td.skr-concell span.skr-err-ch {
-  border-bottom: 2px dotted var(--text-error);
-}
-table.skr-lines-table col.skr-table-colnum {
-  width: 25px;
-}
-table.skr-lines-table tr.skribi-line-extraneous {
-  color: #323232;
-}
-table.skr-lines-table tr.skribi-line-errored td.skr-numcell {
-  background-color: var(--text-error);
-  color: black;
-}
-table.skr-lines-table tr.skribi-line-pointer {
-  background-color: #222;
-}
-table.skr-lines-table tr.skribi-line-pointer td.skr-numcell {
-  background-color: #222;
-  border-top: 1px solid #222;
-  border-bottom: 1px solid #222;
-}
-table.skr-lines-table tr:first-of-type td.skr-numcell {
-  border-top-left-radius: 0.4em;
-  border-top-right-radius: 0.4em;
-}
-table.skr-lines-table tr:last-of-type td.skr-numcell {
-  border-bottom-right-radius: 0.4em;
-  border-bottom-left-radius: 0.4em;
-}
-table.skr-lines-table tr:last-of-type td.skr-numcell.skr-pointer {
-  border-bottom-right-radius: 0em;
-}
-
-/*---------------
 /  Collapsibles
 /----------------*/
 div.skribi-modal-error .skr-collapsible, div.skribi-modal-index-scripts .skr-collapsible,
@@ -884,7 +910,8 @@ div.skribi-settings .skr-collapsible.is-collapsed .skr-collapse-indicator svg {
 }
 
 div.skribi-modal-index-templates div.modal-title a.skr-doc-link,
-div.skribi-modal-index-scripts div.modal-title a.skr-doc-link {
+div.skribi-modal-index-scripts div.modal-title a.skr-doc-link,
+div.skribi-test-modal div.modal-title a.skr-doc-link {
   position: fixed;
   font-family: "Consolas";
   font-size: 0.5em;

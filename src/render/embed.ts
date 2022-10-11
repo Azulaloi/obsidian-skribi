@@ -11,7 +11,7 @@ const extVid = ["mp4", "webm", "ogv"]
 const extTxt = ["md"]
 const extPdf = ["pdf"] // TODO: implement PDF embeds
 
-/* Repairs media embeds that have been rendered to markdown after the valid embedding period. */
+/** Repairs media embeds that have been rendered to markdown after the valid embedding period. */
 export async function embedMedia (
   el: HTMLElement, 
   srcPath: string,

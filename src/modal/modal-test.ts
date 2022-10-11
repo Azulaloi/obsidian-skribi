@@ -4,11 +4,11 @@ import { SkribiChild } from "src/render/child";
 import { Modes } from "src/types/const";
 import SkribosPlugin from "../main";
 import { average, linkDocs, roundTo, vLog } from "../util/util";
-import { makeExternalLink } from "./modal-confirmation";
+import { addDocsButton, makeExternalLink } from "./modal-confirmation";
 
 const maximumIterations = 10000
 
-/* A modal which renders skribis in bulk, for testing purposes. */
+/** A modal which renders skribis in bulk, for testing purposes. Probably not very useful to users. */
 export class TestModal extends Modal {
   private plugin: SkribosPlugin;
   private keypressRef: KeymapEventHandler;
@@ -35,10 +35,10 @@ export class TestModal extends Modal {
     this.containerEl.addClass("skribi-test-modal")
     this.titleEl.setText(l['modal.perf.title'])
 
-    let desc = createDiv({cls: 'skribi-modal-desc'})
-    makeExternalLink(desc.createEl('a', {text: l['documentation'], attr: {'href': linkDocs('commands/performance')}}))
-
-    desc.insertAfter(this.titleEl)
+    // let desc = createDiv({cls: 'skribi-modal-desc'})
+    // makeExternalLink(desc.createEl('a', {text: l['documentation'], attr: {'href': linkDocs('commands/performance')}}))
+    addDocsButton(this.titleEl, 'commands/#performance-test')
+    // desc.insertAfter(this.titleEl)
   }
 
   onOpen() {
@@ -93,65 +93,62 @@ export class TestModal extends Modal {
     }
 
     let container = createDiv()
-    let el = createDiv()
-
     let blocksToProcess: HTMLElement[] = []
     let toIter = Math.min(this.iterations, maximumIterations)
     if (this.multiBlock) {
       for (let i = 0; i < toIter; i++) {
-        let d = createDiv()
+        let d = container.createDiv()
         d.createEl('code', {text: this.textFieldToEval.getValue()})
         blocksToProcess.push(d)
       }
     } else {
-      let singleDiv = createDiv()
+      let singleDiv = container.createDiv()
       for (let i = 0; i < toIter; i++) {
         singleDiv.createEl('code', {text: this.textFieldToEval.getValue()})
       }
       blocksToProcess.push(singleDiv)
     }
 
-    let timeStart = window.performance.now()
+    const timeStart = window.performance.now()
+    const children: SkribiChild[] = []
 
     const proms: Promise<[[], number, number]>[] = blocksToProcess.map(async (div) => {
       let promiseStartTime = window.performance.now()
-
       let promise = await this.plugin.processor.processEntry({srcType: Modes.general}, div, {
         remainingNestLevel: 4,
         docId: '55555555',
         frontmatter: null,
         sourcePath: this.plugin.app.workspace.getActiveFile()?.path || "",
-        addChild: (child: any) => {},
+        addChild: (child: any) => {children.push(child)},
         getSectionInfo: () => {return null as MarkdownSectionInformation},
         containerEl: container,
-        el: el
+        el: div
       }, 4, false, null).catch(() => {})
 
       return [promise, window.performance.now(), promiseStartTime] as any
     })
 
     this.resultsField.setText(l["modal.perf.evaluating"])
-
     let settledValues = await Promise.allSettled(proms)
-
     
     vLog(`Performance test settled in: ${roundTo(window.performance.now()-timeStart, 3)}ms`)
 
     let fullfilled: [any[], number, number][] = settledValues.map((v) => {if (v.status == 'fulfilled') return v.value})
-    console.log(fullfilled)
     let times = fullfilled.map((result) => (result[1] as number - (result[2] as number)))
     let avg = average(...times)
     
     let p: any[] = []
     fullfilled.map(res => res[0].map((a) => p.push(a)))
-    let children = (await Promise.allSettled(p)).map((rez) => {if (rez.status == "fulfilled") return rez.value[1]})
+    let childrenFromPromises = (await Promise.allSettled(p)).map((rez) => {
+      if (rez.status == "fulfilled") return rez.value?.[0]
+    })
     
-    this.resultsField.setText(`${l["modal.perf.results"]} (${children.length} children in ${ l._((times.length > 1 ? "modal.perf.resultsBlockCount.plural" : "modal.perf.resultsBlockCount.single"), times.length.toString())}): ${roundTo(avg, 3)}ms`)
+    this.resultsField.setText(`${l["modal.perf.results"]} (${childrenFromPromises.length} children in ${ l._((times.length > 1 ? "modal.perf.resultsBlockCount.plural" : "modal.perf.resultsBlockCount.single"), times.length.toString())}): ${roundTo(avg, 3)}ms`)
   
-    // invokeMethodOf<SkribiChild>("clear", ...children) // Unload doesn't seem to be invoked consistently so let's just make sure everything is cleared
-    Array.from(children).forEach((child: SkribiChild) => child.clear())
+    Array.from(childrenFromPromises).forEach((child: SkribiChild | undefined) => child?.clear())
+    children.forEach((c: any) => c?.clear())  
     blocksToProcess.map(block => block.remove()) // Children are easier to collect when they lack shelter
-    container.remove(); el.remove(); // One day, the last person who remembers you will die, and you will be forgotten forever
+    container.remove() // One day, the last person who remembers you will die, and you will be forgotten forever
   }
 }
 

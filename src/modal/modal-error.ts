@@ -7,7 +7,7 @@ import { REGENT_CLS } from "src/types/const";
 import { IndexTemplateModal } from "./modal-index-template";
 import { parse, tokenizer } from "acorn";
 
-/* A modal that displays information about the various types of possible errors that may occur when rendering a skribi. 
+/** A modal that displays information about the various types of possible errors that may occur when rendering a skribi. 
  * Opened by error regents. */
 export class ErrorModal extends Modal {
   error: any = null
@@ -17,8 +17,8 @@ export class ErrorModal extends Modal {
     this.error = error
   }
 
-  /* TODO: make this more concise */
-  /* TODO: also I should put most of this logic elsewhere so that the console logging can benefit from it */
+  /* TODO: make this more concise... */
+  /* TODO: also I should put most of this logic elsewhere so that the console logging can benefit from it (what did I mean by this?) */
   async onOpen(){
     var util = require('util')
     let err = this.error
@@ -55,7 +55,7 @@ export class ErrorModal extends Modal {
           makeLinesTable(subErrField.content, err.parseError.stack)
         } else {
           let inspect = util.inspect(err.parseError, true, 7)
-          console.log(inspect)
+          //console.log(inspect)
           let subErrField = makeField("error", this.contentEl, (err.parseError?.name ?? "UnknownError") + " Inspection", true, true)
           makeLinesTable(subErrField.content, inspect)
         }
@@ -302,6 +302,8 @@ export interface pointOptions {
   parseToken?: boolean
 }
 
+/** Wraps `makeLinesTable()` and highlights a target segment of a line, and adds a line after that points to that target.
+ * Used when displaying errors. */
 export function makeLinesAndPoint(el: HTMLElement, read: string | string[], pos: errorPosition, opt?: pointOptions) {
   //@ts-ignore | Sanitize
   pos = pos && {line: parseInt(pos.line), col: parseInt(pos.col)}

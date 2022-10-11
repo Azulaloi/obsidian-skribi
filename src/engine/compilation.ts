@@ -33,7 +33,7 @@ export function compileWith(functionString: string, keys: string[], async?: bool
           // locations: true,
           // sourceFile: func
         })
-        console.log(pa)
+        // console.log(pa)
       } catch (parseError) {
         if (Object.getPrototypeOf(parseError)?.name == "SyntaxError") {
           // var util = require('util')

@@ -2,7 +2,7 @@ import { Component, MarkdownSectionInformation, Modal } from "obsidian";
 import SkribosPlugin from "src/main";
 import { EBAR, Modes } from "src/types/const";
 
-/* A modal that renders a template. */
+/** A modal that renders a template. */
 export default class RenderModal extends Modal {
   private plugin: SkribosPlugin
   templateKey: string;
@@ -37,7 +37,7 @@ export default class RenderModal extends Modal {
     }, "") */
     txt += this?.append ?? ""
     txt += '}'
-    console.log(txt)
+    // console.log(txt)
     this.renderEl.createEl('code', {text: txt})
 
     let container = createDiv()
@@ -52,7 +52,9 @@ export default class RenderModal extends Modal {
       getSectionInfo: () => {return null as MarkdownSectionInformation},
       containerEl: container,
       el: el
-    }, 4, false, null).catch((err) => {console.log("renderModal Error:", EBAR, err)})
+    }, 4, false, null).catch((err) => {
+      console.warn("renderModal Error:", EBAR, err)
+    })
   }
 
   onClose() {

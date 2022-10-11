@@ -436,7 +436,7 @@ export default class SkribiProcessor {
 
 	private async simpleRender(content: string, el: HTMLElement) {
 		el.innerHTML = content
-		console.log(el)
+		// console.log(el)
 		return Promise.resolve()
 	}
 }

@@ -2,29 +2,20 @@ import { setIcon } from "obsidian"
 import { IndexTemplateModal } from "src/modal/modal-index-template"
 import { isExtant } from "./util"
 
-export function makeLines(fieldEl: HTMLElement, linesIn: string | string[], 
-  cb?: (ind: number, els: {lineEl: HTMLElement, numEl: HTMLElement, conEl: HTMLElement}) => any) 
-{
-  let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
-
-  for (let i = 0; i < lines.length; i++) {
-    let lineEl = createDiv({cls: "skribi-modal-error-field-line"})
-    let numEl = lineEl.createDiv({text: (i+1).toString(), cls: "skribi-line-number"})
-    let conEl = lineEl.createDiv({text: lines[i], cls: "skribi-line-content"})
-    
-    fieldEl.append(lineEl)
-    if (cb) {cb(i, {lineEl: lineEl, numEl: numEl, conEl: conEl})} 
-  }
-}
-
+/** Context for the `makeLinesTable()` callback function used by `makeLinesAndPoint()` */
 export interface linesTableCB {
   table: HTMLTableElement, row: HTMLTableRowElement, 
   num: HTMLTableCellElement, con: HTMLTableCellElement
 }
 
+/** Creates a table to display text with numbered lines. Used mostly in error displays.
+ * @param fieldEl if present, table will be appended to this element
+ * @param linesIn lines to display, can be array or will split by newlines
+ * @param cb callback called for every line, used by `makeLinesAndPoint()` */
 export function makeLinesTable(fieldEl?: HTMLElement, linesIn?: string | string[],
   cb?: (ind: number, els: linesTableCB) => any): void | HTMLElement
 {
+  console.log(Array.isArray(linesIn), linesIn)
   let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
   let tab = createEl('table', {cls: "skr-lines-table"}) 
   let colGroup = tab.createEl('colgroup')
@@ -42,10 +33,25 @@ export function makeLinesTable(fieldEl?: HTMLElement, linesIn?: string | string[
     
     if (cb) {cb(i, {table: tab, row: row, num: numCell, con: conCell})} 
   }
-  if (isExtant(fieldEl)) {
-    fieldEl.append(tab)
-  } 
+  if (isExtant(fieldEl)) {fieldEl.append(tab)} 
   return tab
+}
+
+/** Pretty sure this is outmoded by `makeLinesTable()`
+ * TODO: test why that one line in error-modal.ts still uses this function instead of table */
+export function makeLines(fieldEl: HTMLElement, linesIn: string | string[], 
+  cb?: (ind: number, els: {lineEl: HTMLElement, numEl: HTMLElement, conEl: HTMLElement}) => any) 
+{
+  let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
+
+  for (let i = 0; i < lines.length; i++) {
+    let lineEl = createDiv({cls: "skribi-modal-error-field-line"})
+    let numEl = lineEl.createDiv({text: (i+1).toString(), cls: "skribi-line-number"})
+    let conEl = lineEl.createDiv({text: lines[i], cls: "skribi-line-content"})
+    
+    fieldEl.append(lineEl)
+    if (cb) {cb(i, {lineEl: lineEl, numEl: numEl, conEl: conEl})} 
+  }
 }
 
 /** Creates a collapsible field. */
@@ -70,6 +76,7 @@ export function makeField(modalName: string, containerEl: HTMLElement, name: str
   }
 }
 
+/** Wraps an element in a new collapsible element, in place. */
 export function wrapCollapse(el: HTMLElement, startCollapsed?: boolean, cb?: (state: boolean) => any) {
   let oel = el
   let col = new Collapsible(el, startCollapsed, cb)
@@ -88,6 +95,7 @@ export const COL_CLS = {
 	COLLAPSIBLE_IS_COLLAPSED: "is-collapsed"
 }
 
+/** A collapsible widget. */
 export class Collapsible {
   collapseEl: HTMLDivElement;
   collapseTitleEl: HTMLElement;
@@ -121,17 +129,13 @@ export class Collapsible {
       }
     })
   
-    /* Calculate max height before first collapse */
-    this.collapseTitleEl.addEventListener("mouseover", () => {
-    // TODO: in error modals, this will sometimes cause a visible shift
-    // test with the "no such template" error - hovering over the invocation string field looks like the bottom margin shrinks
-
-      if ((!this.collapseContentEl.hasAttribute("style")) )
-        this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
-    }); 
-
     this.updateSize = () => {
       this.collapseContentEl.setAttribute("style", `max-height: ${el.clientHeight + (el.clientHeight * 0.2)}px;`)
     }
+
+    /* Calculate max height before first collapse */
+    this.collapseTitleEl.addEventListener("mouseover", () => {
+      if (!this.collapseContentEl.hasAttribute("style")) this.updateSize()
+    }); 
   }
 }

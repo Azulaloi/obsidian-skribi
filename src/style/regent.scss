@@ -1,6 +1,10 @@
 @use "sass:map";
 @use "sass:string";
 
+/*---------------
+/  Regents
+/----------------*/
+
 @function str-replace($str, $search, $replace: '') {
   $string: string.quote($str);
   $index: str-index($string, $search); 
@@ -112,7 +116,9 @@ code.skribi-regent {
   }
 }
 
-// ERROR
+/*---------------
+/  Regent - Error
+/----------------*/
 
 code.skribi-regent.skr-error {
   $col: map.get($regent-colors, "error");
@@ -126,7 +132,9 @@ code.skribi-regent.skr-error {
   }
 }
 
-// SYNTAX ERROR
+/*---------------
+/  Regent - Syntax Error
+/----------------*/
 
 code.skribi-regent.skr-syntax-eta, code.skribi-regent.skr-syntax-js {
   $col: map.get($regent-colors, "syntax");
@@ -169,7 +177,9 @@ code.skribi-regent.skr-syntax-js {
   }
 }
 
-// ABORT
+/*---------------
+/  Regent - Abort
+/----------------*/
 
 code.skribi-regent.skr-abort {
   $col: map.get($regent-colors, "abort");
@@ -183,7 +193,9 @@ code.skribi-regent.skr-abort {
   }
 }
 
-// STASIS 
+/*---------------
+/  Regent - Stasis
+/----------------*/
 
 code.skribi-regent.skr-stasis {
   $col: map.get($regent-colors, "stasis");
@@ -202,13 +214,17 @@ code.skr-stasis:not(.skribi-regent) {
   // box-shadow: 0px 0px 1px var(--skribi-stasis-col);
 }
 
-// SELF
+/*---------------
+/  Regent - Self
+/----------------*/
 
 code.skribi-regent.skr-self {
   color: var(--skribi-self-col);
 }
 
-// EVALUATE
+/*---------------
+/  Regent - Evaluate
+/----------------*/
 
 @keyframes skribiWiggle {
   0% { transform: rotate(10deg) translateX(0px);}
@@ -265,7 +281,9 @@ body.skribi-anims code.skribi-regent.skr-evaluating {
   }
 }
 
-// WAITING
+/*---------------
+/  Regent - Waiting
+/----------------*/
 
 @keyframes skribiRotation {
 	0% { transform: rotate(0deg) ;}
@@ -298,7 +316,9 @@ code.skribi-regent.skr-waiting.skr-template-init-error {
   }
 }
 
-// DEPTH
+/*---------------
+/  Regent - Depth
+/----------------*/
 
 code.skribi-regent.skr-depth {
   $col: map.get($regent-colors, "depth");

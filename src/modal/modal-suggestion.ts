@@ -1,7 +1,7 @@
 import { FuzzyMatch, FuzzySuggestModal } from "obsidian";
 import SkribosPlugin from "src/main";
 
-/* A modal that displays a list of available templates to select from. */
+/** A modal that displays a list of available templates to select from. */
 export class SuggestionModal extends FuzzySuggestModal<string> {
   private resolve: (value: string) => void;
   private reject: (reason?: any) => void;

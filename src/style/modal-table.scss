@@ -1,0 +1,83 @@
+@use 'sk' as *;
+
+/*---------------
+/  Table Line Display
+/----------------*/
+
+// Used for the source displays in error modals.
+
+div.skribi-modal table.skr-lines-table {
+  border-spacing: 0px;
+
+  td.skr-numcell {
+    height: 100%;
+    width: 22px;
+    padding: 0 3px 0 5px;
+    vertical-align: top;
+    text-align: right;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+
+    color: $sk-field-text;
+    background-color: $sk-field-mid;
+    border-top: 1px solid $sk-field-mid;
+    border-bottom: 1px solid $sk-field-mid;
+  }
+
+  td.skr-concell {
+    padding-left: 1em;
+    // white-space: nowrap;
+
+    span.skr-err-ch {
+      // text-decoration: red wavy underline 3px; // not sure why this doesn't work
+      border-bottom: 2px dotted $sk-field-err;
+    }
+  }
+
+  col.skr-table-colnum {
+    width: 25px;
+    // background-color: #444;
+  }
+
+  col.skr-table-colcon {}
+
+  tr {
+    &.skribi-line-extraneous {
+      color: rgba(50, 50, 50, 150);
+    }
+
+    &.skribi-line-errored {
+      td.skr-numcell {
+        background-color: $sk-field-err;
+        color: black;
+      }
+    }
+
+    &.skribi-line-pointer {
+      background-color: $sk-field-low;
+      td.skr-numcell {
+        background-color: $sk-field-low;
+        border-top: 1px solid $sk-field-low;
+        border-bottom: 1px solid $sk-field-low;
+      }
+    }
+  }
+
+  tr:first-of-type {
+    td.skr-numcell {
+      border-top-left-radius: 0.4em;
+      border-top-right-radius: 0.4em;
+    }
+  }
+
+  tr:last-of-type {
+    td.skr-numcell {
+      border-bottom-right-radius: 0.4em;
+      border-bottom-left-radius: 0.4em;
+      &.skr-pointer {
+        border-bottom-right-radius: 0em;
+      }
+    }
+  }
+}

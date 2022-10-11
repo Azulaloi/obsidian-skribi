@@ -6,13 +6,18 @@ export const DELIMITERS: ArgSet = {
 	"PASS_VALUE": [":"]
 }
 
+// Unused. TODO: make the depth detection use a variable limit
 export const SK_DEPTH_LIMIT = 5;
 
+/** Types of skribi processing modes. */
 export const enum Modes {
+	/** Invocation was a code span. */
 	general = "GENERAL",
+	/** Invocation was a code block. */
 	block = "BLOCK",
 }
 
+/** Types of skribi processing types. */
 export const enum Flags {
 	none = 0,
 	template = 1,
@@ -48,6 +53,7 @@ export const REGENT_CLS = {
 	syntax_js: "skr-syntax-js" // For JS syntax errors
 }
 
+/** The potential states of a template or script. */
 export const enum PartialState {
 	/** Partial is not present. */
 	ABSENT = -1,
