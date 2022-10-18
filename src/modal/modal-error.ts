@@ -280,15 +280,17 @@ export class ErrorModal extends Modal {
   }
 }
 
+// separated this out to more easily test leaks
+function emlClick(ev: MouseEvent, err: any) {
+  ev.preventDefault()
+  new ErrorModal(window.app, err).open();
+}
+
 /** Adds an click event listener to 'el' that opens an error modal for the error 'err'. */
-export function makeErrorModalLink(el: HTMLElement, err: any): HTMLElement {
+export function makeErrorModalLink(el: HTMLElement, err: any) {
   el.addClass("has-link")
-  el.addEventListener('click', (ev) => {
-    ev.preventDefault()
-    let p = new ErrorModal(window.app, err);
-    p.open();
-  })
-	return el
+  // using onclick lets regented children null the listener on clear without having a reference
+  el.onclick = (ev) => emlClick(ev, err)  
 }
 
 export interface errorPosition {

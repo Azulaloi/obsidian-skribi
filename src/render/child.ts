@@ -1,7 +1,7 @@
 import { EventRef, MarkdownRenderChild } from "obsidian";
 import SkribosPlugin from "src/main";
 import { SkContext, Stringdex } from "src/types/types";
-import { dLog, hash, isExtant, vLog } from "src/util/util";
+import { dLog, hasClasses, hash, isExtant, vLog } from "src/util/util";
 import { setTimeout } from "timers";
 import { scopeStyle } from "./style/style";
 
@@ -132,6 +132,15 @@ export class SkribiChild extends MarkdownRenderChild implements SkChild {
 		vLog("clear", this.containerEl)
 		for (let i of this.intervals) window.clearInterval(i); // there might be cases where this doesn't get called properly (?)
 		for (let cb of this.cbOnUnload) cb[0](cb[1]);
+
+		// this.containerEl.querySelectorAll(".skribi-regent.has-link").forEach((el) => {
+			// (el as HTMLElement).onclick = null  // this just changes the retainer for leaked errors from "Detached v8Eve"
+		// })
+
+		if (hasClasses(this.containerEl, "skribi-regent", "has-link")) {
+			this.containerEl.onclick = null
+		}
+
 
 		// this.containerEl.parentNode.removeChild(this.containerEl)
 		this.plugin.children.remove(this)

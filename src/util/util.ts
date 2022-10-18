@@ -202,3 +202,8 @@ export function hash(str: string) {
 }
 
 export type Values<T extends object> = T[keyof T];
+
+export function hasClasses(el: HTMLElement, ...cls: string[]): boolean {
+	for (let c of cls) if (!el.hasClass(c)) return false;
+	return true;
+}

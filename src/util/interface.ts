@@ -15,7 +15,6 @@ export interface linesTableCB {
 export function makeLinesTable(fieldEl?: HTMLElement, linesIn?: string | string[],
   cb?: (ind: number, els: linesTableCB) => any): void | HTMLElement
 {
-  console.log(Array.isArray(linesIn), linesIn)
   let lines = (Array.isArray(linesIn) ? linesIn : linesIn.split(/\r\n|\n/))
   let tab = createEl('table', {cls: "skr-lines-table"}) 
   let colGroup = tab.createEl('colgroup')

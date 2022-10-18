@@ -130,6 +130,10 @@ export default class SkribosPlugin extends Plugin {
 		})
 	}
 
+	findChildParent(el: Element) {
+		return this.children.find((child) => child.containerEl == el)
+	}
+
 	/** Register our commands. */
 	defineCommands(): void {
 		/* Opens a fuzzy suggestion modal of available templates. On selection, opens a template insertion modal that will insert the template invocation string at the cursor. */
