@@ -36,7 +36,12 @@ export function toArray(args: any | any[]): any[] {
 }
 
 export function isInFolder(file: TAbstractFile, directory: string) {
-	return normalizePath(file.parent.path /* (/.+\//g).exec(e.path)[0] */) === normalizePath(directory)
+	// deleted files don't have parents anymore, not sure when obsidian changed this
+	// return normalizePath(file.parent.path) === normalizePath(directory) 
+
+	// regex method fails when file is in root directory, leaving it here so I remember
+	// return normalizePath((/.+\//g).exec(file.path)[0]) == normalizePath(directory)
+	return normalizePath(file.path.substring(0, file.path.length - file.name.length)) == normalizePath(directory)
 }
 
 export function isExtant(obj: any) {

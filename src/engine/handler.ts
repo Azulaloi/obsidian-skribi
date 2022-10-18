@@ -61,21 +61,23 @@ export class Handler {
       }))
 
       this.plugin.registerEvent(this.plugin.app.vault.on('rename', (file, oldPath) => {
-          let ourDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath(minder.directory))
-          let oldDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath((/.+\//g).exec(oldPath)[0]))
-          if (file.parent == ourDir) {
-            // New location of file is in our directory
-            if (file.parent == oldDir) {
-              // File did not move but was renamed
-              minder.fileRenamed(file, (/([a-zA-Z0-9-_.]+\..*)/g).exec(oldPath)[0])
-            } else {
-              // File was moved from elsewhere into the template directory
-              minder.fileAdded(file)
-            }
-          } else if (oldDir == ourDir) {
-            // File used to be in templates directory and is no longer
-            minder.fileDeleted(file)
+        let ourDir = this.plugin.app.vault.getAbstractFileByPath(normalizePath(minder.directory))
+        let op = normalizePath(oldPath.substring(0, oldPath.length - file.name.length))
+        let oldDir = this.plugin.app.vault.getAbstractFileByPath(op)
+
+        if (file.parent == ourDir) {
+          // New location of file is in our directory
+          if (file.parent == oldDir) {
+            // File did not move but was renamed
+            minder.fileRenamed(file, (/([a-zA-Z0-9-_.]+\..*)/g).exec(oldPath)[0])
+          } else {
+            // File was moved from elsewhere into the template directory
+            minder.fileAdded(file)
           }
+        } else if (oldDir == ourDir) {
+          // File used to be in templates directory and is no longer
+          minder.fileDeleted(file)
+        }
       }))
     }
   }

@@ -290,7 +290,7 @@ function emlClick(ev: MouseEvent, err: any) {
 export function makeErrorModalLink(el: HTMLElement, err: any) {
   el.addClass("has-link")
   // using onclick lets regented children null the listener on clear without having a reference
-  el.onclick = (ev) => emlClick(ev, err)  
+  el.onclick = (ev) => emlClick(ev, err)
 }
 
 export interface errorPosition {
